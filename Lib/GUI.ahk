@@ -1,35 +1,39 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
-#Include Image.ahk
-#Include Functions.ahk
+#Include %A_ScriptDir%/lib/Tools/Image.ahk
+#Include %A_ScriptDir%/lib/Functions/Functions.ahk
 
 ; Application Info
 global GameTitle := "Ryn's Anime Crusaders Macro "
-global version := "v0.1"
+global version := "v1.1"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
 global targetHeight := 638
 global offsetX := -5
 global offsetY := 1
-global WM_SIZING := 0x0214
-global WM_SIZE := 0x0005
 global centerX := 408
 global centerY := 320
 global successfulCoordinates := []
+global totalUnits := Map()
 ;Statistics Tracking
-global Wins := 0
-global loss := 0
 global mode := ""
 global StartTime := A_TickCount
 global currentTime := GetCurrentTime()
+; Config and Settings
+global UnitConfigMap := Map()
 ;Auto Challenge
 global challengeStartTime := A_TickCount
 global inChallengeMode := false
 global firstStartup := true
+; Testing
+global waitingState := Map()
 ;Custom Unit Placement
 global waitingForClick := false
-global savedCoords := [[], []]
+global savedCoords := [[], []]  ; Index-based: one array for each preset
+global savedWalkCoords := [[], []]  ; Index-based: one array for each preset
+;Nuke Ability
+global nukeCoords := []
 ;Hotkeys
 global F1Key := "F1"
 global F2Key := "F2"
@@ -41,6 +45,7 @@ global uiBackgrounds := []
 global uiTheme := []
 global UnitData := []
 global MainUI := Gui("+AlwaysOnTop -Caption")
+global CardGUI := Gui("+AlwaysOnTop")
 global lastlog := ""
 global MainUIHwnd := MainUI.Hwnd
 global ActiveControlGroup := ""
@@ -69,6 +74,21 @@ if !DirExist(A_ScriptDir "\Settings") {
 
 setupOutputFile()
 
+; === Need To Load These Before GUI ===
+global currentCardMode := "Default"
+global CardModeConfigs := Map(
+    "Default", Map(
+        "modeName", "Default",
+        "title", "Default Card Priority",
+        "filePath", "Settings\DefaultCardPriority.txt",
+        "options", [
+            ""
+        ]
+    )
+)
+
+global currentConfig := CardModeConfigs[currentCardMode]
+
 ; ========== Constants and Theme Setup ==========
 mainWidth := 1364
 mainHeight := 697
@@ -82,7 +102,6 @@ uiColors := Map(
 )
 
 ; ========== Helper Functions ==========
-
 AddUI(type, options, text := "", onClickFunc := unset) {
     ctrl := MainUI.Add(type, options, text)
     if IsSet(onClickFunc)
@@ -93,7 +112,6 @@ AddUI(type, options, text := "", onClickFunc := unset) {
 AddBorder(x, y, w, h) {
     return MainUI.Add("Text", Format("x{} y{} w{} h{} +Background{}", x, y, w, h, uiColors["Border"]))
 }
-
 ; ========== GUI Initialization ==========
 
 MainUI.BackColor := uiColors["Background"]
@@ -120,6 +138,10 @@ global robloxHolder := MainUI.Add("Text", Format("x3 y33 w797 h597 +Background{}
 ; ========== Exit and Minimize Buttons ==========
 global exitButton := AddUI("Picture", "x1330 y1 w32 h32 +BackgroundTrans", Exitbutton, (*) => Destroy())
 global minimizeButton := AddUI("Picture", "x1305 y3 w27 h27 +Background" uiColors["Background"], Minimize, (*) => minimizeUI())
+
+; ========== Import ==========
+global importUnitConfigButton := AddUI("Picture", "x1312 y48 w20 h20 +BackgroundTrans", Import, (*) => ImportSettingsFromFile())
+global exportUnitConfigButton := AddUI("Picture", "x1337 y48 w20 h20 +BackgroundTrans", Export, (*) => ExportUnitConfig())
 
 ; ========== Title ==========
 MainUI.SetFont("Bold s16 c" uiColors["Primary"], "Verdana")
@@ -152,7 +174,7 @@ WinSetTransColor(uiColors["RobloxBox"], MainUI)
 OpenGuide(*) {
     GuideGUI := Gui("+AlwaysOnTop")
     GuideGUI.SetFont("s10 bold", "Segoe UI")
-    GuideGUI.Title := "Anime Crusaders Guide"
+    GuideGUI.Title := "Anime Last Stand Guide"
 
     GuideGUI.BackColor := "0c000a"
     GuideGUI.MarginX := 20
@@ -167,11 +189,14 @@ OpenGuide(*) {
 
 MainUI.SetFont("s9 Bold c" uiTheme[1])
 
-DebugButton := MainUI.Add("Button", "x708 y5 w90 h20 +Center", "Debug")
+DebugButton := MainUI.Add("Button", "x608 y5 w90 h20 +Center", "Debug")
 DebugButton.OnEvent("Click", (*) => "")
 
-global guideBtn := MainUI.Add("Button", "x808 y5 w90 h20", "Guide")
+global guideBtn := MainUI.Add("Button", "x708 y5 w90 h20", "Guide")
 guideBtn.OnEvent("Click", OpenGuide)
+
+global cardButton := MainUI.Add("Button", "x808 y5 w90 h20", "Card Config")
+cardButton.OnEvent("Click", (*) => OpenCardConfig())
 
 global unitButton := MainUI.Add("Button", "x908 y5 w90 h20", "Unit Config")
 unitButton.OnEvent("Click", (*) => ToggleControlGroup("Unit"))
@@ -193,9 +218,9 @@ MainUI.SetFont("s9")
 global NextLevelBox := MainUI.Add("Checkbox", "x900 y451 cffffff", "Next Level")
 global ReturnLobbyBox := MainUI.Add("Checkbox", "x1150 y476 cffffff Checked", "Return To Lobby")
 
-global AutoAbilityBox := MainUI.Add("CheckBox", "x1005 y451 cffffff Checked " (AutoAbilityEnabled ? "" : "Hidden"), "Auto Ability")
-global AutoAbilityText := MainUI.Add("Text", "x1125 y451 " (AutoAbilityEnabled ? "" : "Hidden") " c" uiTheme[1] , "Auto Ability Timer:")
-global AutoAbilityTimer := MainUI.Add("Edit", "x1255 y449 w45 h20 cBlack Number " (AutoAbilityEnabled ? "" : "Hidden"), "60")
+global AutoAbilityBox := MainUI.Add("CheckBox", "x1005 y451 cffffff Checked", "Auto Ability")
+global AutoAbilityText := MainUI.Add("Text", "x1125 y451 c" uiTheme[1], "Auto Ability Timer:")
+global AutoAbilityTimer := MainUI.Add("Edit", "x1255 y449 w60 h20 cBlack Number", "60")
 
 PlacementPatternText := MainUI.Add("Text", "x815 y390 w125 h20", "Placement Pattern")
 global PlacementPatternDropdown := MainUI.Add("DropDownList", "x825 y410 w100 h180 Choose2 +Center", ["Circle", "Custom", "Grid", "3x3 Grid", "Spiral", "Up and Down", "Random"])
@@ -207,27 +232,43 @@ PlaceSpeedText := MainUI.Add("Text", "x956 y390 w115 h20", "Placement Speed")
 global PlaceSpeed := MainUI.Add("DropDownList", "x963 y410 w100 h180 Choose3 +Center", ["Super Fast (1s)", "Fast (1.5s)", "Default (2s)", "Slow (2.5s)", "Very Slow (3s)", "Toaster (4s)"])
 
 PlacementSelectionText := MainUI.Add("Text", "x1245 y390 w115 h20", "Placement Order")
-global PlacementSelection := MainUI.Add("DropDownList", "x1250 y410 w100 h180 Choose1 +Center", ["Default", "By Priority"])
+global PlacementSelection := MainUI.Add("DropDownList", "x1250 y410 w100 h180 Choose1 +Center", ["Default", "By Priority", "Slot #2 First"])
 
 placementSaveText := MainUI.Add("Text", "x807 y451 w80 h20", "Save Config")
-Hotkeytext := MainUI.Add("Text", "x807 y35 w200 h30", "F1: Fix Roblox Position")
-Hotkeytext2 := MainUI.Add("Text", "x807 y50 w200 h30", "F2: Start Macro")
-Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h30", "F3: Stop Macro")
+Hotkeytext := MainUI.Add("Text", "x807 y35 w200 h30", F1Key ": Fix Roblox Position")
+Hotkeytext2 := MainUI.Add("Text", "x807 y50 w200 h30", F2Key ": Start Macro")
+Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h30", F3Key ": Stop Macro")
 GithubButton := MainUI.Add("Picture", "x30 y640", GithubImage)
 DiscordButton := MainUI.Add("Picture", "x112 y645 w60 h34 +BackgroundTrans cffffff", DiscordImage)
 
 global CustomSettings := MainUI.Add("GroupBox", "x190 y632 w390 h60 +Center c" uiTheme[1], "Custom Placement Settings")
 
-customPlacementButton := MainUI.Add("Button", "x210 y662 w80 h20", "Set")
+customPlacementImportButton := AddUI("Picture", "x205 y652 w27 h27 +BackgroundTrans", Import, (*) => ImportCoordinatesPreset())
+customPlacementExportButton := AddUI("Picture", "x255 y652 w27 h27 +BackgroundTrans", Export, (*) => ExportCoordinatesPreset(PlacementProfiles.Value))
+
+customPlacementButton := MainUI.Add("Button", "x300 y662 w80 h20", "Set")
 customPlacementButton.OnEvent("Click", (*) => StartCoordCapture())
 
-customPlacementClearButton := MainUI.Add("Button", "x345 y662 w80 h20", "Clear")
+customPlacementClearButton := MainUI.Add("Button", "x395 y662 w80 h20", "Clear")
 customPlacementClearButton.OnEvent("Click", (*) => DeleteCoordsForPreset(PlacementProfiles.Value))
 
 fixCameraText := MainUI.Add("Text", "x505 y642 w60 h20 +Left", "Camera")
 fixCameraButton := MainUI.Add("Button", "x490 y662 w80 h20", "Fix")
 fixCameraButton.OnEvent("Click", (*) => BasicSetup(true))
 
+; === Custom Walk Settings ===
+global CustomWalkSettings := MainUI.Add("GroupBox", "x600 y632 w190 h60 +Center c" uiTheme[1], "Custom Walk Settings")
+customWalkButton := MainUI.Add("Button", "x610 y662 w45 h20", "Set")
+customWalkButton.OnEvent("Click", (*) => StartWalkCapture())
+
+customWalkTestButton := MainUI.Add("Button", "x673 y662 w45 h20", "Test")
+customWalkTestButton.OnEvent("Click", (*) => WalkToCoords())
+
+customWalkClearButton := MainUI.Add("Button", "x735 y662 w45 h20", "Clear")
+customWalkClearButton.OnEvent("Click", (*) => DeleteWalkCoordsForPreset(PlacementProfiles.Value))
+; === End of Custom Walk Settings ===
+
+; === Settings GUI ===
 global WebhookBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Webhook Settings")
 global WebhookEnabled := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Webhook Enabled")
 WebhookEnabled.OnEvent("Click", (*) => ValidateWebhook())
@@ -239,6 +280,7 @@ global PrivateServerEnabled := MainUI.Add("CheckBox", "x825 y175 Hidden cffffff"
 global PrivateServerURLBox := MainUI.Add("Edit", "x1050 y173 w160 h20 Hidden c" uiTheme[6], "")
 PrivateServerTestButton := MainUI.Add("Button", "x1225 y173 w80 h20 Hidden", "Test Link")
 PrivateServerTestButton.OnEvent("Click", (*) => Reconnect(true))
+; === End of Settings GUI ===
 
 ; HotKeys
 global KeybindBorder := MainUI.Add("GroupBox", "x808 y205 w195 h176 +Center Hidden c" uiTheme[1], "Keybind Settings")
@@ -259,14 +301,25 @@ global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y110 Hidden cfff
 global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y130 cffffff Hidden", "Use Unit Priority while Upgrading/Auto Upgrading")
 
 global AutoUpgradeBorder := MainUI.Add("GroupBox", "x808 y170 w550 h210 +Center Hidden c" uiTheme[1], "Auto-Upgrade Settings")
-global UnitManagerAutoUpgrade := MainUI.Add("CheckBox", "x825 y197 Hidden cffffff", "Enable Auto-Upgrading (Via the Unit Manager)")
+global AutoUpgrade := MainUI.Add("CheckBox", "x825 y197 Hidden cffffff", "Enable Auto-Upgrading")
 
 global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Settings")
 global ZoomText := MainUI.Add("Text", "x1018 y230 Hidden c" uiTheme[1], "Zoom Level:")
 global ZoomBox := MainUI.Add("Edit", "x1115 y228 w30 h20 Hidden cBlack Number", "20")
 ZoomBox.OnEvent("Change", (*) => ValidateEditBox(ZoomBox))
 
-global MiscSettingsBorder := MainUI.Add("GroupBox", "x1163 y205 w195 h176 +Center Hidden c" uiTheme[1], "")
+global MiscSettingsBorder := MainUI.Add("GroupBox", "x1163 y205 w195 h176 +Center Hidden c" uiTheme[1], "Import/Export")
+global UnitConfigText := MainUI.Add("Text", "x1200 y230 w120 h20 Hidden cffffff", "Unit Configuration")
+global UnitImportButton := MainUI.Add("Button", "x1180 y258 w80 h20 Hidden", "Import")
+UnitImportButton.OnEvent("Click", (*) => ImportSettingsFromFile())
+global UnitExportButton := MainUI.Add("Button", "x1265 y258 w80 h20 Hidden", "Export")
+UnitExportButton.OnEvent("Click", (*) => ExportUnitConfig())
+
+global CustomPlacementText := MainUI.Add("Text", "x1200 y290 w140 h20 Hidden cffffff", "Custom Placements")
+global CustomPlacementImportButton := MainUI.Add("Button", "x1180 y318 w80 h20 Hidden", "Import")
+CustomPlacementImportButton.OnEvent("Click", (*) => ImportCoordinatesPreset())
+global CustomPlacementExportButton := MainUI.Add("Button", "x1265 y318 w80 h20 Hidden", "Export")
+CustomPlacementExportButton.OnEvent("Click", (*) => ExportCoordinatesPreset(PlacementProfiles.Value))
 
 global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Mode Configuration")
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
@@ -278,26 +331,46 @@ global PortalBorder := MainUI.Add("GroupBox", "x808 y255 w550 h126 +Center Hidde
 global PortalLobby := MainUI.Add("CheckBox", "x825 y280 Hidden cffffff", "Starting portal from the lobby")
 
 
-; --- Unit Config GUI ---
-global UnitBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Unit Configuration")
-global SJWNuke := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use SJW Nuke")
+; === Unit Config GUI ===
+global NukeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Nuke Configuration")
+global NukeUnitSlotEnabled := MainUI.Add("Checkbox", "x825 y113 Hidden Choose1 cffffff Checked", "Nuke Unit | Slot")
+global NukeUnitSlot := MainUI.Add("DropDownList", "x960 y110 w100 h180 Hidden Choose1", ["1", "2", "3", "4", "5", "6"])
+global NukeCoordinatesText := MainUI.Add("Text", "x1080 y113 Hidden cffffff", "Nuke Ability Coordinates")
+global NukeCoordinatesButton := MainUI.Add("Button", "x1260 y110 w80 h20 Hidden", "Set")
+NukeCoordinatesButton.OnEvent("Click", (*) => StartNukeCapture())
+global NukeAtSpecificWave := MainUI.Add("Checkbox", "x825 y140 Hidden Choose1 cffffff Checked", "Nuke At Wave | Wave")
+global NukeWave := MainUI.Add("DropDownList", "x1000 y137 w100 h180 Hidden Choose1", ["15", "20", "50"])
+global NukeDelayText := MainUI.Add("Text", "x1120 y140 Hidden cffffff", "Nuke Delay")
+global NukeDelay := MainUI.Add("Edit", "x1210 y138 w40 h20 Hidden cBlack Number", "0")
+NukeDelay.OnEvent("Change", (*) => ValidateEditBox(NukeDelay))
 
+; === Disbled At The Moment ===
+global SJWNuke := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use SJW Nuke")
 global SJWSlotText := MainUI.Add("Text", "x825 y130 Hidden cffffff", "SJW Slot")
 global SJWSlot := MainUI.Add("DropDownlist", "x905 y128 w45 Hidden Choose0 +Center", ["1", "2", "3", "4", "5", "6"])
+; === End of Disabled At The Moment ===
+
+global UnitBorder := MainUI.Add("GroupBox", "x808 y161 w550 h220 +Center Hidden" uiTheme[1], "Unit Configuration")
+global MinionSlot1 := MainUI.Add("CheckBox", "x825 y181 cffffff Hidden", "Slot 1 has minion")
+global MinionSlot2 := MainUI.Add("CheckBox", "x1015 y181 cffffff Hidden", "Slot 2 has minion")
+global MinionSlot3 := MainUI.Add("CheckBox", "x1200 y181 cffffff Hidden", "Slot 3 has minion")
+global MinionSlot4 := MainUI.Add("CheckBox", "x825 y206 cffffff Hidden", "Slot 4 has minion")
+global MinionSlot5 := MainUI.Add("CheckBox", "x1015 y206 cffffff Hidden", "Slot 5 has minion")
+global MinionSlot6 := MainUI.Add("CheckBox", "x1200 y206 cffffff Hidden", "Slot 6 has minion")
+; === End Unit Config GUI ===
 
 GithubButton.OnEvent("Click", (*) => OpenGithub())
 DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Raid", "Custom"])
-global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", [""])
-global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6", "Infinite"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Custom"])
+global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon"])
+global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Legend Stage #1"] )
 ;global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3"])
 global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", [""])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
-global DungeonDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", [""])
 global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", [""])
 global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Host", "Guest"])
 global ConfirmButton := MainUI.Add("Button", "x1218 y53 w80 h25", "Confirm")
@@ -348,11 +421,8 @@ AddUnitCard(MainUI, index, x, y) {
     MainUI.SetFont("s9 c" uiTheme[1])
     unit.PlaceAndUpgradeText  := AddText(x + 266, y + 2, 250, 20, "BackgroundTrans", "Place && Upgrade")
     unit.UpgradeTitle         := AddText(x + 295, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
-
-    if (UpgradeLimits) {
-        unit.UpgradeCapText       := AddText(x + 425, y + 2, 250, 20, "BackgroundTrans", "Upgrade Limit")
-        unit.UpgradeLimitTitle    := AddText(x + 435, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
-    }
+    unit.UpgradeCapText       := AddText(x + 425, y + 2, 250, 20, "BackgroundTrans", "Upgrade Limit")
+    unit.UpgradeLimitTitle    := AddText(x + 435, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
 
     UnitData.Push(unit)
     return unit
@@ -380,12 +450,12 @@ upgradeEnabled4 := MainUI.Add("CheckBox", "x1070 y255 w15 h15", "")
 upgradeEnabled5 := MainUI.Add("CheckBox", "x1070 y305 w15 h15", "")
 upgradeEnabled6 := MainUI.Add("CheckBox", "x1070 y355 w15 h15", "")
 
-upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1210 y105 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
-upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1210 y155 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
-upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1210 y205 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
-upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1210 y255 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
-upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1210 y305 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
-upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1210 y355 w15 h15 " (UpgradeLimits ? "" : "Hidden"), "")
+upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1210 y105 w15 h15", "")
+upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1210 y155 w15 h15", "")
+upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1210 y205 w15 h15", "")
+upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1210 y255 w15 h15", "")
+upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1210 y305 w15 h15", "")
+upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1210 y355 w15 h15", "")
 
 MainUI.SetFont("s8 c" uiTheme[6])
 
@@ -434,12 +504,12 @@ UpgradePriority6 := MainUI.Add("DropDownList", "x1020 y355 w35 h180 Choose6 +Cen
 UpgradePriority6.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 6, UpgradePriority6.Text))
 
 ; Upgrade Limit
-UpgradeLimit1 := MainUI.Add("DropDownList", "x1310 y105 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
-UpgradeLimit2 := MainUI.Add("DropDownList", "x1310 y155 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
-UpgradeLimit3 := MainUI.Add("DropDownList", "x1310 y205 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
-UpgradeLimit4 := MainUI.Add("DropDownList", "x1310 y255 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
-UpgradeLimit5 := MainUI.Add("DropDownList", "x1310 y305 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
-UpgradeLimit6 := MainUI.Add("DropDownList", "x1310 y355 w45 h180 Choose1 +Center " (UpgradeLimits ? "" : "Hidden"), ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit1 := MainUI.Add("DropDownList", "x1310 y105 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit2 := MainUI.Add("DropDownList", "x1310 y155 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit3 := MainUI.Add("DropDownList", "x1310 y205 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit4 := MainUI.Add("DropDownList", "x1310 y255 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit5 := MainUI.Add("DropDownList", "x1310 y305 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
+UpgradeLimit6 := MainUI.Add("DropDownList", "x1310 y355 w45 h180 Choose1 +Center", ["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14"])
 
 LoadUnitSettingsByMode()
 MainUI.Show("w1366 h700")
@@ -580,7 +650,6 @@ checkSizeTimer() {
 
 StartCoordCapture() {
     global savedCoords
-    global waitingForClick
     global placement1, placement2, placement3, placement4, placement5, placement6
 
     presetIndex := PlacementProfiles.Value
@@ -598,7 +667,7 @@ StartCoordCapture() {
         WinActivate(rblxID)
     }
 
-    waitingForClick := true
+    AddWaitingFor("Custom Coords")
     AddToLog("Press LShift to stop coordinate capture")
     SetTimer UpdateTooltip, 50  ; Update tooltip position every 50ms
 }
@@ -616,49 +685,99 @@ UpdateTooltip() {
 
 ~LShift::
 {
-    global waitingForClick
+    global waitingForClick, walkStartTime
     if waitingForClick {
         AddToLog("Stopping coordinate capture")
-        waitingForClick := false
+        if (WaitingFor("Walk")) {
+            walkStartTime := 0
+        }
+        RemoveWaiting()
     }
 }
 
 ~LButton::
 {
     global waitingForClick, savedCoords
+    global savedWalkCoords, walkStartTime
+    global nukeCoords
     global placement1, placement2, placement3, placement4, placement5, placement6
 
     if !scriptInitialized
         return
 
     if waitingForClick {
-        presetIndex := PlacementProfiles.Value
+        if (WaitingFor("Walk")) {
+            presetIndex := PlacementProfiles.Value
 
-        if (presetIndex < 1)
-        {
-            if (debugMessages) {
-                AddToLog("⚠️ Invalid preset index: " presetIndex)
+            if (presetIndex < 1)
+            {
+                if (debugMessages) {
+                    AddToLog("⚠️ Invalid preset index: " presetIndex)
+                }
+                return
             }
-            return
+
+            MouseGetPos(&x, &y)
+            SetTimer(UpdateTooltip, 0)
+
+            ; === Delay handling ===
+            if (!walkStartTime) {
+                walkStartTime := A_TickCount
+                delay := 0
+            } else {
+                delay := A_TickCount - walkStartTime
+                walkStartTime := A_TickCount ; Reset for next click
+            }
+
+            coords := GetOrInitWalkCoords(presetIndex)
+            coords.Push({x: x, y: y, delay: delay}) ; Store delay with coords
+            savedWalkCoords[presetIndex] := coords
+
+            ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
+            delaySeconds := Round(delay / 1000, 1)
+            AddToLog("📌 [Preset: " PlacementProfiles.Text "] Saved → X: " x ", Y: " y ", Delay: " delaySeconds "s | Set: " coords.Length)
+            SetTimer(ClearToolTip, -1200)
+            ; Test Walk
+            FixClick(x, y, "Right")
         }
+        else if (WaitingFor("Nuke")) {
+            MouseGetPos(&x, &y)
+            SetTimer(UpdateTooltip, 0)
+            nukeCoords := {x: x, y: y}
+            ToolTip("Nuke Coords Set", x + 10, y + 10)
+            AddToLog("📌 Nuke Ability Coordinates Saved → X: " x ", Y: " y)
+            SetTimer(ClearToolTip, -1200)
+            RemoveWaiting()
+        }
+        else {
+            presetIndex := PlacementProfiles.Value
 
-        totalEnabled := placement1.Value + placement2.Value + placement3.Value + placement4.Value + placement5.Value + placement6.Value
+            if (presetIndex < 1)
+            {
+                if (debugMessages) {
+                    AddToLog("⚠️ Invalid preset index: " presetIndex)
+                }
+                return
+            }
 
-        MouseGetPos(&x, &y)
-        SetTimer(UpdateTooltip, 0)
+            totalEnabled := placement1.Value + placement2.Value + placement3.Value + placement4.Value + placement5.Value + placement6.Value
 
-        ; Use your function here
-        coords := GetOrInitPresetCoords(presetIndex)
-        coords.Push({x: x, y: y})
-        savedCoords[presetIndex] := coords  ; Not strictly needed, but OK for clarity
+            MouseGetPos(&x, &y)
+            SetTimer(UpdateTooltip, 0)
 
-        ToolTip("Coords Set: " coords.Length " / Total Enabled: " totalEnabled, x + 10, y + 10)
-        AddToLog("📌 [Preset: " PlacementProfiles.Text "] Saved → X: " x ", Y: " y " | Set: " coords.Length " / Enabled: " totalEnabled)
-        SetTimer(ClearToolTip, -1200)
+            ; Use your function here
+            coords := GetOrInitPresetCoords(presetIndex)
+            coords.Push({x: x, y: y})
+            savedCoords[presetIndex] := coords  ; Not strictly needed, but OK for clarity
 
-        if coords.Length >= totalEnabled {
-            AddToLog("✅ [Preset " PlacementProfiles.Text "] All coordinates set, stopping capture.")
-            waitingForClick := false
+            ToolTip("Coords Set: " coords.Length " / Total Enabled: " totalEnabled, x + 10, y + 10)
+            AddToLog("📌 [Preset: " PlacementProfiles.Text "] Saved → X: " x ", Y: " y " | Set: " coords.Length " / Enabled: " totalEnabled)
+            SetTimer(ClearToolTip, -1200)
+
+            if coords.Length >= totalEnabled {
+                AddToLog("✅ [Preset " PlacementProfiles.Text "] All coordinates set, stopping capture.")
+                RemoveWaiting()
+            }
         }
     }
 }
@@ -724,12 +843,12 @@ InitControlGroups() {
         PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
         ZoomSettingsBorder, ZoomText, ZoomBox,
-        MiscSettingsBorder, 
+        MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton, CustomPlacementText, CustomPlacementImportButton, CustomPlacementExportButton
     ]
 
     ControlGroups["Upgrade"] := [
-        UpgradeBorder, UnitManagerUpgradeSystem, ;PriorityUpgrade,
-        AutoUpgradeBorder, UnitManagerAutoUpgrade
+        UpgradeBorder, UnitManagerUpgradeSystem, PriorityUpgrade,
+        AutoUpgradeBorder, AutoUpgrade
     ]
 
     ControlGroups["Mode"] := [
@@ -739,7 +858,9 @@ InitControlGroups() {
     ]
 
     ControlGroups["Unit"] := [
-        UnitBorder ; , SJWNuke, SJWSlotText, SJWSlot
+        UnitBorder,
+        NukeBorder, NukeUnitSlotEnabled, NukeUnitSlot, NukeCoordinatesText, NukeCoordinatesButton, NukeAtSpecificWave, NukeWave, NukeDelayText, NukeDelay,
+        MinionSlot1, MinionSlot2, MinionSlot3, MinionSlot4, MinionSlot5, MinionSlot6
     ]
 }
 
@@ -783,16 +904,11 @@ SetUnitCardVisibility(visible) {
         }
     }
 
-    for name in ["upgradeLimitEnabled", "upgradeLimit"] {
+    for name in ["Placement", "enabled", "upgradeEnabled", "Priority"] {
         loop 6 {
             ctrl := %name%%A_Index%
-            if IsObject(ctrl) {
-                if (name = "upgradeLimit" && !UpgradeLimits || name = "upgradeLimitEnabled" && !UpgradeLimits) {
-                    ctrl.Visible := false
-                    continue
-                }
+            if IsObject(ctrl)
                 ctrl.Visible := visible
-            }
         }
     }
 }
@@ -826,9 +942,16 @@ ValidateEditBox(ctrl) {
 
     ; Convert to integer
     num := Integer(val)
+
     if (num < 0)
         ctrl.Value := "0"
 
-    if (num > 20)
-        ctrl.Value := "20"  ; Limit to a maximum of 20
+    if (ctrl == ZoomBox) {
+        if (num > 20)
+            ctrl.Value := "20"  ; Limit to a maximum of 20
+    }
+}
+
+OpenCoordinateEditor() {
+    
 }

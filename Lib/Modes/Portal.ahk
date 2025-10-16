@@ -12,13 +12,12 @@ HandlePortalEnd(isVictory := true) {
             StartNextPortal()
         } else {
             if (FindText(&X, &Y, 238, 400, 566, 445, 0, 0, Retry)) {
-                ClickReplayPixel()
+                ClickReplay()
                 AddToLog(PortalDropdown.Text " Portal failed, retrying...")
             } else {
                 AddToLog(PortalDropdown.Text " Portal failed, starting next portal...")
                 Sleep(1000)
                 StartNextPortal()
-                ; Add sleep if needed
             }
         }
     } else {
@@ -71,7 +70,7 @@ IsValidPortal() {
 
 DetectMapForPortal() {
     mapPatterns := Map(
-        "Summer Laguna", SummerLaguna
+        "Summer Laguna", "SummerLaguna"
     )
 
     for mapName, pattern in mapPatterns {
@@ -153,4 +152,34 @@ GetPortalCoords(portal) {
         5, {x: 490, y: 235},
     )
     return coordMap.Has(portal) ? coordMap[portal] : coordMap[0]
+}
+
+CheckForPortalSelection() {
+    if (ok := FindText(&X, &Y, 356, 436, 447, 455, 0, 0, "ChoosePortal") or (ok := FindText(&X, &Y, 356, 436, 447, 455,
+        0.10, 0.10, "ChoosePortalHighlighted"))) {
+
+        if (AutoAbilityBox.Value) {
+            CloseMenu("Ability Manager")
+            SetTimer(CheckAutoAbility, 0)
+        }
+
+        CloseMenu("Unit Manager")
+        FixClick(399, 299)
+        Sleep(500)
+        FixClick(402, 414)
+
+        ; Wait before checking for another portal
+        Sleep(1500)
+
+        if (ok := FindText(&X, &Y, 356, 436, 447, 455, 0, 0, "ChoosePortal") or (ok := FindText(&X, &Y, 356, 436, 447,
+            455, 0.10, 0.10, "ChoosePortalHighlighted"))) {
+            FixClick(399, 299)
+            Sleep(500)
+            FixClick(402, 414)
+        }
+
+        return true
+    }
+
+    return false
 }

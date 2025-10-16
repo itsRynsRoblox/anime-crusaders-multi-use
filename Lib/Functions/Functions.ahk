@@ -14,7 +14,7 @@ global confirmClicked := false
 
  ;Login Text
  setupOutputFile() {
-     content := "`n==" GameTitle "" version "==`n  Start Time: [" currentTime "]`n"
+     content := "`n==" GameTitle "" version "==`nStart Time: [" currentTime "]`n"
      FileAppend(content, currentOutputFile)
  }
  
@@ -33,7 +33,7 @@ getCurrentTime() {
 
 OnModeChange(*) {
     ; Hide all
-    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown, RaidActDropdown, DungeonDropdown, PortalDropdown, PortalRoleDropdown]
+    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown]
         ctrl.Visible := false
 
     ; Show based on selection
@@ -45,8 +45,6 @@ OnModeChange(*) {
             LegendDropDown.Visible := true
         case "Raid":
             RaidDropdown.Visible := RaidActDropdown.Visible := true
-        case "Dungeon":
-            DungeonDropdown.Visible := true
         case "Portal":
             PortalDropdown.Visible := PortalRoleDropdown.Visible := true
         case "Custom":
@@ -126,7 +124,6 @@ OnConfirmClick(*) {
     LegendDropDown.Visible := false
     RaidDropdown.Visible := false
     RaidActDropdown.Visible := false
-    DungeonDropdown.Visible := false
     PortalDropdown.Visible := false
     PortalRoleDropdown.Visible := false
     ConfirmButton.Visible := false
@@ -321,8 +318,9 @@ RotateCameraAngle() {
 }
 
 CloseLobbyPopups() {
-    Send("{Tab}") ; Close any open popups
-    FixClick(623, 147) ; Update UI
+    FixClick(572, 103) ; close leaderboard
+    Sleep(500)
+    FixClick(655, 185) ; Update UI
     Sleep(500)
     FixClick(400,340)
     Sleep(500)
@@ -332,37 +330,31 @@ CloseLobbyPopups() {
 
 ClickUnit(slot) {
     global totalUnits
-    baseX := 585
-    baseY := 175
-    colSpacing := 80
-    rowSpacing := 115
-    maxCols := 3
+    baseX := 595
+    baseY := 165
+    colSpacing := 125
+    rowSpacing := 88
+    maxCols := 2
 
     totalCount := 0
     for _, count in totalUnits {
         totalCount += count
     }
 
-    fullRows := Floor(totalCount / maxCols)
-    lastRowUnits := Mod(totalCount, maxCols)
-
     index := slot - 1
     row := Floor(index / maxCols)
     colInRow := Mod(index, maxCols)
-    isLastRow := (row = fullRows)
 
-    if (lastRowUnits != 0 && isLastRow) {
-        rowStartX := baseX + Floor((maxCols - lastRowUnits) * colSpacing / 2)
-        clickX := rowStartX + (colInRow * colSpacing)
-    } else {
-        clickX := baseX + (colInRow * colSpacing)
-    }
-
+    clickX := baseX + (colInRow * colSpacing)
     clickY := baseY + (row * rowSpacing)
+
+    OpenMenu("Unit Manager")
+    Sleep(500)
 
     FixClick(clickX, clickY)
     Sleep(150)
 }
+
 
 GetAutoAbilityTimer() {
     seconds := AutoAbilityTimer.Value
@@ -375,7 +367,7 @@ ToggleMenu(name := "") {
 
     key := ""
     if (name = "Unit Manager")
-        key := "C"
+        key := "F"
     else if (name = "Ability Manager")
         key := "Z"
 
@@ -420,7 +412,7 @@ OpenMenu(name := "") {
 
     key := ""
     if (name = "Unit Manager")
-        key := "F"
+        key := "C"
     else if (name = "Ability Manager")
         key := "Z"
 
@@ -439,16 +431,23 @@ CheckAutoAbility() {
     global totalUnits
 
     AddToLog("Checking for unactive abilities...")
-    OpenMenu("Ability Manager")
+    if (!NukeUnitSlotEnabled.Value) {
+        OpenMenu("Ability Manager")
+    }
     Sleep (1000)
 
-    if (CheckForGameOver()) {
+    if (isMenuOpen("End Screen")) {
         AddToLog("Stopping auto ability check because the game ended")
+        CloseMenu("Ability Manager")
         SetTimer(CheckAutoAbility, 0)  ; Stop the timer
         return
     }
 
-    HandleAutoAbilityUnitManager()
+    if (NukeUnitSlotEnabled.Value) {
+        CheckUnitAbilities()
+    } else {
+        HandleAutoAbilityUnitManager()
+    }
     Sleep (1000)
     CloseMenu("Ability Manager")
     AddToLog("Finished looking for abilities")
@@ -456,7 +455,7 @@ CheckAutoAbility() {
 
 CleanString(str) {
     ; Remove emojis and any adjacent spaces (handles gaps)
-    return RegExReplace(str, "\s*[^\x00-\x7F]+\s*", " ")
+    return RegExReplace(str, "\s*[^\x00-\x7F]+\s*", "")
 }
 
 SortArrayOfObjects(arr, key, ascending := true) {
@@ -490,4 +489,175 @@ OnPriorityChange(type, priorityNumber, newPriorityNumber) {
     } else {
         AddToLog("Upgrade priority changed: Slot " priorityNumber " → " newPriorityNumber)
     }
+}
+
+CheckForCardSelection() {
+    if GetPixel(0x4A4747, 436, 383, 2, 2, 3) {
+        SelectCardsByMode()
+        return true
+    }
+    return false
+}
+
+SearchForImage(X1, Y1, X2, Y2, image) {
+    if !WinExist(rblxID) {
+        AddToLog("Roblox window not found.")
+        return false
+    }
+
+    WinActivate(rblxID)
+
+    return ImageSearch(&FoundX, &FoundY, X1, Y1, X2, Y2, image)
+}
+
+OpenCardConfig() {
+    if (ModeDropdown.Text = "Halloween Event") {
+        SwitchCardMode("Halloween")
+    }
+    else if (ModeDropdown.Text = "Boss Rush") {
+        SwitchCardMode("BossRush")
+    }
+    else {
+        AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
+    }
+}
+
+AddWaitingFor(action) {
+    global waitingState, waitingForClick
+    waitingState := action
+    waitingForClick := true
+}
+
+WaitingFor(action) {
+    global waitingState
+    if (waitingState = action) {
+        return true
+    }
+    return false
+}
+
+RemoveWaiting() {
+    global waitingState, waitingForClick
+    waitingForClick := false
+    waitingState := ""
+}
+
+HasMinionInSlot(slot) {
+    if (slot = 1)
+        return !!MinionSlot1.Value
+    else if (slot = 2)
+        return !!MinionSlot2.Value
+    else if (slot = 3)
+        return !!MinionSlot3.Value
+    else if (slot = 4)
+        return !!MinionSlot4.Value
+    else if (slot = 5)
+        return !!MinionSlot5.Value
+    else if (slot = 6)
+        return !!MinionSlot6.Value
+    return false
+}
+
+CheckUnitAbilities() {
+    global successfulCoordinates, maxedCoordinates
+
+    AddToLog("Checking auto abilities of placed units...")
+
+    for coord in successfulCoordinates {
+
+        slot := coord.slot
+
+        if (isMenuOpen("End Screen")) {
+            AddToLog("Stopping auto ability check because the game ended")
+            return MonitorStage()
+        }
+
+        if (CheckForCardSelection()) {
+            SelectCardsByMode()
+        }
+
+        if (NukeUnitSlotEnabled.Value && slot = NukeUnitSlot.Value) {
+            AddToLog("Skipping nuke unit in slot " slot)
+            continue
+        }
+
+        FixClick(coord.x, coord.y)
+        Sleep(500)
+
+        HandleAutoAbility()
+    }
+}
+
+; Global variable to track current coordinate mode (default is Screen)
+global currentCoordMode := "Screen"
+global oldCoordMode := ""
+
+; Wrapper function to set coord mode and save state
+SetCoordModeTracked(mode) {
+    global currentCoordMode, oldCoordMode
+    oldCoordMode := currentCoordMode
+    CoordMode("Mouse", mode)
+    currentCoordMode := mode
+}
+
+isInLobby() {
+    return FindText(&X, &Y, 15, 585, 47, 620, 0.20, 0.20, LobbySettings)
+}
+
+isInGame() {
+    return FindText(&X, &Y, 59, 585, 95, 621, 0.20, 0.20, IngameQuests)
+}
+
+StartContent(mapName, actName, getMapFunc, getActFunc, mapScrollMousePos, actScrollMousePos) {
+    ;AddToLog("Selecting : " mapName " - " actName)
+
+    ; Get the map
+    Map := getMapFunc.Call(mapName)
+    if !Map {
+        AddToLog("Error: Map '" mapName "' not found.")
+        return false
+    }
+
+    ; Scroll map if needed
+    if Map.scrolls > 0 {
+        AddToLog(Format("Scrolling down {} times for {}", Map.scrolls, mapName))
+        MouseMove(mapScrollMousePos.x, mapScrollMousePos.y)
+        Scroll(Map.scrolls, 'WheelDown', 250)
+    }
+
+    Sleep(1000)
+    FixClick(Map.x, Map.y)
+    Sleep(1000)
+
+    ; Get the act
+    Act := getActFunc.Call(actName)
+    if !Act {
+        AddToLog("ERROR: Act '" actName "' not found.")
+        return false
+    }
+
+    ; Scroll act if needed
+    if Act.scrolls > 0 {
+        AddToLog(Format("Scrolling down {} times for {}", Act.scrolls, actName))
+        MouseMove(actScrollMousePos.x, actScrollMousePos.y)
+        Scroll(Act.scrolls, 'WheelDown', 250)
+    }
+
+    Sleep(1000)
+    FixClick(Act.x, Act.y)
+    Sleep(1000)
+
+    return true
+}
+
+TeleportToSpawn() {
+    FixClick(35, 600) ; open settings
+    Sleep (250)
+    MouseMove(545, 195)
+    Sleep (100)
+    Scroll(5, 'WheelDown', 250)
+    Sleep (100)
+    FixClick(535, 365)
+    Sleep (100)
+    FixClick(35, 600) ; close settings
 }

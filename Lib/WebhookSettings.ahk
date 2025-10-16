@@ -7,7 +7,6 @@ global currentStreak := 0
 global lastResult := "none"
 global Wins := 0
 global loss := 0
-global StartTime := A_TickCount 
 global stageStartTime := A_TickCount
 global macroStartTime := A_TickCount
 global currentMap := ""
@@ -248,9 +247,18 @@ sendDCWebhook() {
     myEmbed.setColor(0xB00A0A)
 
     try {
-        if (WebhookURL.Value != "") {
-            global Webhook := WebHookBuilder(WebhookURL.Value)
+
+        ; Check if WebhookURL is initialized and valid
+        if (!IsSet(WebhookURL) || WebhookURL = "" || !(WebhookURL ~= "i)^https?:\/\/discord\.com\/api\/webhooks\/(\d{18,19})\/[\w-]{68}$")) {
+            AddToLog("Webhook URL is missing or invalid - skipping webhook")
+            return
         }
+
+        ; Build webhook object if not already initialized
+        if !IsObject(webhook) {
+            webhook := WebHookBuilder(WebhookURL)
+        }
+
     } catch {
         AddToLog("Webhook URL is not set or invalid.")
         return

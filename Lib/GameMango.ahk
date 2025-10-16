@@ -1,8 +1,8 @@
 #Requires AutoHotkey v2.0
-#Include Image.ahk
+#Include %A_ScriptDir%/lib/Tools/Image.ahk
 global macroStartTime := A_TickCount
 global stageStartTime := A_TickCount
-
+global cachedCardPriorities := Map()
 LoadKeybindSettings()  ; Load saved keybinds
 Hotkey(F1Key, (*) => moveRobloxWindow())
 Hotkey(F2Key, (*) => StartMacro())
@@ -22,7 +22,7 @@ F7:: {
 }
 
 F8:: {
-    Run (A_ScriptDir "\Lib\FindText.ahk")
+    Run (A_ScriptDir "\Lib\Tools\FindText.ahk")
 }
 
 StartMacro(*) {
@@ -30,7 +30,7 @@ StartMacro(*) {
         return
     }
     if (StartsInLobby(ModeDropdown.Text)) {
-        if (ok := CheckForLobby()) {
+        if (isInLobby()) {
             StartSelectedMode()
         } else {
             AddToLog("You need to be in the lobby to start " ModeDropdown.Text " mode")
@@ -51,239 +51,6 @@ TogglePause(*) {
     }
 }
 
-StartPlacingUnits(untilSuccessful := true) {
-    global successfulCoordinates, maxedCoordinates
-    successfulCoordinates := []
-    maxedCoordinates := []
-    placedCounts := Map()  
-
-    ; --- Priority Setup ---
-    global slotPriority := Map(1, 2, 2, 1, 3, 3)  ; Customize as needed
-    usePriorityPlacement := true  ; <- Toggle to enable/disable priority mode
-
-    ; --- Check if any slot is enabled ---
-    anyEnabled := false
-    for slotNum in [1, 2, 3, 4, 5, 6] {
-        enabled := "enabled" slotNum
-        enabled := %enabled%
-        enabled := enabled.Value
-        if (enabled) {
-            anyEnabled := true
-            break
-        }
-    }
-
-    if (!anyEnabled) {
-        AddToLog("No units enabled - skipping to monitoring")
-        return MonitorStage()
-    }
-
-    ; --- Placement Order Logic ---
-    if (PlacementSelection.Text = "By Priority") {
-        global slotPriorityList := []
-
-        ; Build list of enabled slots and their priorities
-        for slotNum in [1, 2, 3, 4, 5, 6] {
-            priorityVar := "priority" slotNum
-            enabledVar := "enabled" slotNum
-
-            priority := %priorityVar%
-            enabled := %enabledVar%
-
-            if (enabled.Value) {
-                slotPriorityList.Push({slot: slotNum, priority: priority.Value})
-            }
-        }
-
-        ; Manually sort the list by priority (ascending)
-        Loop slotPriorityList.Length {
-            for i, item in slotPriorityList {
-                if (i = slotPriorityList.Length)
-                    continue
-                if (slotPriorityList[i].priority > slotPriorityList[i + 1].priority) {
-                    temp := slotPriorityList[i]
-                    slotPriorityList[i] := slotPriorityList[i + 1]
-                    slotPriorityList[i + 1] := temp
-                }
-            }
-        }
-
-        ; Extract sorted slot numbers into placementOrder
-        placementOrder := []
-
-        for item in slotPriorityList {
-            placementOrder.Push(item.slot)
-        }
-    } else {
-        placementOrder := [1, 2, 3, 4, 5, 6]
-    }
-
-    placementStrategies := Map(
-        "Map Specific", UseRecommendedPoints,
-        "Custom", UseCustomPoints,
-        "Circle", GenerateCirclePoints,
-        "Grid", GenerateGridPoints,
-        "Spiral", GenerateSpiralPoints,
-        "Up and Down", GenerateUpandDownPoints
-    )
-
-    ; Get the selected text
-    selection := PlacementPatternDropdown.Text
-
-    ; Call mapped function if it exists, else use fallback
-    if placementStrategies.Has(selection)
-        placementPoints := placementStrategies[selection].Call()
-    else
-        placementPoints := GenerateRandomPoints()
-
-    ; Use user-defined placement order to iterate through slots
-    for slotNum in placementOrder {
-        enabled := "enabled" slotNum
-        enabled := %enabled%
-        enabled := enabled.Value
-
-        ; Get number of placements wanted for this slot
-        placements := "placement" slotNum
-        placements := %placements%
-        placements := Integer(placements.Text)
-
-        ; Initialize count if not exists
-        if !placedCounts.Has(slotNum)
-            placedCounts[slotNum] := 0
-
-        ; If enabled, place all units for this slot
-        if (enabled && placements > 0) {
-            HandleStartButton() ; Check for start button if placement failed
-            AddToLog("Placing Unit " slotNum " (0/" placements ")")
-            
-            for point in placementPoints {
-                ; Skip if this coordinate was already used successfully
-                alreadyUsed := false
-                for coord in successfulCoordinates {
-                    if (coord.x = point.x && coord.y = point.y) {
-                        alreadyUsed := true
-                        break
-                    }
-                }
-                for coord in maxedCoordinates {
-                    if (coord.x = point.x && coord.y = point.y) {
-                        alreadyUsed := true
-                        break
-                    }
-                }
-                if (alreadyUsed)
-                    continue
-
-                ; If untilSuccessful is false, try once and move on
-                if (!untilSuccessful) {
-                    if (placedCounts[slotNum] < placements) {
-                        if PlaceUnit(point.x, point.y, slotNum) {
-                            successfulCoordinates.Push({x: point.x, y: point.y, slot: slotNum})
-                            placedCounts[slotNum] += 1
-                            AddToLog("Placed Unit " slotNum " (" placedCounts[slotNum] "/" placements ")")
-                            HandleAutoAbility()
-                            FixClick(332, 196)
-                            ;AttemptUpgrade()
-                            UpgradePlacedUnits()
-                        } else {
-                            PostPlacementChecks()
-                        }
-                    }
-                }
-                ; If untilSuccessful is true, keep trying the same point until it works
-                else {
-                    while (placedCounts[slotNum] < placements) {
-                        if PlaceUnit(point.x, point.y, slotNum) {
-                            placementIndex := successfulCoordinates.Length + 1
-
-                            successfulCoordinates.Push({
-                                x: point.x,
-                                y: point.y,
-                                slot: slotNum,
-                                upgradePriority: GetUpgradePriority(slotNum),
-                                placementIndex: placementIndex
-                            })
-                            placedCounts[slotNum] += 1
-                            AddToLog("Placed Unit " slotNum " (" placedCounts[slotNum] "/" placements ")")
-                            HandleAutoAbility()
-                            FixClick(332, 196)
-                            ;AttemptUpgrade()
-                            UpgradePlacedUnits()
-                            break ; Move to the next placement spot
-                        }
-                        UpgradePlacedUnits()
-                        PostPlacementChecks()
-                        Sleep(500) ; Prevents spamming clicks too fast
-                    }
-                }
-
-                if CheckForGameOver()
-                    return MonitorStage()
-            }
-        }
-    }
-
-    AddToLog("All units placed to requested amounts")
-    UpgradeUnits()
-}
-
-PlaceDungeonUnits() {
-    placementPoints := PlacementPatternDropdown.Text = "Custom" ? UseCustomPoints() : GenerateDungeonPoints()
-
-    ; Collect enabled slots
-    enabledSlots := []
-    for slotNum in [1, 2, 3, 4, 5, 6] {
-        enabled := "enabled" slotNum
-        enabled := %enabled%
-        enabled := enabled.Value
-        if (enabled) {
-            enabledSlots.Push(slotNum)
-        }
-    }
-
-    if (enabledSlots.Length = 0) {
-        if (debugMessages) {
-            AddToLog("No units enabled - exiting")
-        }
-        return
-    }
-
-    ; Loop through placement points and assign them to enabled slots in order
-    pointIndex := 1
-    while true {
-        for slotIndex, slotNum in enabledSlots {
-            point := placementPoints[pointIndex]
-            if PlaceUnit(point.x, point.y, slotNum) {
-                SendInput("{T}")
-                HandleAutoAbility()
-                FixClick(700, 560) ; Move Click
-            }
-            Sleep(500) ; Prevent spamming
-
-            ; Move to the next placement point, loop back if at the end
-            pointIndex++
-            if (pointIndex > placementPoints.Length) {
-                pointIndex := 1
-            }
-        }
-    }
-}
-
-CheckForGameOver() {
-    if (CheckForVictory() || CheckForDefeat()) {
-        return true
-    }
-}
-
-CheckForVictory() {
-    return FindText(&X, &Y, 69, 129, 232, 177, 0.20, 0.20, Victory)
-}
-
-CheckForDefeat() {
-    return FindText(&X, &Y, 69, 129, 232, 177, 0.20, 0.20, Defeat)
-}
-
-
 ChallengeMode() {    
     AddToLog("Moving to Challenge mode")
     ChallengeMovement()
@@ -292,28 +59,6 @@ ChallengeMode() {
         ChallengeMovement()
     }
 
-    RestartStage()
-}
-
-RaidMode() {
-
-    ; Get current map and act
-    currentRaidMap := RaidDropdown.Text
-    currentRaidAct := RaidActDropdown.Text
-
-    ; Execute the movement pattern
-    AddToLog("Moving to position for " currentRaidMap)
-    RaidMovement()
-
-    ; Start stage
-    while !(ok := FindText(&X, &Y, 351, 435, 454, 455, 0, 0, RaidSelectButton)) {
-        RaidMovement()
-    }
-
-    AddToLog("Starting " currentRaidMap " - " currentRaidAct)
-    StartRaid(currentRaidMap, currentRaidAct)
-    ; Handle play mode selection
-    PlayHere("Raid")
     RestartStage()
 }
 
@@ -326,12 +71,12 @@ HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
         Case "Story":
             HandleStoryEnd()
-        Case "Raid":
-            HandleRaidEnd()
         Case "Portal":
             HandlePortalEnd(isVictory)
+        case "Custom":
+            HandleCustomEnd()    
         Default:
-            HandleCustomEnd()
+            HandleDefaultEnd()
     }
 }
 
@@ -340,40 +85,33 @@ HandleStoryEnd() {
     AddToLog("Handling Story mode end")
     if (NextLevelBox.Value && lastResult = "win") {
         AddToLog("Next level")
-        ClickNextLevelPixel()
+        ClickUntilGone(0, 0, 80, 85, 739, 224, LobbyIcon, +260, -35)
     } else {
         AddToLog("Replay level")
-        ClickReplayPixel()
+        ClickReplay()
     }
     return RestartStage()
-}
-
-HandleRaidEnd() {
-    AddToLog("Handling Raid end")
-    if (ReturnLobbyBox.Value) {
-        AddToLog("Return to lobby")
-        ClickReturnToLobbyPixel()
-        return CheckLobby()
-    } else {
-        AddToLog("Replay raid")
-        ClickReplayPixel()
-        return RestartStage()
-    }
 }
 
 HandleCustomEnd() {
     global lastResult
     if (NextLevelBox.Value) {
         if (lastResult = "win") {
-            AddToLog("[Info] Starting next level")
-            ClickNextLevelPixel()
+            AddToLog("[Game Over] Starting next level")
+            ClickUntilGone(0, 0, 80, 85, 739, 224, LobbyIcon, +260, -35)
             return RestartStage()
         }
     } else {
-        AddToLog("[Info] Replaying stage")
-        ClickReplayPixel()
+        AddToLog("[Game Over] Replaying stage")
+        ClickReplay()
         return RestartStage()
     }
+}
+
+HandleDefaultEnd() {
+    AddToLog("[Game Over] Restarting stage")
+    ClickReplay()
+    return RestartStage()
 }
 
 MonitorStage() {
@@ -393,44 +131,62 @@ MonitorStage() {
             lastClickTime := A_TickCount
         }
 
+        ; --- Check for progression or special cases ---
+        if (HasCards(ModeDropdown.Text)) {
+            CheckForCardSelection()
+        }
+
+        CheckForPortalSelection()
+
+        ; --- Check for wave 50 ---
+        HandleNuke()
+
         ; --- Fallback if disconnected ---
         Reconnect()
 
-        ; --- Wait for Game Over ---
-        if (!CheckForVictory() && !CheckForDefeat()) {
+        ; --- Wait for XP/Results screen ---
+        if (!isMenuOpen("End Screen"))
             continue
-        }
 
         ; --- Handle Auto Ability ---
         if (AutoAbilityBox.Value) {
             SetTimer(CheckAutoAbility, 0)
         }
 
+        if (NukeUnitSlotEnabled.Value) {
+            ClearNuke()
+        }
+
         ; --- Close Menus ---
         CloseMenu("Unit Manager")
+        Sleep(500)
+        CloseMenu("Ability Manager")
 
         ; --- Endgame Handling ---
         AddToLog("Checking win/loss status")
         stageEndTime := A_TickCount
         stageLength := FormatStageTime(stageEndTime - stageStartTime)
-        if (CheckForVictory() || (isDefeat := CheckForDefeat())) {
-            result := isDefeat ? true : false
-            AddToLog((result = 1 ? "Defeat" : "Victory") " detected - Stage Length: " stageLength)
+        result := true
 
-            if (WebhookEnabled.Value) {
-                try {
-                    SendWebhookWithTime(result, stageLength)
-                } catch {
-                    AddToLog("Error: Unable to send webhook.")
-                }
-            } else {
-                UpdateStreak(result)
-            }
-
-            HandleEndScreen(result)
-            Reconnect()
-            return
+        if (GetPixel(0xFF0005, 156, 151, 2, 2, 10)) {
+            result := false
         }
+
+        AddToLog((result ? "Victory" : "Defeat") " detected - Stage Length: " stageLength)
+
+        if (WebhookEnabled.Value) {
+            try {
+                SendWebhookWithTime(result, stageLength)
+            } catch {
+                AddToLog("Error: Unable to send webhook.")
+            }
+        } else {
+            UpdateStreak(result)
+        }
+
+        HandleEndScreen(result)
+        Reconnect()
+        return
     }
 }
 
@@ -439,38 +195,10 @@ ClickThroughDrops() {
     Loop 10 {
         FixClick(400, 495)
         Sleep(500)
-        if CheckForGameOver() {
+        if isMenuOpen("End Screen") {
             return
         }
     }
-}
-
-CheckForPortalSelection() {
-    if (ok := FindText(&X, &Y, 356, 436, 447, 455, 0, 0, ChoosePortal) or (ok := FindText(&X, &Y, 356, 436, 447, 455, 0.10, 0.10, ChoosePortalHighlighted))) {
-        
-        if (AutoAbilityBox.Value) {
-            CloseMenu("Ability Manager")
-            SetTimer(CheckAutoAbility, 0)
-        }
-
-        CloseMenu("Unit Manager")
-        FixClick(399, 299)
-        Sleep(500)
-        FixClick(402, 414)
-
-        ; Wait before checking for another portal
-        Sleep(1500)
-
-        if (ok := FindText(&X, &Y, 356, 436, 447, 455, 0, 0, ChoosePortal) or (ok := FindText(&X, &Y, 356, 436, 447, 455, 0.10, 0.10, ChoosePortalHighlighted))) {
-            FixClick(399, 299)
-            Sleep(500)
-            FixClick(402, 414)
-        }
-        
-        return true
-    }
-
-    return false
 }
 
 ChallengeMovement() {
@@ -482,115 +210,20 @@ ChallengeMovement() {
     SendInput ("{a up}")
 }
 
-RaidMovement() {
-    Teleport("Raid")
-    Sleep (1000)
-    spawnAngle := DetectAngle("Raid")
-    WalkToRaidRoom(spawnAngle)
-    Sleep (1000)
-    
-}
-
-StartContent(mapName, actName, getMapFunc, getActFunc, mapScrollMousePos, actScrollMousePos) {
-    ;AddToLog("Selecting : " mapName " - " actName)
-
-    ; Get the map
-    Map := getMapFunc.Call(mapName)
-    if !Map {
-        AddToLog("Error: Map '" mapName "' not found.")
-        return false
-    }
-
-    ; Scroll map if needed
-    if Map.scrolls > 0 {
-        AddToLog(Format("Scrolling down {} times for {}", Map.scrolls, mapName))
-        MouseMove(mapScrollMousePos.x, mapScrollMousePos.y)
-        Scroll(Map.scrolls, 'WheelDown', 250)
-    }
-
-    Sleep(1000)
-    FixClick(Map.x, Map.y)
-    Sleep(1000)
-
-    ; Get the act
-    Act := getActFunc.Call(actName)
-    if !Act {
-        AddToLog("ERROR: Act '" actName "' not found.")
-        return false
-    }
-
-    ; Scroll act if needed
-    if Act.scrolls > 0 {
-        AddToLog(Format("Scrolling down {} times for {}", Act.scrolls, actName))
-        MouseMove(actScrollMousePos.x, actScrollMousePos.y)
-        Scroll(Act.scrolls, 'WheelDown', 250)
-    }
-
-    Sleep(1000)
-    FixClick(Act.x, Act.y)
-    Sleep(1000)
-
-    return true
-}
-
-
-StartRaid(map, act) {
-    return StartContent(map, act, GetRaidMap, GetRaidAct, { x: 195, y: 185 }, { x: 195, y: 185 })
-}
-
 PlayHere(mode := "Story") {
     if (mode = "Story") {
-        FixClick(400, 415)
-        Sleep (300)
-        FixClick(570, 405)
-        Sleep (300)
+        FixClick(595, 468) ; click select
+        Sleep(300)
+        FixClick(333, 349) ; click play here
+        Sleep(300)
+        FixClick(410, 525) ; click play
+
     }
     else if (mode = "Raid") {
-        FixClick(399, 413)
+        FixClick(399, 413) ; click select
         Sleep (300)
-        FixClick(570, 433)
+        FixClick(333, 349) ; click play here
     }
-    else if (mode = "Dungeon") {
-        FixClick(301, 421)
-        Sleep (300)
-        FixClick(570, 433)
-    }
-}
-
-GetRaidMap(map) {
-    switch map {
-        case "Marines Fort": return { x: 185, y: 185, scrolls: 0 }
-        case "Hell City": return { x: 185, y: 225, scrolls: 0 }
-        case "Snowy Capital": return { x: 185, y: 260, scrolls: 0 }
-        case "Leaf Village": return { x: 185, y: 295, scrolls: 0 }
-        case "Wanderniech": return { x: 185, y: 335, scrolls: 0 }
-        case "Central City": return { x: 185, y: 370, scrolls: 0 }
-        case "Giants District": return { x: 185, y: 265, scrolls: 1 }
-        case "Flying Island": return { x: 185, y: 305, scrolls: 1 }
-        case "U-18": return { x: 185, y: 340, scrolls: 1 }
-        case "Flower Garden": return { x: 185, y: 375, scrolls: 1 }
-        case "Ancient Dungeon": return { x: 185, y: 275, scrolls: 2 }
-        case "Shinjuku Crater": return { x: 185, y: 315, scrolls: 2 }
-        case "Valhalla Arena": return { x: 185, y: 350, scrolls: 2 }
-        case "Frozen Planet": return { x: 185, y: 380, scrolls: 2 }
-        case "Blossom Church": return { x: 185, y: 370, scrolls: 3 }
-    }
-}
-
-GetRaidAct(act) {
-    baseY := 185
-    spacing := 30
-    x := 270
-
-    ; Extract the act number from the string, e.g., "Act 3" → 3
-    if RegExMatch(act, "Act\s*(\d+)", &match) {
-        actNumber := match[1]
-        y := baseY + spacing * (actNumber - 1)
-        return { x: x, y: y, scrolls: 0 }
-    }
-
-    ; Default return if the input doesn't match expected format
-    return { x: x, y: baseY, scrolls: 0 }
 }
 
 Zoom() {
@@ -611,19 +244,6 @@ Zoom() {
     
     ; Move mouse back to center
     MouseMove(400, 300)
-}
-
-TeleportToSpawn() {
-    FixClick(29, 570) ;click settings
-    Sleep 300
-    FixClick(385, 180)
-    Sleep 300
-    Scroll(5, "WheelDown", 100) ;scroll down
-    Sleep 300
-    FixClick(526, 194) ;click tp to spawn
-    Sleep 300
-    FixClick(29, 570) ;click settings
-    Sleep 300
 }
 
 RestartMatch() {
@@ -661,61 +281,22 @@ BasicSetup(usedButton := false) {
     ; Teleport to spawn
     TeleportToSpawn()
 
-    FixClick(487, 72) ; Closes Player leaderboard
+    FixClick(496, 104) ; Closes Player leaderboard
     Sleep 300
+
+    WalkToCoords()
 
     if (!usedButton) {
         firstStartup := false
     }
 }
-
-DetectMap() {
-    if (ModeDropdown.Text = "Raid") {
-        AddToLog("Map selected: " RaidDropdown.Text)
-        return RaidDropdown.Text
-    } else if (ModeDropdown.Text = "Story") {
-        AddToLog("Map selected: " StoryDropdown.Text)
-        return StoryDropdown.Text
-    } else if (ModeDropdown.Text = "Dungeon") {
-        AddToLog("Map selected: " DungeonDropdown.Text)
-        return DungeonDropdown.Text
-    } else if (ModeDropdown.Text = "Portal") {
-        return PortalDropdown.Text
-    } else {
-        return "no map found"
-    }
-}
-
-HandleMapMovement(MapName) {
-    AddToLog("Executing Movement for: " MapName)
-    
-    switch MapName {
-        case "Central City":
-            MoveForCentralCity()
-    }
-}
-
-MoveForCentralCity() {
-    Fixclick(390, 29, "Right")
-    Sleep (5000)
-}
-
     
 RestartStage() {
-    global currentMap
-
-    if (currentMap = "" || currentMap = "no map found" || ModeDropdown.Text != "Custom") {
-        currentMap := DetectMap()
-    }
     
     ; Wait for loading
     CheckLoaded()
 
     BasicSetup()
-
-    if (currentMap != "no map found") {
-        HandleMapMovement(currentMap)
-    }
 
     ; Wait for game to actually start
     StartedGame()
@@ -728,15 +309,11 @@ RestartStage() {
 }
 
 Reconnect(testing := false) {
-    ; Credit: @Haie
-    color_home := PixelGetColor(10, 10)
-    color_reconnect := PixelGetColor(519, 329)
-
     if (WinExist(rblxID)) {
         WinActivate(rblxID)
     }
 
-    if (color_home = 0x121215 || color_reconnect = 0x393B3D || testing) {
+    if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || testing) {
         AddToLog("Disconnected! Attempting to reconnect...")
         sendDCWebhook()
 
@@ -748,7 +325,7 @@ Reconnect(testing := false) {
             AddToLog("Connecting to private server...")
             Run(psLink)
         } else {
-            Run("roblox://placeID=107573139811370")
+            Run("roblox://placeID=12886143095")
         }
 
         Sleep 2000
@@ -760,9 +337,12 @@ Reconnect(testing := false) {
 
         loop {
             FixClick(490, 400)
-            AddToLog("Reconnecting to Anime Crusaders...")
+            AddToLog("Reconnecting to Anime Last Stand...")
             Sleep 15000
-            if (ok := CheckForLobby()) {
+            if (WinExist(rblxID)) {
+                WinActivate(rblxID)
+            }
+            if (ok := FindText(&X, &Y, 7, 590, 37, 618, 0, 0, LobbySettings)) {
                 AddToLog("Reconnected Successfully!")
                 return StartSelectedMode()
             } else {
@@ -770,79 +350,6 @@ Reconnect(testing := false) {
             }
         }
     }
-}
-
-PlaceUnit(x, y, slot := 1) {
-
-    ; First click to prepare placement
-    FixClick(x, y)
-    Sleep 50
-
-    ; Check if the unit was successfully placed
-    if (UnitPlaced()) {
-        return true
-    }
-
-    ; Select the unit slot
-    SendInput(slot)
-    Sleep 50  ; Slightly reduced for responsiveness
-
-    ; First click to prepare placement
-    FixClick(x, y)
-    Sleep 50
-
-    ; Check if the unit was successfully placed
-    if (UnitPlaced()) {
-        return true
-    }
-
-    return false
-}
-
-MaxUpgrade() {
-    Sleep 500
-    ; Check for max text
-    if (ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeText)) {
-        return true
-    }
-    return false
-}
-
-UnitPlaced() {
-    ;if (WaitForUpgradeText(GetPlacementSpeed())) { ; Wait up to 4.5 seconds for the upgrade text to appear
-    if (WaitForUpgradeText(500)) { ; Wait up to 2 seconds for the upgrade text to appear
-        AddToLog("Unit Placed Successfully")
-        return true
-    }
-    return false
-}
-
-WaitForUpgradeText(timeout := 4500) {
-    startTime := A_TickCount
-    while (A_TickCount - startTime < timeout) {
-        if (ok := GetPixel(0xFFBD07, 194, 221, 2, 2, 5)) {
-            return true
-        }
-        Sleep 100  ; Check every 100ms
-    }
-    return false  ; Timed out, upgrade text was not found
-}
-
-WaitForUpgradeLimitText(upgradeCap, timeout := 4500) {
-    upgradeTexts := [
-        Upgrade0, Upgrade1, Upgrade2, Upgrade3, Upgrade4, Upgrade5, Upgrade6, Upgrade7, Upgrade8, Upgrade9, Upgrade10, Upgrade11, Upgrade12, Upgrade13, Upgrade14
-    ]
-    targetText := upgradeTexts[upgradeCap]
-
-    startTime := A_TickCount
-    while (A_TickCount - startTime < timeout) {
-        if (FindText(&X, &Y, 103, 373, 165, 386, 0, 0, targetText)) {
-            AddToLog("Found Upgrade Cap")
-            return true
-        }
-        Sleep 100
-    }
-    return false  ; Timed out
 }
 
 HandleAutoAbility() {
@@ -856,7 +363,9 @@ HandleAutoAbility() {
         {color: 0xC22725, x: 539, y: 268},
         {color: 0xC22725, x: 539, y: 303},
 
-        {color: 0xC22725, x: 326, y: 284} ; Left Side
+        {color: 0xC22725, x: 326, y: 284}, ; Left Side
+        {color: 0xC22725, x: 326, y: 265},
+        {color: 0xC22725, x: 326, y: 303}
     ]
 
     for pixel in pixelChecks {
@@ -919,7 +428,7 @@ UpgradeUnit(x, y) {
 CheckLobby() {
     loop {
         Sleep 1000
-        if (ok := CheckForLobby) {
+        if (ok := FindText(&X, &Y, 8, 589, 37, 619, 0, 0, LobbySettings)) {
             break
         }
         Reconnect()
@@ -928,27 +437,26 @@ CheckLobby() {
     return StartSelectedMode()
 }
 
-CheckForLobby() {
-    return FindText(&X, &Y, 68, 399, 121, 417, 0, 0, LobbySummon)
-}
-
 CheckLoaded() {
     loop {
-        if (ok := FindText(&X, &Y, 13, 582, 50, 625, 0.20, 0.20, IngameSettings)) {
+        Sleep(500)
+        
+        if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.20, 0.20, IngameQuests)) {
             AddToLog("Successfully Loaded In")
-            Sleep(500)
             break
-        } else {
-            Sleep (500)
         }
+
         Reconnect()
     }
 }
 
 StartedGame() {
+    global alreadyNuked
     Sleep(500)
     AddToLog("Game started")
     global stageStartTime := A_TickCount
+    alreadyNuked := false
+    HandleNuke()
 }
 
 StartSelectedMode() {
@@ -961,7 +469,7 @@ StartSelectedMode() {
         StartStoryMode()
     }
     else if (ModeDropdown.Text = "Raid") {
-        RaidMode()
+        StartRaidMode()
     }
     else if (ModeDropdown.Text = "Custom") {
         CustomMode()
@@ -1010,63 +518,20 @@ ClickUntilGone(x, y, searchX1, searchY1, searchX2, searchY2, textToFind, offsetX
     }
 }
 
-GetPlacementSpeed() {
-    speeds := [1000, 1500, 2000, 2500, 3000, 4000]  ; Array of sleep values
-    speedIndex := PlaceSpeed.Value  ; Get the selected speed value
-
-    if speedIndex is number  ; Ensure it's a number
-        return speeds[speedIndex]  ; Use the value directly from the array
-}
-
 ClickReturnToLobby() {
     ClickUntilGone(0, 0, 238, 400, 566, 445, LobbyIcon, 0, -35)
 }
 
-ClickReplay() {
-    ClickUntilGone(0, 0, 238, 400, 566, 445, Retry, 0, -25)
-}
-
-ClickReplayPixel() {
-    while (CheckForVictory() || CheckForDefeat()) {
-        pixelChecks := [
-            {color: 0xEEB21E, x: 266, y: 425}
-        ]
+ClickReplay(testing := false) {
+    while (isMenuOpen("End Screen")) {
+        pixelChecks := [{ color: 0xA5892A, x: 271, y: 472 }]
 
         for pixel in pixelChecks {
             if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-                if (CustomReplay) {
-                    FixClick(400, 500)
-                } else {
-                    FixClick(pixel.x, pixel.y, "Right")
+                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
+                if (testing) {
+                    Sleep(1500)
                 }
-            }
-        }
-    }
-}
-
-ClickReturnToLobbyPixel() {
-    while (CheckForVictory() || CheckForDefeat()) {
-        pixelChecks := [
-            {color: 0x4D9A41, x: 144, y: 425}
-        ]
-
-        for pixel in pixelChecks {
-            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-                FixClick(pixel.x, pixel.y, "Right")
-            }
-        }
-    }
-}
-
-ClickNextLevelPixel() {
-    while (CheckForVictory() || CheckForDefeat()) {
-        pixelChecks := [
-            {color: 0x4964A5, x: 385, y: 425}
-        ]
-
-        for pixel in pixelChecks {
-            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-                FixClick(pixel.x, pixel.y, "Right")
             }
         }
     }
@@ -1136,287 +601,34 @@ ZoomOut() {
 DetectAngle(mode := "Story") {
     switch mode {
         case "Story":
-            firstAngle := GetPixel(0xAC7841, 407, 92, 2, 2, 2)
-
+            firstAngle := GetPixel(0xAC7841, 407, 92, 2, 2, 10)
+            secondAngle := GetPixel(0xD77106, 407, 92, 2, 2, 10)
             if (firstAngle) {
+                AddToLog("Spawn Angle: Left")
                 return 1
-            } else {
+            } else if (secondAngle) {
+                AddToLog("Spawn Angle: Right")
                 return 2
+            } else {
+                AddToLog("Spawn Angle: Unknown | Color: " PixelGetColor(407, 92) )
+                return 3
             }
 
         case "Raid":
-            firstAngle := GetPixel(0x6F4746, 414, 49, 2, 2, 2)
-
+            firstAngle := GetPixel(0xB74D0D, 414, 49, 2, 2, 10)
+            secondAngle := GetPixel(0x71250F, 414, 49, 2, 2, 10)
             if (firstAngle) {
+                AddToLog("Spawn Angle: Left")
                 return 1
-            } else {
+            } else if (secondAngle) {
+                AddToLog("Spawn Angle: Right")
                 return 2
+            } else {
+                AddToLog("Spawn Angle: Unknown | Color: " PixelGetColor(414, 49) )
+                return 3
             }
     }
     return 0
-}
-
-WalkToRaidRoom(angle) {
-    switch angle {
-        case 1:
-            SendInput("{a down}")
-            Sleep(800)
-            SendInput("{a up}")
-            KeyWait "a"  ; Wait for the key to be fully processed
-            SendInput("{s down}")
-            Sleep(800)
-            SendInput("{s up}")
-            KeyWait "s"  ; Wait for the key to be fully processed
-        case 2:
-            SendInput("{s down}")
-            Sleep(800)
-            SendInput("{s up}")
-            KeyWait "s"  ; Wait for the key to be fully processed
-            SendInput("{d down}")
-            Sleep(2000)
-            SendInput("{d up}")
-            KeyWait "d"  ; Wait for the key to be fully processed    
-    }
-}
-
-TestAllUpgradeFindTexts() {
-    foundCount := 0
-    notFoundCount := 0
-
-    Loop 15 {
-        upgradeCap := A_Index  ; Now 1–15, aligns with AHK v2 arrays
-        result := WaitForUpgradeLimitText(upgradeCap, 500)
-
-        if (result) {
-            AddToLog("Found Upgrade Level: " upgradeCap - 1)
-            foundCount++
-        } else {
-            AddToLog("Did NOT Find Upgrade Level: " upgradeCap - 1)
-            notFoundCount++
-        }
-    }
-
-    AddToLog("Found: " foundCount " | Not Found: " notFoundCount)
-}
-
-UpgradePlacedUnits() {
-    global stage
-    global successfulCoordinates, maxedCoordinates
-    global totalUnits := Map(), upgradedCount := Map()
-
-    hasUpgradeableUnits := false
-
-    ; Check if there are any units eligible for upgrading
-    for coord in successfulCoordinates {
-        totalUnits[coord.slot] := (totalUnits.Has(coord.slot) ? totalUnits[coord.slot] + 1 : 1)
-        upgradedCount[coord.slot] := upgradedCount.Has(coord.slot) ? upgradedCount[coord.slot] : 0
-
-        if (IsUpgradeEnabled(coord.slot) && !maxedCoordinates.Has(coord)) {
-            hasUpgradeableUnits := true
-        }
-    }
-
-    ; If no upgradeable units found, skip the rest
-    if (!hasUpgradeableUnits) {
-        return
-    }
-
-    AddToLog("Initiating Single-Pass Unit Upgrades...")
-    stage := "Upgrading"
-
-    if (ShouldOpenUnitManager()) {
-        OpenMenu("Unit Manager")
-    }
-
-    if (PriorityUpgrade.Value) {
-        AddToLog("Using priority upgrade system (single pass)")
-        for priorityNum in [1, 2, 3, 4, 5, 6] {
-            for slot in [1, 2, 3, 4, 5, 6] {
-                if (!IsUpgradeEnabled(slot))
-                    continue
-
-                priority := "priority" slot
-                priority := %priority%
-
-                if (priority.Text = priorityNum && HasUnitsInSlot(slot, successfulCoordinates)) {
-                    AddToLog("Processing upgrades for priority " priorityNum " (slot " slot ")")
-                    ProcessUpgrades(slot, priorityNum, true) ; true = single pass
-                }
-            }
-        }
-    } else {
-        seenSlots := Map()
-        for coord in successfulCoordinates {
-            if (!IsUpgradeEnabled(coord.slot))
-                continue
-
-            if (!seenSlots.Has(coord.slot)) {
-                ProcessUpgrades(coord.slot, "", true)
-                seenSlots[coord.slot] := true
-            }
-        }
-    }
-
-    AddToLog("Upgrade attempt completed")
-}
-
-ProcessUpgrades(slot := false, priorityNum := "", singlePass := false) {
-    global successfulCoordinates, totalUnits
-
-    if (singlePass) {
-        for index, coord in successfulCoordinates {
-            if (!slot || coord.slot = slot) {
-                if (StageEndedDuringUpgrades()) {
-                    return HandleStageEnd()
-                }
-
-                UpgradeUnitWithLimit(coord, index)
-
-                if (StageEndedDuringUpgrades()) {
-                    return HandleStageEnd()
-                }
-
-                PostUpgradeChecks()
-
-                if (MaxUpgrade()) {
-                    HandleMaxUpgrade(coord, index)
-                }
-
-                if (!UnitManagerUpgradeSystem.Value) {
-                    FixClick(332, 196) ; Close unit menu
-                }
-
-                PostUpgradeChecks()
-            }
-        }
-
-        if (slot)
-            AddToLog("Finished single-pass upgrades for priority " priorityNum)
-
-        return
-    }
-
-    ; Original behavior (full upgrade loop)
-    while (true) {
-        slotDone := true
-        for index, coord in successfulCoordinates {
-            if (!slot || coord.slot = slot) {
-                slotDone := false
-
-                if (StageEndedDuringUpgrades()) {
-                    return HandleStageEnd()
-                }
-
-                UpgradeUnitWithLimit(coord, index)
-
-                if (StageEndedDuringUpgrades()) {
-                    return HandleStageEnd()
-                }
-
-                PostUpgradeChecks()
-
-                if (MaxUpgrade()) {
-                    HandleMaxUpgrade(coord, index)
-                    break
-                }
-
-                if (!UnitManagerUpgradeSystem.Value) {
-                    FixClick(332, 196) ; Close unit menu
-                }
-
-                PostUpgradeChecks()
-            }
-        }
-
-        if (slot && (slotDone || successfulCoordinates.Length = 0)) {
-            AddToLog("Finished upgrades for priority " priorityNum)
-            break
-        }
-
-        if (!slot)
-            break
-    }
-}
-
-StageEndedDuringUpgrades() {
-    return CheckForGameOver()
-}
-
-PostUpgradeChecks() {
-    HandleAutoAbility()
-    CheckForPortalSelection()
-    Reconnect()
-}
-
-PostPlacementChecks() {
-    HandleStartButton()
-
-    if (CheckForLobby()) {
-        AddToLog("Found in lobby, restarting mode if possible")
-        return CheckLobby()
-    }
-
-    if CheckForGameOver() {
-        return MonitorStage()
-    }
-
-    CheckForPortalSelection()
-
-    Reconnect()
-
-}
-
-UpgradeUnitWithLimit(coord, index) {
-    global totalUnits
-
-    upgradeLimitEnabled := "upgradeLimitEnabled" coord.slot
-    upgradeLimitEnabled := %upgradeLimitEnabled%
-
-    upgradeLimit := "upgradeLimit" coord.slot
-    upgradeLimit := %upgradeLimit%
-    upgradeLimit := String(upgradeLimit.Text)
-
-    upgradePriority := "upgradePriority" coord.slot
-    upgradePriority := %upgradePriority%
-    upgradePriority := String(upgradePriority.Text)
-
-    if (!upgradeLimitEnabled.Value) {
-        if (UnitManagerUpgradeSystem.Value) {
-            UnitManagerUpgrade(coord.slot)
-        } else {
-            UpgradeUnit(coord.x, coord.y)
-        }
-    } else {
-        if (UnitManagerUpgradeSystem.Value) {
-            UnitManagerUpgradeWithLimit(coord, index, upgradeLimit)
-        } else {
-            UpgradeUnitLimit(coord, index, upgradeLimit)
-        }
-    }
-}
-
-UpgradeUnitLimit(coord, index, upgradeLimit) {
-    FixClick(coord.x, coord.y)
-    if (WaitForUpgradeLimitText(upgradeLimit + 1, 750)) {
-        HandleMaxUpgrade(coord, index)
-    } else {
-        SendInput("T")
-    }
-}
-
-HandleMaxUpgrade(coord, index) {
-    global successfulCoordinates, maxedCoordinates, upgradedCount, totalUnits
-
-    if (IsSet(totalUnits) && IsSet(upgradedCount)) {
-        upgradedCount[coord.slot]++
-        AddToLog("Max upgrade reached for Unit: " coord.slot " (" upgradedCount[coord.slot] "/" totalUnits[coord.slot] ")")
-    } else {
-        AddToLog("Max upgrade reached for Unit: " coord.slot)
-        maxedCoordinates.Push(coord)
-    }
-    maxedCoordinates.Push(coord)
-    successfulCoordinates.RemoveAt(index)
-    FixClick(332, 196) ; Close unit menu
 }
 
 HandleStageEnd(waveRestart := false) {
@@ -1424,20 +636,6 @@ HandleStageEnd(waveRestart := false) {
     AddToLog("Stage ended during upgrades, proceeding to results")
     ResetPlacementTracking()
     return MonitorStage()
-}
-
-ResetPlacementTracking() {
-    global successfulCoordinates, maxedCoordinates
-    successfulCoordinates := []
-    maxedCoordinates := []
-}
-
-HasUnitsInSlot(slot, coordinates) {
-    for coord in coordinates {
-        if (coord.slot = slot)
-            return true
-    }
-    return false
 }
 
 CheckForStartButton() {
@@ -1452,14 +650,9 @@ HandleStartButton() {
     }
 }
 
-IsUpgradeEnabled(slotNum) {
-    setting := "upgradeEnabled" slotNum
-    return %setting%.Value
-}
-
 StartsInLobby(ModeName) {
     ; Array of modes that usually start in lobby
-    static modes := ["Story", "Raid", "Challenge", "Dungeon", "Portal", "Survival"]
+    static modes := ["Story", "Raid"]
     
     ; Special case: If PortalLobby.Value is set, don't start in lobby for "Portal"
     if (ModeName = "Portal" && !PortalLobby.Value)
@@ -1473,46 +666,29 @@ StartsInLobby(ModeName) {
     return false
 }
 
-UnitManagerUpgrade(slot) {
-    if !(GetPixel(0x1643C5, 77, 357, 4, 4, 2)) {
-        ClickUnit(slot)
-        Sleep(500)
-    }
-    Loop 3 {
-        SendInput("T")
-    }
-}
-
-UnitManagerUpgradeWithLimit(coord, index, upgradeLimit) {
-    if !(GetPixel(0x1643C5, 77, 357, 4, 4, 2)) {
-        ClickUnit(coord.upgradePriority)
-        Sleep(500)
-    }
-    if (WaitForUpgradeLimitText(upgradeLimit + 1, 750)) {
-        HandleMaxUpgrade(coord, index)
-    } else {
-        SendInput("T")
-    }
+HasCards(ModeName) {
+    ; Array of modes that have card selection
+    static modesWithCards := [""]
     
-}
-
-ShouldOpenUnitManager() {
-    if (UnitManagerAutoUpgrade.Value || UnitManagerUpgradeSystem.Value) {
-        return true
+    ; Check if current mode is in the array
+    for mode in modesWithCards {
+        if (mode = ModeName)
+            return true
     }
+    return false
 }
 
 isMenuOpen(name := "") {
     if (name = "Unit Manager") {
-        return GetPixel(0x00EFFF, 667, 42, 4, 4, 2) ; Blue pixel on Unit Manager
+        return GetPixel(0x00CBFF, 773, 71, 2, 2, 5)
     }
     else if (name = "Ability Manager") {
         return FindText(&X, &Y, 675, 594, 785, 616, 0.20, 0.20, AbilityManager)
     }
     else if (name = "Story") {
-        return FindText(&X, &Y, 352, 431, 451, 458, 0.20, 0.20, StorySelectButton)
+        return FindText(&X, &Y, 546, 454, 634, 479, 0.20, 0.20, StoryFailsafe)
     }
     else if (name = "End Screen") {
-        return FindText(&X, &Y, 225, 217, 356, 246, 0.20, 0.20, Results)
+        return FindText(&X, &Y, 85, 361, 151, 383, 0.20, 0.20, Results)
     }
 }
