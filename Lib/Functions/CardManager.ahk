@@ -46,11 +46,8 @@ OpenCardPriorityPicker() {
 
 
 SelectCardsByMode() {
-    if (ModeDropdown.Text = "Halloween Event") {
-        return SelectCards("Halloween")
-    }
-    else if (ModeDropdown.Text = "Boss Rush") {
-        return SelectCards("BossRush")
+    if (ModeDropdown.Text = "") {
+        return SelectCards("SpiritInvasion")
     }
     return false
 }
@@ -97,41 +94,73 @@ SelectCards(eventName) {
         PauseNuke()
     }
 
-    SendInput("X") ; Close unit menu
-
     cardPriorities := cachedCardPriorities[eventName]
 
-    ; Default card slots 571, 219, 701, 246
-    cardSlots:= [
-        { clickX: 169, clickY: 305, ocrX1: 100, ocrY1: 214, ocrX2: 238, ocrY2: 257 },
-        { clickX: 328, clickY: 288, ocrX1: 256, ocrY1: 214, ocrX2: 394, ocrY2: 256 },
-        { clickX: 486, clickY: 291, ocrX1: 410, ocrY1: 224, ocrX2: 550, ocrY2: 271 },
-        { clickX: 642, clickY: 295, ocrX1: 571, ocrY1: 224, ocrX2: 701, ocrY2: 256 }
+    ; Default card slots
+    ; Base origin for all cards (e.g. top-left corner of the card container)
+    baseX := 100
+    baseY := 250
+
+    ; Global scale for all coordinates (for resolution or zoom)
+    scale := 1.0
+
+    ; Relative offsets and sizes for each card slot
+    cardSlots := [
+        { clickOffsetX: 105, clickOffsetY: 95, ocrOffsetX1: 31, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY:  45},
+        { clickOffsetX: 305, clickOffsetY: 95, ocrOffsetX1: 240, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 },
+        { clickOffsetX: 505, clickOffsetY: 95, ocrOffsetX1: 450, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }
     ]
+
+    ; Then compute absolute coords on the fly
+    for index, slot in cardSlots {
+        slot.clickX := baseX + slot.clickOffsetX * scale
+        slot.clickY := baseY + slot.clickOffsetY * scale
+        slot.ocrX1 := baseX + slot.ocrOffsetX1 * scale
+        slot.ocrY1 := baseY + slot.ocrOffsetY1 * scale
+        slot.ocrX2 := slot.ocrX1 + slot.ocrWidth * scale
+        slot.ocrY2 := slot.ocrY1 + slot.ocrHeight * scale
+
+        ; Tier color check pixel
+        slot.tierCheckX := slot.clickX - slot.tierOffsetX * scale
+        slot.tierCheckY := slot.clickY - slot.tierOffsetY * scale
+    }
+
+    tierColors := Map(
+        "3", 0x2C1E01, ; Gold for Tier 3
+        "2", 0x11002A ; Purple for Tier 2
+    )
 
     foundCards := Map()
     for index, slot in cardSlots {
         MouseMove(slot.clickX, slot.clickY)
-        Wiggle()
-        ;FixClick(slot.clickX, slot.clickY)
-        Sleep(500)
+        Sleep(250)
 
         ; OCR
-        orcResult := OCRFromFile(slot.ocrX1, slot.ocrY1, slot.ocrX2, slot.ocrY2, 10.0, false)
+        orcResult := OCRFromFile(slot.ocrX1, slot.ocrY1, slot.ocrX2, slot.ocrY2, 5.0, true)
         ocrCleaned := RegExReplace(orcResult, "\\s+|!", "")
-        ocrCleaned := RegExReplace(ocrCleaned, "[^a-zA-Z]", "")
-        ocrCleaned := RegExReplace(ocrCleaned, "i)(IV|III|II|I)$", "")
-
-        ;ocrCleaned := DetectText(slot.ocrX1, slot.ocrY1, slot.ocrX2, slot.ocrY2) ; Alternative OCR method that works better with no image preprocessing might use elsewhere
 
         if (ocrCleaned != "") {
             for cardName, priority in cardPriorities {
                 matchScore := 1.0 - (Levenshtein(ocrCleaned, cardName) / Max(StrLen(ocrCleaned), StrLen(cardName)))
-                if (matchScore >= 0.5) {  ; Accept matches with at least 50% similarity
-                    foundCards[cardName] := { slot: slot, priority: priority }
-                    AddToLog("Found card '" cardName "' with priority " priority)
+                if (debugMessages) {
+                    AddToLog("OCR='" ocrCleaned "' matched with '" cardName "' with score " matchScore)
+                }
+                if (matchScore >= 0.75) {  ; Accept matches with at least 75% similarity
+
+                    ; Detect tier by pixel color at tierCheck position
+                    tier := "1"  ; default or unknown
+                    for t, color in tierColors {
+                        MouseMove(slot.tierCheckX, slot.tierCheckY)
+                        if GetPixel(color, slot.tierCheckX, slot.tierCheckY, 1, 1, 5) {
+                            tier := t
+                            break
+                        }
+                    }
+
+                    foundCards[cardName] := { slot: slot, priority: priority, tier: tier }
+                    AddToLog("Found card '" cardName "' with priority " priority " and tier " tier)
                     if (debugMessages) {
-                        AddToLog("Exact or close match: OCR='" ocrCleaned "' matched with '" cardName)
+                        AddToLog("Exact or close match: OCR='" ocrCleaned "' matched with '" cardName "' Tier: " tier)
                     }
                     break
                 }
@@ -141,21 +170,40 @@ SelectCards(eventName) {
     }
 
     if (foundCards.Count > 0) {
-        highestPriority := 999
-        bestCard := ""
+        ; Step 1: Group cards by name and keep highest tier per name
+        bestByName := Map()
         for cardName, cardInfo in foundCards {
-            if (cardInfo.priority < highestPriority) {
-                highestPriority := cardInfo.priority
+            thisTier := Integer(cardInfo.tier)
+            if (!bestByName.Has(cardName) || thisTier > Integer(bestByName[cardName].tier)) {
+                bestByName[cardName] := cardInfo
+            }
+        }
+
+        ; Step 2: From bestByName, pick the one with the best (lowest) priority and highest tier
+        highestPriority := 999
+        highestTier := 0
+        bestCard := ""
+
+        for cardName, cardInfo in bestByName {
+            thisPriority := cardInfo.priority
+            thisTier := Integer(cardInfo.tier)
+
+            if (thisPriority < highestPriority
+                || (thisPriority = highestPriority && thisTier > highestTier)) {
+                highestPriority := thisPriority
+                highestTier := thisTier
                 bestCard := cardName
             }
         }
 
         if (bestCard != "") {
-            AddToLog("Selecting highest priority card: " bestCard)
-            slot := foundCards[bestCard].slot
+            cardInfo := bestByName[bestCard]
+            slot := cardInfo.slot
+            AddToLog("Selecting highest priority card: " bestCard " (Tier " cardInfo.tier ")")
             FixClick(slot.clickX, slot.clickY)
             Sleep(300)
-            FixClick(400, 395)
+            FixClick(415, 450)
+
             if (AutoAbilityBox.Value) {
                 SetTimer(CheckAutoAbility, GetAutoAbilityTimer())
             }

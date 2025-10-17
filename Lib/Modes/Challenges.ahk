@@ -1,24 +1,34 @@
 #Requires AutoHotkey v2.0
 
-WalkToChallengeRoom(angle) {
-    switch angle {
-    case 2:
-        SendInput("{d down}")
-        Sleep(800)
-        SendInput("{d up}")
-        KeyWait "d"  ; Wait for the key to be fully processed
-        SendInput("{s down}")
-        Sleep(800)
-        SendInput("{s up}")
-        KeyWait "s"  ; Wait for the key to be fully processed
-    case 1:
-        SendInput("{w down}")
-        Sleep(800)
-        SendInput("{w up}")
-        KeyWait "w"  ; Wait for the key to be fully processed
-        SendInput("{d down}")
-        Sleep(2000)
-        SendInput("{d up}")
-        KeyWait "d"  ; Wait for the key to be fully processed    
+
+StartChallenge(maxAttempts := 5) {
+    attempts := 0
+
+    while (attempts < maxAttempts && !(ok := isMenuOpen("Matchmaking"))) {
+        WalkToChallengeRoom()
+        attempts += 1
     }
+
+    if (attempts >= maxAttempts) {
+        AddToLog("Failed to start challenge after " attempts " attempts. Giving up.")
+        SetChallengeCooldown()
+        return
+    }
+
+    AddToLog("Starting Challenge")
+    FixClick(330, 350)
+    Sleep(500)
+    FixClick(410, 525) ; click play
+    SetChallengeCooldown()
+    RestartStage()
+}
+
+WalkToChallengeRoom() {
+    Teleport("Challenge")
+    Walk("d", 10000)
+    Walk("w", 5000)
+}
+
+TimeForChallenge() {
+    return AutoChallenge.Value && !IsChallengeOnCooldown()
 }

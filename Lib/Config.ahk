@@ -88,8 +88,15 @@ SaveSettingsForMode(*) {
         content .= "`nUnit Manager Upgrade System=" UnitManagerUpgradeSystem.Value
         content .= "`nPriority Upgrade=" PriorityUpgrade.Value
 
+        content .= "`n`n[Auto Challenge Settings]"
+        content .= "`nAuto Challenge=" AutoChallenge.Value
+
         content .= "`n`n[Portal Settings]"
         content .= "`nStart Portal In Lobby=" PortalLobby.Value
+
+        content .= "`n`n[Gate Settings]"
+        content .= "`nFindText Gate Enabled=" GateSelection.Value
+        content .= "`nPremade Gate Movement=" GateMovement.Value
 
         content .= "`n`n[Unit Settings]"
         content .= "`nUse Sunwoo Nuke=" SJWNuke.Value
@@ -279,11 +286,12 @@ LoadUniversalSettings() {
             case "Webhook Logs Enabled": WebhookLogsEnabled.Value := value
             case "Private Server Enabled": PrivateServerEnabled.Value := value
             case "Private Server URL": PrivateServerURLBox.Text := value
-            case "Nightmare Difficulty": NightmareDifficulty.Value := value
             case "Placement Pattern": PlacementPatternDropdown.Value := value
             case "Placement Order": PlacementSelection.Value := value
             case "Placement Profile": PlacementProfiles.Value := value
             case "Placement Speed": PlaceSpeed.Value := value
+            case "Story Difficulty": StoryDifficulty.Value := value
+            case "Matchmaking Enabled": Matchmaking.Value := value
         }
     }
 }
@@ -298,6 +306,7 @@ SaveUniversalSettings() {
         content .= "[Universal Settings]"
         content .= "`nNext Level=" NextLevelBox.Value
         content .= "`nReturn To Lobby=" ReturnLobbyBox.Value
+        content .= "`nMatchmaking Enabled=" Matchmaking.Value
         content .= "`nUsing Mode Configurations=" ModeConfigurations.Value
 
         content .= "`n`n[Webhook Settings]"
@@ -310,7 +319,7 @@ SaveUniversalSettings() {
         content .= "`nPrivate Server URL=" PrivateServerURLBox.Text
 
         content .= "`n`n[Story Settings]"
-        content .= "`nNightmare Difficulty=" NightmareDifficulty.Value
+        content .= "`nStory Difficulty=" StoryDifficulty.Value
 
         content .= "`n`n[Placement Settings]"
         content .= "`nPlacement Pattern=" PlacementPatternDropdown.Value
@@ -595,17 +604,18 @@ InitSettings() {
     UnitConfigMap["AutoAbility"] := { control: AutoAbilityBox, prop: "Value" }
     UnitConfigMap["AutoAbilityTimer"] := { control: AutoAbilityTimer, prop: "Text" }
 
+    UnitConfigMap["Auto Challenge"] := { control: AutoChallenge, prop: "Value" }
+
     UnitConfigMap["ZoomLevel"] := { control: ZoomBox, prop: "Text" }
     UnitConfigMap["Auto Upgrade"] := { control: AutoUpgrade, prop: "Value" }
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Start Portal In Lobby"] := { control: PortalLobby, prop: "Value" }
+    UnitConfigMap["FindText Gate Enabled"] := { control: GateSelection, prop: "Value" }
+    UnitConfigMap["Premade Gate Movement"] := { control: GateMovement, prop: "Value" }
 
-    UnitConfigMap["Use Sunwoo Nuke"] := { control: SJWNuke, prop: "Value" }
-    UnitConfigMap["Sunwoo Nuke Slot"] := { control: SJWSlot, prop: "Value" }
     UnitConfigMap["Nuke Enabled"] := { control: NukeUnitSlotEnabled, prop: "Value" }
     UnitConfigMap["Nuke Slot"] := { control: NukeUnitSlot, prop: "Value" }
-
     UnitConfigMap["Nuke At Specific Wave"] := { control: NukeAtSpecificWave, prop: "Value" }
     UnitConfigMap["Nuke Wave"] := { control: NukeWave, prop: "Value" }
     UnitConfigMap["Nuke Delay"] := { control: NukeDelay, prop: "Value" }

@@ -21,6 +21,8 @@ StoryFailsafe:="|<>*96$51.0000000003k0C00001zk3s0070SS0lU01w60zqDszMlk7znzzz7ATs
 IngameQuests:="|<>*100$27.zzszzz07zy00zzU07zw00Hz002Ts00HzU82Dw3UFzUz3DwDsNzUy3Dw3kNzUT1Dw209zU01jw00Bzk01by00Azk01by00Czk03ry0Tyzlzy7zA03zs0TzzVzzw"
 MaxUpgradeText:="|<>*153$53.zzzzzzzzzszy7zzzzzlzwDzzzzz1zkzzzzzy3z1zzzzzw3w3s2C7Vs7s7U0SC7kDUC30w8T2C8sT1w1y4MFkn2M7AM1XV6AMQMs6768NUklkQC7kq0l3lsQD1s1W7Xls03VVYPxXM0C7Xcnm6M4MT3TU7sTzzryU"
 Results:="|<>*89$53.zzzzzzzzzzzzzzzzzz1zzzzztzw1zzzzznzsXzzzzzbzlY4mE0E8HU804U0UGX0080868Vy00k4EAFXwN1mA0Q04Rn3aw5w49zzzzzzzzzU"
+JoinMatchmaking:="|<>*130$75.zzzzzzzzzzzzzzzzzzzy3zzzzzzzzzzzkDzzzzzw7zzzw1zzzzzz0zzzzUDzzzzzs7zzzy1zzzzzz0zzzzkTzzzzzs7zzzzzzzzzzz0zzzzzzzzzzzs7zzzzzzzzzzz0zs1zkS3Uzzzs7w03y1k01zzz0z00DUA007zzs7k00w1U00Tzz0w007UA003zzs7U00Q1U00Dzz0s1s3UA0M1zzs70TUA1UDUDzz0s7w1UA1y1zzs70zUA1UDkDzz0s7w1UA1y1y7k70TUA1UDkDUQ0s1k3UA1y1w007U00Q1UDkDU01w007UA1y1w00Tk00w1UDkDk03z00DUA1y1z01zw03y1kDkDy0Tzs1zkS3z1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+
 
 ;New UI
 Teleports:="|<>*105$46.zy00Mzzzzk01Xzzzz002Dzzzy008zzzsTzzzrzy0zzzyDzsVzxwstz74N1V13wSFU040Dlt608MkzX4E1UX1y0844207w0kEMQEzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzs"
@@ -29,16 +31,11 @@ Raids:="|<>*150$44.zzzzzzzzzzzzzzz0zDn0w7k7lwk61wtsTAsbzCS3nD0zn74wnm1w1l7AwsD0M
 NewUpgrade:="|<>*47$39.zzzzzzzzzzzzzzzzzzrzzAzzwzztVUF0Tz80003zs00U0TzW4603zznXzzzzywzzzU"
 Retry:="|<>*115$29.000000000000000w20024+0047nzk9802EE09l0U2GW194ZY1zzmE0004U000600000000004"
 Settings:="|<>*110$17.zzzzDzs7zX7zjTzSzwMzy7zyTzzzzzzk"
-UnitManager:="|<>*108$56.zzzzzzzzzzzzzzzzzzyRwjjTzzzzbTvlXzzzztnkQ0zzzzyQ470032AEm5/k1G5+4w12Qw4UEVDWKbzF/6AHzzzzzzzXzzzzzzzzxzy"
 PortalSelection:="|<>*108$56.zzzzzzzzzzzzzzzzzzyRwjjTzzzzbTvlXzzzztnkQ0zzzzyQ470032AEm5/k1G5+4w12Qw4UEVDWKbzF/6AHzzzzzzzXzzzzzzzzxzy"
 LobbyIcon:="|<>**50$11.TwX9SGwZ1/mLYX+"
-AutoOff:="|<>*51$13.zzw1w0Q060301U0k0M0A060301k1w1zzw"
-AutoOff2:="|<>*53$13.zzw1w0Q060301U0k0M0A060301U0s0y0zzy"
 
 StartButton:="|<>*121$25.00003s043y0735U6l2zzQW402wgdrtG4ty9WQzzzzzzzzz"
 RaidSelectButton:="|<>*120$29.00000S3U01a903a7mzwcTbztsFAMVs0EFbs0UDD0xD6TAP6CzzzzzzzzzzU"
-DungeonSelectButton:="|<>*120$28.00000w6024MY0IVyTzO7tzswMaA3l2EbS492QwMqAHzzzzzzzzzs"
-UnitManager:="|<>*121$67.zzzzzzzzzzzzzzzzzzzzzzwTjn3UTzzNzwDrtVwzzzjzyC1sEyMUA21XmJw8T9GIf2ZZ+y0DY92JVEslCxHr6lWGgTzzzzzzuzzyjzzzzzzzzzzzzzzzzzzzzzz"
 AbilityManager:="|<>*118$65.zzzzzzzzzzz0Tznzv/xzjz3zzbzW7lzTz7zzDz4DXwTyMlWMw0S0UlwY+IZs0w1/9x+493m5t2GLz6AP7z9zlaDzxOzzzzzzzzzxvzzzzzzzzzzzzzzzzzzk"
 
 ; === Upgrade Limits === (630, 375, 717, 385)
@@ -63,3 +60,15 @@ Wave15:="|<>*127$34.zzzzzzb1wtkQ87X21UUS8842Dk0Xs8D623s0MS07W1XsUSDWDXss0Fy07U17
 
 Wave20 := "|<>*84$16.zzzzzz6DsETY9zYbwGzUXzzzzzy"
 Wave50 := "|<>*110$10.zz4M1WG1C5n7zs"
+
+; === Gates ===
+GateUI:="|<>*167$107.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyDzzzzzzzzzzzzzzzzkDzzzzzzzzzzzzzzzzUDzzzzzzzzzzzzzzzz0Tzzzzzzzzk7zzzz1y0zzzzzzzzz0Dzzzw3y3zzzzzzzzy0Dzzzs7zzzzzzzzzzs0TzzzkDzzzzzzzzzzk0Ty0DUDk87s7k3zzzU0zs0A07UE7kD01zzy11zU080D0kD0w01zzw61y0000S1US1k01zzkA3s3UU0w3UQ70w3zzUQ3kDbkDs70kC1w7zy1s7UTzUTkC1UQ00Dzw0070zz0zUS01s00Tzk00C1zy1z0w03k00zzU00Q1tw3y1w0DUTzzz000M00s3w3s0T0STzw1y0s00s1s7k1z00Tzs7y0s03k1kDk3z00TzUDy1s0Dk3UTU7z00zz0zw1w1zk70zUTzU7zzzzzzzzzzzzzzzzzzy"
+ARank:="|<>*123$36.zzzzzzzzVzzjwz0zzDsT4zzDsTAU11kD0001kD0AA3X7A0A1bbiUA9zzzzzzU"
+BRank:="|<>*124$34.zzzzzz3szzvs70zzDWQHzwyFn80EN70001aQ0kkC1n030QDiUA9zzzzzy"
+CRank:="|<>*122$35.zzzzzzsy7zyz0s7ztyPlDzntzaE0Unz0001Xy0MM7UQk0k7Vxo1VDzzzzzs"
+DRank:="|<>*123$35.zzzzzzVy7zyy1s7ztwFlDzntnaE0Unb0001bC0MM70wk0k73xo1VDzzzzzs"
+SRank:="|<>*122$34.zzzzzzXsTzvwD0zzDXwHzwz7n80EQ70001yQ0kkC1n030QDiUA9zzzzzy"
+NationalRank:="|<>*125$43.zzzzzzzvzzrzzysnyPzzyQ9z7vzzC4U0kUk700EE003a399VVVn0460k0Rm333N1Dzzzzzzy"
+
+; === Card Selection ===
+CardSelection:="|<>*139$39.00000000Q0k00DykD0011o1M0097zvszWQa6Ng2HYamNAW0VC4GYER/kmIWwgaG94Y9lb90XUvvi7s0000004"

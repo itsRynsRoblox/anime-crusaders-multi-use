@@ -254,35 +254,26 @@ CalculateElapsedTime(startTime) {
     return Format("{:02}:{:02}:{:02}", elapsedHours, elapsedMinutes, elapsedSeconds)
 }
 
-GetPixel(color, x1, y1, extraX, extraY, variation) {
+GetPixel(color, x1, y1, extraX, extraY, variation, returnTrue := true) {
     global foundX, foundY
     try {
         if PixelSearch(&foundX, &foundY, x1, y1, x1 + extraX, y1 + extraY, color, variation) {
-            return [foundX, foundY] AND true
+            return returnTrue ? true : [foundX, foundY]
         }
         return false
     }
 }
 
 Teleport(mode := "") {
-    FixClick(33, 340) ; Open teleport menu
+    teleportCoords := [780, 450]
+    FixClick(teleportCoords[1], teleportCoords[2])
     Sleep 500
     switch mode {
-        case "Dungeon":
-            FixClick(407, 382) ; Click on Dungeon
-        case "Story":
-            FixClick(393, 329) ; Click on Story
-        case "Raid":
-            FixClick(531, 206) ; Move mouse to scroll down
-            Sleep (500)
-            Scroll(20, 'WheelDown', 5)
-            Sleep 1000
-            FixClick(407, 382)
+        case "Challenge":
+            FixClick(480, 365)
         default:
             AddToLog("Invalid teleport mode specified")
     }
-    Sleep 500
-    FixClick(33, 340) ; Close the teleport menu
     Sleep(1000)
 }
 
@@ -367,9 +358,7 @@ ToggleMenu(name := "") {
 
     key := ""
     if (name = "Unit Manager")
-        key := "F"
-    else if (name = "Ability Manager")
-        key := "Z"
+        key := "C"
 
     if (!key)
         return
@@ -393,8 +382,6 @@ CloseMenu(name := "") {
     clickX := 0, clickY := 0
     if (name = "Unit Manager")
         key := "C"
-    else if (name = "Ability Manager")
-        key := "Z"
 
     if (!key)
         return  ; Unknown menu name
@@ -458,28 +445,6 @@ CleanString(str) {
     return RegExReplace(str, "\s*[^\x00-\x7F]+\s*", "")
 }
 
-SortArrayOfObjects(arr, key, ascending := true) {
-    len := arr.Length
-    if (len < 2)
-        return arr
-
-    Loop len {
-        i := 1
-        while (i < len) {
-            a := arr[i][key]
-            b := arr[i + 1][key]
-
-            if (ascending ? (a > b) : (a < b)) {
-                temp := arr[i]
-                arr[i] := arr[i + 1]
-                arr[i + 1] := temp
-            }
-            i++
-        }
-    }
-    return arr
-}
-
 OnPriorityChange(type, priorityNumber, newPriorityNumber) {
     if (newPriorityNumber == "") {
         newPriorityNumber := "Disabled"
@@ -492,7 +457,8 @@ OnPriorityChange(type, priorityNumber, newPriorityNumber) {
 }
 
 CheckForCardSelection() {
-    if GetPixel(0x4A4747, 436, 383, 2, 2, 3) {
+    if (FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection)) {
+        AddToLog("Found card selection")
         SelectCardsByMode()
         return true
     }
@@ -511,15 +477,7 @@ SearchForImage(X1, Y1, X2, Y2, image) {
 }
 
 OpenCardConfig() {
-    if (ModeDropdown.Text = "Halloween Event") {
-        SwitchCardMode("Halloween")
-    }
-    else if (ModeDropdown.Text = "Boss Rush") {
-        SwitchCardMode("BossRush")
-    }
-    else {
-        AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
-    }
+    AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
 }
 
 AddWaitingFor(action) {
@@ -660,4 +618,33 @@ TeleportToSpawn() {
     FixClick(535, 365)
     Sleep (100)
     FixClick(35, 600) ; close settings
+}
+
+DoesntHaveSeamless(ModeName) {
+
+    static modesWithoutSeamless := ["Gates"]
+
+    for mode in modesWithoutSeamless {
+        if (mode = ModeName)
+            return true
+    }
+    return false
+}
+
+ModesWithMatchmaking(ModeName) {
+    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates"]
+
+    for mode in modesWithMatchmaking {
+        if (mode = ModeName)
+            return true
+    }
+    return false
+}
+
+PlayHereOrMatchmake() {
+    if (Matchmaking.Value && ModesWithMatchmaking(ModeDropdown.Text)) {
+        FixClick(488, 350)
+    } else {
+        FixClick(331, 350)
+    }
 }

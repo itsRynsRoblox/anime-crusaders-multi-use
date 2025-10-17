@@ -75,14 +75,19 @@ if !DirExist(A_ScriptDir "\Settings") {
 setupOutputFile()
 
 ; === Need To Load These Before GUI ===
-global currentCardMode := "Default"
+global currentCardMode := "Spirit Invasion"
 global CardModeConfigs := Map(
-    "Default", Map(
-        "modeName", "Default",
-        "title", "Default Card Priority",
-        "filePath", "Settings\DefaultCardPriority.txt",
+    "Spirit Invasion", Map(
+        "modeName", "SpiritInvasion",
+        "title", "Spirit Invasion Card Priority",
+        "filePath", "Settings\SpiritInvasionCardPriority.txt",
         "options", [
-            ""
+            "Tier1BuffCard",
+            "Tier2BuffCard",
+            "Tier3BuffCard",
+            "Tier1TradeOff",
+            "Tier2TradeOff",
+            "Tier3TradeOff"
         ]
     )
 )
@@ -216,6 +221,9 @@ placementSaveBtn.OnEvent("Click", SaveSettingsForMode)
 MainUI.SetFont("s9")
 
 global NextLevelBox := MainUI.Add("Checkbox", "x900 y451 cffffff", "Next Level")
+global AutoChallenge := MainUI.Add("Checkbox", "x900 y476 cffffff", "Auto Challenge")
+global Matchmaking := MainUI.Add("Checkbox", "x1035 y476 cffffff", "Matchmaking")
+
 global ReturnLobbyBox := MainUI.Add("Checkbox", "x1150 y476 cffffff Checked", "Return To Lobby")
 
 global AutoAbilityBox := MainUI.Add("CheckBox", "x1005 y451 cffffff Checked", "Auto Ability")
@@ -226,7 +234,7 @@ PlacementPatternText := MainUI.Add("Text", "x815 y390 w125 h20", "Placement Patt
 global PlacementPatternDropdown := MainUI.Add("DropDownList", "x825 y410 w100 h180 Choose2 +Center", ["Circle", "Custom", "Grid", "3x3 Grid", "Spiral", "Up and Down", "Random"])
 
 PlacementProfilesText := MainUI.Add("Text", "x1100 y390 w125 h20", "Placement Presets")
-global PlacementProfiles := MainUI.Add("DropDownList", "x1110 y410 w100 h180 Choose1 +Center", ["Story", "Raid", "Portals", "Boss Rush", "Survival", "Custom #1", "Custom #2", "Custom #3"])
+global PlacementProfiles := MainUI.Add("DropDownList", "x1110 y410 w100 h180 Choose1 +Center", ["Story", "Raid", "Portals", "Custom #1", "Custom #2", "Custom #3", "Custom #4", "Custom #5"])
 
 PlaceSpeedText := MainUI.Add("Text", "x956 y390 w115 h20", "Placement Speed")
 global PlaceSpeed := MainUI.Add("DropDownList", "x963 y410 w100 h180 Choose3 +Center", ["Super Fast (1s)", "Fast (1.5s)", "Default (2s)", "Slow (2.5s)", "Very Slow (3s)", "Toaster (4s)"])
@@ -325,11 +333,15 @@ global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
 
 global StoryBorder := MainUI.Add("GroupBox", "x808 y170 w550 h211 +Center Hidden c" uiTheme[1], "Story Settings")
-global NightmareDifficulty := MainUI.Add("CheckBox", "x825 y195 Hidden cffffff", "Nightmare Difficulty")
+global StoryDifficultyText := MainUI.Add("Text", "x825 y195 Hidden", "Story Difficulty")
+global StoryDifficulty := MainUI.Add("DropDownList", "x825 y215 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
 
 global PortalBorder := MainUI.Add("GroupBox", "x808 y255 w550 h126 +Center Hidden c" uiTheme[1], "Portal Settings")
 global PortalLobby := MainUI.Add("CheckBox", "x825 y280 Hidden cffffff", "Starting portal from the lobby")
 
+global GateBorder := MainUI.Add("GroupBox", "x808 y255 w550 h126 +Center Hidden c" uiTheme[1], "Gate Settings")
+global GateSelection := MainUI.Add("CheckBox", "x825 y280 Hidden cffffff", "Use FindText to select the gate (OCR is used by default)")
+global GateMovement := MainUI.Add("CheckBox", "x825 y300 Hidden cffffff", "Use premade movement to walk to the center of the gate room")
 
 ; === Unit Config GUI ===
 global NukeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Nuke Configuration")
@@ -364,12 +376,12 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Custom"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Gates", "Raid", "Custom"])
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Legend Stage #1"] )
 ;global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3"])
-global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", [""])
+global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Psychic", "Immortal", "Crusher", "Lonely Fool", "Thunderbird"])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", [""])
 global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Host", "Guest"])
@@ -853,8 +865,8 @@ InitControlGroups() {
 
     ControlGroups["Mode"] := [
         ModeBorder, ModeConfigurations,
-        StoryBorder, NightmareDifficulty,
-        PortalBorder, PortalLobby
+        StoryBorder, StoryDifficultyText, StoryDifficulty,
+        GateBorder, GateSelection, GateMovement
     ]
 
     ControlGroups["Unit"] := [

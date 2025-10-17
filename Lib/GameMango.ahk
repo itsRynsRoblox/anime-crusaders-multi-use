@@ -10,7 +10,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-
+    CheckForCardSelection()
 }
 
 F6:: {
@@ -69,49 +69,34 @@ CustomMode() {
 
 HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
-        Case "Story":
-            HandleStoryEnd()
         Case "Portal":
             HandlePortalEnd(isVictory)
-        case "Custom":
-            HandleCustomEnd()    
+        case "Gates":
+            HandleGateEnd()    
         Default:
             HandleDefaultEnd()
     }
 }
 
-HandleStoryEnd() {
+HandleDefaultEnd() {
     global lastResult
-    AddToLog("Handling Story mode end")
-    if (NextLevelBox.Value && lastResult = "win") {
-        AddToLog("Next level")
-        ClickUntilGone(0, 0, 80, 85, 739, 224, LobbyIcon, +260, -35)
-    } else {
-        AddToLog("Replay level")
-        ClickReplay()
-    }
-    return RestartStage()
-}
 
-HandleCustomEnd() {
-    global lastResult
+    if (TimeForChallenge()) {
+        AddToLog("[Info] Game over, starting challenge")
+        return ClickReturnToLobby()
+    }
+
     if (NextLevelBox.Value) {
         if (lastResult = "win") {
-            AddToLog("[Game Over] Starting next level")
-            ClickUntilGone(0, 0, 80, 85, 739, 224, LobbyIcon, +260, -35)
+            AddToLog("[Info] Game over, starting next level")
+            ;ClickNextLevel()
             return RestartStage()
         }
     } else {
-        AddToLog("[Game Over] Replaying stage")
+        AddToLog("[Info] Game over, replaying stage")
         ClickReplay()
         return RestartStage()
     }
-}
-
-HandleDefaultEnd() {
-    AddToLog("[Game Over] Restarting stage")
-    ClickReplay()
-    return RestartStage()
 }
 
 MonitorStage() {
@@ -264,12 +249,14 @@ BasicSetup(usedButton := false) {
     global firstStartup
 
     if (!firstStartup) {
-        return
+        if (!DoesntHaveSeamless(ModeDropdown.Text)) {
+            return
+        }
     }
 
-    ; Close various UI elements
-
     CloseChat()
+    Sleep 300
+    FixClick(496, 104) ; Closes Player leaderboard
     Sleep 300
 
     if (ModeDropdown.Text = "Custom" && !usedButton) {
@@ -280,11 +267,13 @@ BasicSetup(usedButton := false) {
 
     ; Teleport to spawn
     TeleportToSpawn()
-
-    FixClick(496, 104) ; Closes Player leaderboard
     Sleep 300
 
-    WalkToCoords()
+    if (ModeDropdown.Text = "Gates" && GateMovement.Value) {
+        WalkToCenterOfGateRoom()
+    } else {
+        WalkToCoords()
+    }
 
     if (!usedButton) {
         firstStartup := false
@@ -428,12 +417,12 @@ UpgradeUnit(x, y) {
 CheckLobby() {
     loop {
         Sleep 1000
-        if (ok := FindText(&X, &Y, 8, 589, 37, 619, 0, 0, LobbySettings)) {
+        if (isInLobby()) {
             break
         }
         Reconnect()
     }
-    AddToLog("Returned to lobby, restarting selected mode")
+    AddToLog("[Info] Returned to lobby, " (TimeForChallenge() ? "starting challenge" : "restarting selected mode"))
     return StartSelectedMode()
 }
 
@@ -441,7 +430,7 @@ CheckLoaded() {
     loop {
         Sleep(500)
         
-        if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.20, 0.20, IngameQuests)) {
+        if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
             AddToLog("Successfully Loaded In")
             break
         }
@@ -465,6 +454,13 @@ StartSelectedMode() {
         CloseLobbyPopups()
     }
 
+    if (AutoChallenge.Value) {
+        if (!IsChallengeOnCooldown() || firstStartup) {
+            AddToLog("[Auto Challenge] It's time for a challenge!")
+            StartChallenge()
+        }
+    }
+
     if (ModeDropdown.Text = "Story") {
         StartStoryMode()
     }
@@ -476,6 +472,9 @@ StartSelectedMode() {
     }
     else if (ModeDropdown.Text = "Portal") {
         StartPortalMode()
+    }
+    else if (ModeDropdown.Text = "Gates") {
+        StartGates()
     }
 }
 
@@ -518,8 +517,21 @@ ClickUntilGone(x, y, searchX1, searchY1, searchX2, searchY2, textToFind, offsetX
     }
 }
 
-ClickReturnToLobby() {
-    ClickUntilGone(0, 0, 238, 400, 566, 445, LobbyIcon, 0, -35)
+ClickReturnToLobby(testing := false) {
+    while (isMenuOpen("End Screen")) {
+        pixelChecks := [{ color: 0x5AB94A, x: 108, y: 469 }]
+
+        for pixel in pixelChecks {
+            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
+                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
+                if (testing) {
+                    Sleep(1500)
+                }
+            }
+        }
+    }
+    AddToLog("[Info] Returning to lobby")
+    return CheckLobby()
 }
 
 ClickReplay(testing := false) {
@@ -536,6 +548,8 @@ ClickReplay(testing := false) {
         }
     }
 }
+
+
 
 SetupForInfinite() {
     ChangeCameraMode("Follow")
@@ -690,5 +704,11 @@ isMenuOpen(name := "") {
     }
     else if (name = "End Screen") {
         return FindText(&X, &Y, 85, 361, 151, 383, 0.20, 0.20, Results)
+    }
+    else if (name = "Matchmaking") {
+        return FindText(&X, &Y, 231, 247, 315, 287, 0.20, 0.20, JoinMatchmaking)
+    }
+    else if (name = "Gates") {
+        return FindText(&X, &Y, 136, 193, 246, 234, 0.20, 0.20, GateUI)
     }
 }

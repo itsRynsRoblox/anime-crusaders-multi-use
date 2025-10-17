@@ -1,6 +1,7 @@
 [Universal Settings]
 Next Level=0
 Return To Lobby=1
+Matchmaking Enabled=0
 Using Mode Configurations=0
 
 [Webhook Settings]
@@ -13,10 +14,10 @@ Private Server Enabled=0
 Private Server URL=
 
 [Story Settings]
-Nightmare Difficulty=0
+Story Difficulty=1
 
 [Placement Settings]
-Placement Pattern=2
+Placement Pattern=1
 Placement Order=2
 Placement Profile=1
 Placement Speed=3

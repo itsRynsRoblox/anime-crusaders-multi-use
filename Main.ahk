@@ -25,6 +25,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Portal.ahk
 #Include %A_ScriptDir%/lib/Modes/Story.ahk
 #Include %A_ScriptDir%/lib/Modes/Raid.ahk
+#Include %A_ScriptDir%/lib/Modes/Gates.ahk
 
 ; === Limited Time Game Modes ===
 
@@ -36,6 +37,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/PlacementPatterns.ahk
 #Include %A_ScriptDir%/lib/Functions/NukeManager.ahk
 #Include %A_ScriptDir%/lib/Functions/CardManager.ahk
+#Include %A_ScriptDir%/lib/Functions/CooldownManager.ahk
 
 ; === Webhook Integration ===
 #Include %A_ScriptDir%/lib/WebhookSettings.ahk

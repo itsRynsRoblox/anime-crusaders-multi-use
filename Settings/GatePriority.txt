@@ -1,0 +1,6 @@
+DRank=6
+CRank=5
+BRank=4
+ARank=3
+SRank=2
+NationalRank=1
