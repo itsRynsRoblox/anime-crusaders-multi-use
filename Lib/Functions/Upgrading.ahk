@@ -333,7 +333,7 @@ WaitForUpgradeLimitText(upgradeCap, timeout := 4500) {
 
     startTime := A_TickCount
     while (A_TickCount - startTime < timeout) {
-        if (FindText(&X, &Y, 103, 373, 165, 386, 0, 0, targetText)) {
+        if (FindText(&X, &Y, 279, 311, 377, 334, 0, 0, targetText)) {
             AddToLog("Found Upgrade Cap")
             return true
         }
@@ -344,6 +344,7 @@ WaitForUpgradeLimitText(upgradeCap, timeout := 4500) {
 
 UpgradeUnitWithLimit(coord, index) {
     global totalUnits
+    global unitUpgradeLimitDisabled  ; Make sure this variable is declared global
 
     upgradeLimitEnabled := "upgradeLimitEnabled" coord.slot
     upgradeLimitEnabled := %upgradeLimitEnabled%
@@ -356,7 +357,8 @@ UpgradeUnitWithLimit(coord, index) {
     upgradePriority := %upgradePriority%
     upgradePriority := String(upgradePriority.Text)
 
-    if (!upgradeLimitEnabled.Value) {
+    ; Check if upgrade limit is disabled globally OR the toggle is off
+    if (!upgradeLimitEnabled.Value || unitUpgradeLimitDisabled) {
         if (UnitManagerUpgradeSystem.Value) {
             UnitManagerUpgrade(coord.placementIndex)
         } else {

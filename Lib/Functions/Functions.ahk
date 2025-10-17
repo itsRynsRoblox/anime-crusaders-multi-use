@@ -117,6 +117,10 @@ OnConfirmClick(*) {
         AddToLog("Selected " ModeDropdown.Text " mode")
     }
 
+    if (StartsInLobby(ModeDropdown.Text)) {
+        AddToLog("[Reminder] Please rejoin the game to use default camera position")
+    }
+
     ; Hide all controls if validation passes
     ModeDropdown.Visible := false
     StoryDropdown.Visible := false
@@ -254,11 +258,11 @@ CalculateElapsedTime(startTime) {
     return Format("{:02}:{:02}:{:02}", elapsedHours, elapsedMinutes, elapsedSeconds)
 }
 
-GetPixel(color, x1, y1, extraX, extraY, variation, returnTrue := true) {
+GetPixel(color, x1, y1, extraX, extraY, variation) {
     global foundX, foundY
     try {
         if PixelSearch(&foundX, &foundY, x1, y1, x1 + extraX, y1 + extraY, color, variation) {
-            return returnTrue ? true : [foundX, foundY]
+            return [foundX, foundY] and true
         }
         return false
     }
@@ -266,11 +270,17 @@ GetPixel(color, x1, y1, extraX, extraY, variation, returnTrue := true) {
 
 Teleport(mode := "") {
     teleportCoords := [780, 450]
-    FixClick(teleportCoords[1], teleportCoords[2])
-    Sleep 500
     switch mode {
         case "Challenge":
+            FixClick(teleportCoords[1], teleportCoords[2])
+            Sleep 500
             FixClick(480, 365)
+        case "Spirit Invasion":
+            FixClick(330, 180)
+        case "Raid":
+            FixClick(teleportCoords[1], teleportCoords[2])
+            Sleep 500
+            FixClick(479, 432)  
         default:
             AddToLog("Invalid teleport mode specified")
     }
@@ -311,12 +321,11 @@ RotateCameraAngle() {
 CloseLobbyPopups() {
     FixClick(572, 103) ; close leaderboard
     Sleep(500)
+    FixClick(410, 420) ; close daily reward
+    Sleep(500)
     FixClick(655, 185) ; Update UI
     Sleep(500)
-    FixClick(400,340)
-    Sleep(500)
-    FixClick(400,390)
-
+    FixClick(400, 390)
 }
 
 ClickUnit(slot) {
@@ -458,7 +467,6 @@ OnPriorityChange(type, priorityNumber, newPriorityNumber) {
 
 CheckForCardSelection() {
     if (FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection)) {
-        AddToLog("Found card selection")
         SelectCardsByMode()
         return true
     }
@@ -477,7 +485,11 @@ SearchForImage(X1, Y1, X2, Y2, image) {
 }
 
 OpenCardConfig() {
-    AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
+    if (ModeDropdown.Text = "Spirit Invasion") {
+        SwitchCardMode("Spirit Invasion")
+    } else {
+        AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
+    }
 }
 
 AddWaitingFor(action) {
@@ -632,7 +644,7 @@ DoesntHaveSeamless(ModeName) {
 }
 
 ModesWithMatchmaking(ModeName) {
-    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates"]
+    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates", "Spirit Invasion"]
 
     for mode in modesWithMatchmaking {
         if (mode = ModeName)
@@ -644,7 +656,44 @@ ModesWithMatchmaking(ModeName) {
 PlayHereOrMatchmake() {
     if (Matchmaking.Value && ModesWithMatchmaking(ModeDropdown.Text)) {
         FixClick(488, 350)
+        AddToLog("[Info] Waiting for game to start...")
+        while (isInLobby()) {
+            Sleep(1000)
+        }
+        AddToLog("[Info] Match has been found!")
     } else {
-        FixClick(331, 350)
+        if (isInGame()) {
+            FixClick(331, 350)
+        } else {
+            FixClick(331, 350)
+            Sleep(1500)
+            FixClick(410, 525)
+        }
+    }
+}
+
+ActiveAbilityEnabled() {
+    if (autoAbilityDisabled) {
+        return false
+    }
+
+    if (AutoAbilityBox.Value) {
+        return true
+    }
+    return false
+}
+
+ClickNextLevel(testing := false) {
+    while (isMenuOpen("End Screen")) {
+        pixelChecks := [{ color: 0x79A7DC, x: 395, y: 482 }]
+
+        for pixel in pixelChecks {
+            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
+                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
+                if (testing) {
+                    Sleep(1500)
+                }
+            }
+        }
     }
 }

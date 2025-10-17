@@ -95,7 +95,6 @@ SaveSettingsForMode(*) {
         content .= "`nStart Portal In Lobby=" PortalLobby.Value
 
         content .= "`n`n[Gate Settings]"
-        content .= "`nFindText Gate Enabled=" GateSelection.Value
         content .= "`nPremade Gate Movement=" GateMovement.Value
 
         content .= "`n`n[Unit Settings]"
@@ -290,6 +289,7 @@ LoadUniversalSettings() {
             case "Placement Order": PlacementSelection.Value := value
             case "Placement Profile": PlacementProfiles.Value := value
             case "Placement Speed": PlaceSpeed.Value := value
+            case "Place Until Successful": PlaceUntilSuccessful.Value := value
             case "Story Difficulty": StoryDifficulty.Value := value
             case "Matchmaking Enabled": Matchmaking.Value := value
         }
@@ -326,6 +326,7 @@ SaveUniversalSettings() {
         content .= "`nPlacement Order=" PlacementSelection.Value
         content .= "`nPlacement Profile=" PlacementProfiles.Value
         content .= "`nPlacement Speed=" PlaceSpeed.Value
+        content .= "`nPlace Until Successful=" PlaceUntilSuccessful.Value
 
         FileAppend(content, universalFile)
     }
@@ -611,7 +612,6 @@ InitSettings() {
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Start Portal In Lobby"] := { control: PortalLobby, prop: "Value" }
-    UnitConfigMap["FindText Gate Enabled"] := { control: GateSelection, prop: "Value" }
     UnitConfigMap["Premade Gate Movement"] := { control: GateMovement, prop: "Value" }
 
     UnitConfigMap["Nuke Enabled"] := { control: NukeUnitSlotEnabled, prop: "Value" }

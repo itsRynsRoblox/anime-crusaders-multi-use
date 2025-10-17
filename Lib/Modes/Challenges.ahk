@@ -12,7 +12,7 @@ StartChallenge(maxAttempts := 5) {
     if (attempts >= maxAttempts) {
         AddToLog("Failed to start challenge after " attempts " attempts. Giving up.")
         SetChallengeCooldown()
-        return
+        return StartSelectedMode()
     }
 
     AddToLog("Starting Challenge")
@@ -30,5 +30,5 @@ WalkToChallengeRoom() {
 }
 
 TimeForChallenge() {
-    return AutoChallenge.Value && !IsChallengeOnCooldown()
+    return AutoChallenge.Value && !IsChallengeOnCooldown() && !ModeDropdown.Text = "Custom"
 }

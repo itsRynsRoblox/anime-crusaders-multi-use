@@ -10,7 +10,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    CheckForCardSelection()
+
 }
 
 F6:: {
@@ -51,17 +51,6 @@ TogglePause(*) {
     }
 }
 
-ChallengeMode() {    
-    AddToLog("Moving to Challenge mode")
-    ChallengeMovement()
-    
-    while !(ok := FindText(&X, &Y, 325, 520, 489, 587, 0, 0, Story)) {
-        ChallengeMovement()
-    }
-
-    RestartStage()
-}
-
 CustomMode() {
     AddToLog("Starting Custom Mode")
     RestartStage()
@@ -69,10 +58,8 @@ CustomMode() {
 
 HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
-        Case "Portal":
-            HandlePortalEnd(isVictory)
         case "Gates":
-            HandleGateEnd()    
+            HandleGateEnd()  
         Default:
             HandleDefaultEnd()
     }
@@ -93,7 +80,11 @@ HandleDefaultEnd() {
             return RestartStage()
         }
     } else {
-        AddToLog("[Info] Game over, replaying stage")
+        if (lastResult = "win") {
+            AddToLog("[Info] Game over, " (ModeDropdown.Text = "Infinity Castle" ? "starting next room" : " replaying stage"))
+        } else {
+            AddToLog("[Info] Game over, " (ModeDropdown.Text = "Infinity Castle" ? "retrying room" : " replaying stage"))
+        }
         ClickReplay()
         return RestartStage()
     }
@@ -134,7 +125,7 @@ MonitorStage() {
             continue
 
         ; --- Handle Auto Ability ---
-        if (AutoAbilityBox.Value) {
+        if (ActiveAbilityEnabled()) {
             SetTimer(CheckAutoAbility, 0)
         }
 
@@ -205,9 +196,8 @@ PlayHere(mode := "Story") {
 
     }
     else if (mode = "Raid") {
-        FixClick(399, 413) ; click select
-        Sleep (300)
-        FixClick(333, 349) ; click play here
+        FixClick(595, 468) ; click select
+        Sleep(300)
     }
 }
 
@@ -291,7 +281,7 @@ RestartStage() {
     StartedGame()
 
     ; Begin unit placement and management
-    StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlacementPatternDropdown.Text = "Map Specific")
+    StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlaceUntilSuccessful.Value)
     
     ; Monitor stage progress
     MonitorStage()
@@ -314,7 +304,7 @@ Reconnect(testing := false) {
             AddToLog("Connecting to private server...")
             Run(psLink)
         } else {
-            Run("roblox://placeID=12886143095")
+            Run("roblox://placeID=107573139811370")
         }
 
         Sleep 2000
@@ -324,14 +314,21 @@ Reconnect(testing := false) {
             Sleep 1000
         }
 
+        AddToLog("Reconnecting to Anime Crusaders...")
+
+        while (isInLobby()) {
+            Sleep(100)
+        }
+
+        AddToLog("New session has been detected...")
+
         loop {
             FixClick(490, 400)
-            AddToLog("Reconnecting to Anime Last Stand...")
-            Sleep 15000
+            Sleep(1000)
             if (WinExist(rblxID)) {
                 WinActivate(rblxID)
             }
-            if (ok := FindText(&X, &Y, 7, 590, 37, 618, 0, 0, LobbySettings)) {
+            if (isInLobby()) {
                 AddToLog("Reconnected Successfully!")
                 return StartSelectedMode()
             } else {
@@ -342,7 +339,7 @@ Reconnect(testing := false) {
 }
 
 HandleAutoAbility() {
-    if !AutoAbilityBox.Value
+    if !ActiveAbilityEnabled()
         return
 
     wiggle()
@@ -367,7 +364,7 @@ HandleAutoAbility() {
 }
 
 HandleAutoAbilityUnitManager() {
-    if !AutoAbilityBox.Value
+    if !ActiveAbilityEnabled()
         return
 
     wiggle()
@@ -450,12 +447,12 @@ StartedGame() {
 
 StartSelectedMode() {
 
-    if (ModeDropdown.Text != "Custom") {
+    if (StartsInLobby(ModeDropdown.Text)) {
         CloseLobbyPopups()
     }
 
     if (AutoChallenge.Value) {
-        if (!IsChallengeOnCooldown() || firstStartup) {
+        if (TimeForChallenge()) {
             AddToLog("[Auto Challenge] It's time for a challenge!")
             StartChallenge()
         }
@@ -475,6 +472,12 @@ StartSelectedMode() {
     }
     else if (ModeDropdown.Text = "Gates") {
         StartGates()
+    }
+    else if (ModeDropdown.Text = "Spirit Invasion") {
+        StartSpiritInvasion()
+    }
+    else if (ModeDropdown.Text = "Infinity Castle") {
+        StartInfinityCastle()
     }
 }
 
@@ -536,7 +539,7 @@ ClickReturnToLobby(testing := false) {
 
 ClickReplay(testing := false) {
     while (isMenuOpen("End Screen")) {
-        pixelChecks := [{ color: 0xA5892A, x: 271, y: 472 }]
+        pixelChecks := [{ color: 0xFCE560, x: 270, y: 483 }]
 
         for pixel in pixelChecks {
             if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
@@ -548,8 +551,6 @@ ClickReplay(testing := false) {
         }
     }
 }
-
-
 
 SetupForInfinite() {
     ChangeCameraMode("Follow")
@@ -666,7 +667,7 @@ HandleStartButton() {
 
 StartsInLobby(ModeName) {
     ; Array of modes that usually start in lobby
-    static modes := ["Story", "Raid"]
+    static modes := ["Story", "Raid", "Gates", "Spirit Invasion", "Infinity Castle"]
     
     ; Special case: If PortalLobby.Value is set, don't start in lobby for "Portal"
     if (ModeName = "Portal" && !PortalLobby.Value)
@@ -682,7 +683,7 @@ StartsInLobby(ModeName) {
 
 HasCards(ModeName) {
     ; Array of modes that have card selection
-    static modesWithCards := [""]
+    static modesWithCards := ["Spirit Invasion"]
     
     ; Check if current mode is in the array
     for mode in modesWithCards {
@@ -696,8 +697,8 @@ isMenuOpen(name := "") {
     if (name = "Unit Manager") {
         return GetPixel(0x00CBFF, 773, 71, 2, 2, 5)
     }
-    else if (name = "Ability Manager") {
-        return FindText(&X, &Y, 675, 594, 785, 616, 0.20, 0.20, AbilityManager)
+    else if (name = "Raids") {
+        return FindText(&X, &Y, 546, 456, 633, 479, 0.20, 0.20, Raids)
     }
     else if (name = "Story") {
         return FindText(&X, &Y, 546, 454, 634, 479, 0.20, 0.20, StoryFailsafe)
@@ -710,5 +711,11 @@ isMenuOpen(name := "") {
     }
     else if (name = "Gates") {
         return FindText(&X, &Y, 136, 193, 246, 234, 0.20, 0.20, GateUI)
+    }
+    else if (name = "Spirit Invasion") {
+        return GetPixel(0xDE36E0, 260, 176, 2, 2, 5)
+    }
+    else if (name = "Infinity Castle") {
+        return FindText(&X, &Y, 444, 439, 610, 475, 0.20, 0.20, InfinityCastleUI)
     }
 }

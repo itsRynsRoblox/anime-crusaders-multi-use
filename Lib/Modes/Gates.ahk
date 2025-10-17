@@ -5,11 +5,7 @@ StartGates() {
         WalkToGates()
     }
 
-    if (GateSelection.Value) {
-        SelectGatesByFindText()
-    } else {
-        SelectGatesByOCR()
-    }
+    SelectGatesByFindText()
     FixClick(331, 348) ; Click Play Here
     Sleep(500)
     FixClick(410, 526)
@@ -130,70 +126,6 @@ SelectGatesByFindText() {
     AddToLog("Failed to pick a gate")
 }
 
-SelectGatesByOCR() {
-    rankMap := loadRankSettings("Settings\GatePriority.txt")
-    ShowAllRanks(rankMap)
-
-    coords := [
-        [156, 236, 306, 284], [294, 238, 412, 285], [429, 236, 547, 284],
-        [156, 236, 306, 284], [294, 238, 412, 285], [429, 236, 547, 284]
-    ]
-
-    mouseCoords := [
-        [226, 474], [368, 473], [500, 478],
-        [236, 472], [374, 471], [511, 472]
-    ]
-
-    best := {
-        priority: 6,
-        index: -1,
-        rank: "",
-        score: 0.0
-    }
-
-    loop coords.Length {
-        i := A_Index
-        region := coords[i]
-        mouse := mouseCoords[i]
-
-        MouseMove(mouse[1], mouse[2])
-        Sleep(1000)
-        wiggle()
-        Sleep(200)
-
-        if (i = 4) {
-            Scroll(3, "WheelDown", 5)
-            Sleep(1000)
-            wiggle()
-            Sleep(300)
-        }
-
-        result := getValidOCR(region, i)
-        if !result {
-            AddToLog("No valid OCR result at position " i)
-            continue
-        }
-
-        ; === Matching logic ===
-        match := getBestRankMatch(result, rankMap, best)
-        if match && match.priority < best.priority {
-            best := match
-            if best.priority = 1
-                return SelectGate(best.index, mouseCoords)
-        }
-
-        Sleep(300)
-    }
-
-    if best.rank {
-        AddToLog("Best rank found: " best.rank " with priority " best.priority)
-        return SelectGate(best.index, mouseCoords)
-    } else {
-        AddToLog("No valid rank found")
-        return -1
-    }
-}
-
 ; === Selects card by index and scroll direction
 SelectGate(index, mouseCoords) {
     if (index > 3) {
@@ -204,80 +136,6 @@ SelectGate(index, mouseCoords) {
     Sleep(1500)
     FixClick(mouseCoords[index][1], mouseCoords[index][2])
     return index
-}
-
-getValidOCR(region, index) {
-    attempts := 3
-    loop attempts {
-        if A_Index > 1 {
-            AddToLog("Retrying OCR at position " index " (attempt " A_Index "/" attempts ")")
-            Sleep(500)
-            wiggle()
-            Sleep(500)
-        }
-
-        result := OCRFromFile(region[1], region[2], region[3], region[4], A_Index > 1 ? 4 : 2, false)
-        cleaned := sanitizeOCRResult(result)
-
-        if cleaned != "" {
-            return cleaned
-        } else {
-            AddToLog("Only 'Gate' found at position " index ", attempt " A_Index "/" attempts)
-        }
-    }
-    return ""
-}
-
-sanitizeOCRResult(text) {
-    cleaned := StrReplace(text, " Gate", "")
-    cleaned := StrReplace(cleaned, "Gate", "")
-    cleaned := StrReplace(cleaned, " ", "")
-    cleaned := StrReplace(cleaned, "O", "B")  ; Common OCR misread
-    return cleaned
-}
-
-getBestRankMatch(ocrText, rankMap, currentBest) {
-    best := currentBest.Clone()
-    for key, priority in rankMap {
-        ; Exact match
-        if (ocrText = key) {
-            AddToLog("Exact match: " ocrText)
-            return { rank: key, priority: priority, index: A_Index, score: 1.0 }
-        }
-
-        ; Substring match
-        if InStr(ocrText, key) || InStr(key, ocrText) {
-            AddToLog("Substring match: '" ocrText "' ≈ '" key "'")
-            if priority < best.priority {
-                return { rank: key, priority: priority, index: A_Index, score: 0.9 }
-            }
-        }
-
-        ; Fuzzy match
-        score := FuzzyMatch(ocrText, key)
-        if (score >= 0.85 && (priority < best.priority || (priority = best.priority && score > best.score))) {
-            AddToLog("Fuzzy match: '" ocrText "' ≈ '" key "' (score: " score ")")
-            best := { rank: key, priority: priority, index: A_Index, score: score }
-        }
-    }
-    return best
-}
-
-loadRankSettings(filePath) {
-    ranks := Map()
-    for line in StrSplit(FileRead(filePath), "`n", "`r") {
-        if InStr(line, "=") {
-            parts := StrSplit(Trim(line), "=")
-            ranks[Trim(parts[1])] := Integer(Trim(parts[2]))
-        }
-    }
-    return ranks
-}
-
-ShowAllRanks(rankMap) {
-    for k, v in rankMap {
-        AddToLog("  " k " = " v)
-    }
 }
 
 ; Calculates similarity between two strings using Levenshtein
@@ -298,11 +156,7 @@ PickNextGate(testing := false) {
             }
         }
     }
-    if (GateSelection.Value) {
-        SelectGatesByFindText()
-    } else {
-        SelectGatesByOCR()
-    }
+    SelectGatesByFindText()
     Sleep (500)
     FixClick(331, 348) ; Click Play Here
 }

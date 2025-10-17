@@ -21,7 +21,7 @@ StartStoryMode() {
     SelectDifficulty("Nightmare")
 
     ; Handle play mode selection
-    PlayHere()
+    PlayHereOrMatchmake()
     RestartStage()
 }
 

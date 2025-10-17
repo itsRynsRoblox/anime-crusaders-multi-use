@@ -20,6 +20,7 @@ CreateCardPriorityGui(config) {
         dropDown := CardGUI.Add("DropDownList", Format("x60 y{} w135", yPos), config["options"])
         dropDowns.Push(dropDown)
         AttachDropDownEvent(dropDown, A_Index, OnDropDownChange)
+        AddToLog("Added dropdown " config["options"][A_Index] " with priority " A_Index)
     }
 
     groupBoxHeight := yStart + (config["options"].Length * ySpacing - 15)
@@ -46,7 +47,7 @@ OpenCardPriorityPicker() {
 
 
 SelectCardsByMode() {
-    if (ModeDropdown.Text = "") {
+    if (ModeDropdown.Text = "Spirit Invasion") {
         return SelectCards("SpiritInvasion")
     }
     return false
@@ -96,22 +97,17 @@ SelectCards(eventName) {
 
     cardPriorities := cachedCardPriorities[eventName]
 
-    ; Default card slots
-    ; Base origin for all cards (e.g. top-left corner of the card container)
+    ; Base origin for all cards
     baseX := 100
     baseY := 250
-
-    ; Global scale for all coordinates (for resolution or zoom)
     scale := 1.0
 
-    ; Relative offsets and sizes for each card slot
-    cardSlots := [
-        { clickOffsetX: 105, clickOffsetY: 95, ocrOffsetX1: 31, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY:  45},
-        { clickOffsetX: 305, clickOffsetY: 95, ocrOffsetX1: 240, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 },
-        { clickOffsetX: 505, clickOffsetY: 95, ocrOffsetX1: 450, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }
+    cardSlots := [{ clickOffsetX: 105, clickOffsetY: 95, ocrOffsetX1: 31, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30,
+        tierOffsetX: 0, tierOffsetY: 45 }, { clickOffsetX: 305, clickOffsetY: 95, ocrOffsetX1: 240, ocrOffsetY1: 10,
+            ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }, { clickOffsetX: 505, clickOffsetY: 95,
+                ocrOffsetX1: 450, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }
     ]
 
-    ; Then compute absolute coords on the fly
     for index, slot in cardSlots {
         slot.clickX := baseX + slot.clickOffsetX * scale
         slot.clickY := baseY + slot.clickOffsetY * scale
@@ -119,15 +115,14 @@ SelectCards(eventName) {
         slot.ocrY1 := baseY + slot.ocrOffsetY1 * scale
         slot.ocrX2 := slot.ocrX1 + slot.ocrWidth * scale
         slot.ocrY2 := slot.ocrY1 + slot.ocrHeight * scale
-
-        ; Tier color check pixel
         slot.tierCheckX := slot.clickX - slot.tierOffsetX * scale
         slot.tierCheckY := slot.clickY - slot.tierOffsetY * scale
     }
 
     tierColors := Map(
-        "3", 0x2C1E01, ; Gold for Tier 3
-        "2", 0x11002A ; Purple for Tier 2
+        "3", 0x2C1E01, ; Gold
+        "2", 0x11002A  ; Purple
+        ; "1" is default if none matched
     )
 
     foundCards := Map()
@@ -140,27 +135,34 @@ SelectCards(eventName) {
         ocrCleaned := RegExReplace(orcResult, "\\s+|!", "")
 
         if (ocrCleaned != "") {
-            for cardName, priority in cardPriorities {
-                matchScore := 1.0 - (Levenshtein(ocrCleaned, cardName) / Max(StrLen(ocrCleaned), StrLen(cardName)))
-                if (debugMessages) {
-                    AddToLog("OCR='" ocrCleaned "' matched with '" cardName "' with score " matchScore)
-                }
-                if (matchScore >= 0.75) {  ; Accept matches with at least 75% similarity
+            for baseCardName, _ in cardPriorities {
+                ; Strip "Tier1/2/3" from keys to match base card name
+                strippedName := RegExReplace(baseCardName, "^Tier[123]")
+                matchScore := 1.0 - (Levenshtein(ocrCleaned, strippedName) / Max(StrLen(ocrCleaned), StrLen(strippedName)))
 
-                    ; Detect tier by pixel color at tierCheck position
-                    tier := "1"  ; default or unknown
+                if (matchScore >= 0.5) {
+                    ; Determine tier via pixel color
+                    tier := "1" ; default if no match
                     for t, color in tierColors {
-                        MouseMove(slot.tierCheckX, slot.tierCheckY)
                         if GetPixel(color, slot.tierCheckX, slot.tierCheckY, 1, 1, 5) {
                             tier := t
                             break
                         }
                     }
 
-                    foundCards[cardName] := { slot: slot, priority: priority, tier: tier }
-                    AddToLog("Found card '" cardName "' with priority " priority " and tier " tier)
-                    if (debugMessages) {
-                        AddToLog("Exact or close match: OCR='" ocrCleaned "' matched with '" cardName "' Tier: " tier)
+                    ; Compose key like "Tier3BuffCard"
+                    tieredCardKey := "Tier" tier strippedName
+                    if (cardPriorities.Has(tieredCardKey)) {
+                        priority := cardPriorities[tieredCardKey]
+                        foundCards[tieredCardKey] := {
+                            slot: slot,
+                            priority: priority,
+                            tier: tier,
+                            baseName: strippedName
+                        }
+                        AddToLog("Found card '" tieredCardKey "' with priority " priority)
+                    } else {
+                        AddToLog("No priority set for " tieredCardKey)
                     }
                     break
                 }
@@ -169,22 +171,13 @@ SelectCards(eventName) {
         Sleep(50)
     }
 
+    ; Find best card based on lowest priority, then highest tier
     if (foundCards.Count > 0) {
-        ; Step 1: Group cards by name and keep highest tier per name
-        bestByName := Map()
-        for cardName, cardInfo in foundCards {
-            thisTier := Integer(cardInfo.tier)
-            if (!bestByName.Has(cardName) || thisTier > Integer(bestByName[cardName].tier)) {
-                bestByName[cardName] := cardInfo
-            }
-        }
-
-        ; Step 2: From bestByName, pick the one with the best (lowest) priority and highest tier
         highestPriority := 999
         highestTier := 0
         bestCard := ""
 
-        for cardName, cardInfo in bestByName {
+        for cardKey, cardInfo in foundCards {
             thisPriority := cardInfo.priority
             thisTier := Integer(cardInfo.tier)
 
@@ -192,36 +185,30 @@ SelectCards(eventName) {
                 || (thisPriority = highestPriority && thisTier > highestTier)) {
                 highestPriority := thisPriority
                 highestTier := thisTier
-                bestCard := cardName
+                bestCard := cardKey
             }
         }
 
         if (bestCard != "") {
-            cardInfo := bestByName[bestCard]
-            slot := cardInfo.slot
-            AddToLog("Selecting highest priority card: " bestCard " (Tier " cardInfo.tier ")")
+            slot := foundCards[bestCard].slot
+            AddToLog("Selecting best card: " bestCard)
             FixClick(slot.clickX, slot.clickY)
             Sleep(300)
             FixClick(415, 450)
 
-            if (AutoAbilityBox.Value) {
+            if (AutoAbilityBox.Value)
                 SetTimer(CheckAutoAbility, GetAutoAbilityTimer())
-            }
-            if (NukeUnitSlotEnabled.Value) {
+            if (NukeUnitSlotEnabled.Value)
                 ResumeNuke()
-            }
             return true
         }
     }
 
     AddToLog("No cards found...")
-
-    if (AutoAbilityBox.Value) {
+    if (AutoAbilityBox.Value)
         SetTimer(CheckAutoAbility, GetAutoAbilityTimer())
-    }
-    if (NukeUnitSlotEnabled.Value) {
+    if (NukeUnitSlotEnabled.Value)
         ResumeNuke()
-    }
     return false
 }
 
@@ -328,8 +315,6 @@ SaveNewCardConfigToFile(filePath) {
     if (debugMessages)
         AddToLog("Card configuration saved to: " filePath)
 }
-
-
 
 LoadNewCardConfigFromFile(filePath) {
     global dropDowns, currentConfig, priorityOrder
@@ -478,15 +463,48 @@ LoadAllCardConfig() {
 ; === Helper Functions ===
 
 OnDropDownChange(ctrl, index) {
-    if (index >= 0 and index <= 19) {
+    if (index >= 0 && index <= dropDowns.Length) {
         newPriority := ctrl.Text
+        used := Map()
+        originalOptions := currentConfig["options"].Clone()
+
+        ; First, collect all selected options (after change)
         for i, dropdown in dropDowns {
-            if (i != index && dropdown.Text = newPriority) {
-                AddToLog(Format("{} already exists for priority {}, don't forget to change it!", newPriority, i))
-                break
+            if (i == index) {
+                used[newPriority] := i  ; new value just selected
+            } else {
+                used[dropdown.Text] := i
             }
         }
-        currentConfig["options"][index] := newPriority
+
+        ; Find missing option(s)
+        missing := []
+        for _, opt in originalOptions {
+            if !used.Has(opt) {
+                missing.Push(opt)
+            }
+        }
+
+        ; Check for duplicates and fix them
+        for i, dropdown in dropDowns {
+            if (i != index && dropdown.Text = newPriority) {
+                if (missing.Length > 0) {
+                    replacement := missing.Pop()
+                    dropdown.Text := replacement
+                    if (debugMessages) {
+                        AddToLog(Format("Card '{}' replaced with '{}'", newPriority, replacement))
+                    }
+                } else {
+                    AddToLog("Warning: No available replacement for duplicate value.")
+                }
+            }
+        }
+
+        ; Update options based on new dropdown states
+        for i, dropdown in dropDowns {
+            currentConfig["options"][i] := dropdown.Text
+        }
+
         AddToLog(Format("Priority {} set to {}", index, newPriority))
         RemoveEmptyStrings(priorityOrder)
         SaveNewCardConfigToFile(currentConfig["filePath"])
@@ -496,6 +514,7 @@ OnDropDownChange(ctrl, index) {
         }
     }
 }
+
 
 AttachDropDownEvent(dropDown, index, callback) {
     dropDown.OnEvent("Change", (*) => callback(dropDown, index))

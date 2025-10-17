@@ -1,8 +1,6 @@
 [SavedCoordinates]
 [Preset 1]
-X=454, Y=315
-X=528, Y=327
-X=263, Y=353
+NoCoordinatesSaved
 [Preset 2]
 NoCoordinatesSaved
 [Preset 3]

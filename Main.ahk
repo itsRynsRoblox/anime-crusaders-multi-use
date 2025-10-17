@@ -26,6 +26,8 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Story.ahk
 #Include %A_ScriptDir%/lib/Modes/Raid.ahk
 #Include %A_ScriptDir%/lib/Modes/Gates.ahk
+#Include %A_ScriptDir%/lib/Modes/SpiritInvasion.ahk
+#Include %A_ScriptDir%/lib/Modes/InfinityCastle.ahk
 
 ; === Limited Time Game Modes ===
 

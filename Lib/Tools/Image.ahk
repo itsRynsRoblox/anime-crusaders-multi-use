@@ -8,9 +8,7 @@ global Import := "Images\import.png"
 global Export := "Images\export.png"
 
 ;=== General FindText Text and Buttons ===
-ModeCancel:="|<>*134$70.zzzzzzzzzzzzzzzzzzzzzzzzwDzzzzzzzszz0DzzzzzzzXzs0TzzzzzzyDz01zzzzzzzszsDDzzzznz7XzVzw0k3w3k6DyDzU307U60Mzszw0A0A0kEXzXzkkkkkz72DyDz737X7w08zsTwQASATk1XzkMk0lsk33y7z01037X040MDy060ASC0M1Uzy1y8lsy7k73zzzzzzzzzzzzU"
 Disconnect:="|<>*154$122.zznzzzzzzzzzzzzzzzzws7szzzzzzzzzzzzzDzzzC0TDzzzzzzzzzzzznzzznb3zzzzzzzzzzzzzwzzzwtwzzzzzzzzzzzzzzDzzzCT7DVy7kz8T8TkzV0S7sHblnUC0k7k3k3k7U060w0tyQsrXMswMwMstsrD7CCCTbCDlyDDDDDCTATnntXnblnkwzblnnnnU3Dww0NwtwQz3DtwQwwws0nzD06TCTDDwlyDDDDDCTwTnnzXnb3nbADXXnnnnXr3wQSsss1ws3UA1wwwww1s31UD0C1zD1y7kzDDDDkzVsS7sHU"
-NextLevel:="|<>*113$31.0000000000000000S1s00TVy00MMVU0AAkk063MMA30wAzlUC7sQk73k2M1Vk1A0Ek0640MQ330A01Vk600ks33yMS1UvABUk0a6sQ0H6AD08z3wzwD0w7w0000000000E"
 OpenChat:="|<>*154$30.zzzzzzzzzzw000Ds0007s0007s0007s0007s0007s7zs7s7zs7s0007s0007s0z07s1zU7s0007s0007s0007s0007s0007zs07zzy0Tzzz0zzzzVzzzznzzzzzzzU"
 
 ; === Anime Crusaders ===
@@ -22,33 +20,21 @@ IngameQuests:="|<>*100$27.zzszzz07zy00zzU07zw00Hz002Ts00HzU82Dw3UFzUz3DwDsNzUy3D
 MaxUpgradeText:="|<>*153$53.zzzzzzzzzszy7zzzzzlzwDzzzzz1zkzzzzzy3z1zzzzzw3w3s2C7Vs7s7U0SC7kDUC30w8T2C8sT1w1y4MFkn2M7AM1XV6AMQMs6768NUklkQC7kq0l3lsQD1s1W7Xls03VVYPxXM0C7Xcnm6M4MT3TU7sTzzryU"
 Results:="|<>*89$53.zzzzzzzzzzzzzzzzzz1zzzzztzw1zzzzznzsXzzzzzbzlY4mE0E8HU804U0UGX0080868Vy00k4EAFXwN1mA0Q04Rn3aw5w49zzzzzzzzzU"
 JoinMatchmaking:="|<>*130$75.zzzzzzzzzzzzzzzzzzzy3zzzzzzzzzzzkDzzzzzw7zzzw1zzzzzz0zzzzUDzzzzzs7zzzy1zzzzzz0zzzzkTzzzzzs7zzzzzzzzzzz0zzzzzzzzzzzs7zzzzzzzzzzz0zs1zkS3Uzzzs7w03y1k01zzz0z00DUA007zzs7k00w1U00Tzz0w007UA003zzs7U00Q1U00Dzz0s1s3UA0M1zzs70TUA1UDUDzz0s7w1UA1y1zzs70zUA1UDkDzz0s7w1UA1y1y7k70TUA1UDkDUQ0s1k3UA1y1w007U00Q1UDkDU01w007UA1y1w00Tk00w1UDkDk03z00DUA1y1z01zw03y1kDkDy0Tzs1zkS3z1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzw"
+Raids:="|<>*96$50.000000000D00s0000Dy0T000s7bUAM00T30Tv7wTgNk7znzzz7MzkwsT1Uq7k68300AkQsWQFbDC00800zXbw02E0Dsnj0zYTXiCk30FUA1Vi1sAQ7UwNzzzzzzzy7sTCDVwT000000002"
+InfinityCastleUI:="|<>*151$65.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzU1zzzzzzzzw00zzyDzzzzs01zzwDzzzzk03zzsTzzzzU0Dzzkzzzzz3zwty0TUzCS7zk0s0Q0w0Q0DU0k0k0s0M0D00k100k1k0S01k63VUrU0wD3kwD33z3zsS3Vs067y7zkw73k0QCADzVsC7VzsQM033kw31lksk027Vs303VlU0ADXs7073XU0QT7sT0D67zzzrxzzzzw7zzz7kzbzjk00000001s00U"
 
+; === Upgrade Limits === 279, 311, 377, 334
+Upgrade0:="|<>*96$18.zzzVlVX0Vb4NbANaCNbCNbANb0tbVtbzlVzVzzzzzzU"
+Upgrade1:="|<>*98$15.zzw0VW4AstbbAwtbbAwtbbAwtbyADVzzzzzU"
+Upgrade2:="|<>*97$17.zzz36684Av6NyAnwtbnnCDaQ3Ak6NzskzVzzzzzy"
+Upgrade3:="|<>*96$17.zzz22680AyCNwwnktbsnDtaM3AsCNzskzVzzzzzy"
+Upgrade4:="|<>*96$19.zzzkwsMwQAyTaSDnC9tb0Qn06Nz7AzbaTzX3zVzzzk"
+Upgrade5:="|<>*98$17.zzz226A0AtyNlwnUtbsnDtaQ3AsCNzskzVzzzzzy"
+Upgrade6:="|<>*96$18.zzzVkVXUVb7tbDta0ta4NbANb0tbVtbzlVzVzzzU"
+Upgrade7:="|<>*95$18.zzzV0VW0Va8tbMtbttbltbntbXtbXtbzlVzVzzzzzzU"
+Upgrade8:="|<>*95$18.zzzVVVX0VbANb4tb0tb4NaANb0NbUtbzlVzVzzzzzzU"
+Upgrade9:="|<>*90$22.zzzy3bkM871XUD6AQQMlllXU76D0QMzllXyD6C0wMsDlXzz67zkMTz1zzzy"
 
-;New UI
-Teleports:="|<>*105$46.zy00Mzzzzk01Xzzzz002Dzzzy008zzzsTzzzrzy0zzzyDzsVzxwstz74N1V13wSFU040Dlt608MkzX4E1UX1y0844207w0kEMQEzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzs"
-Story:="|<>*150$71.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzU031s6DDzzzy1041k6QTzzzwznllbANzzzzszbbnCQ3zzzzkDCDaMwDzzzzsCQTA1szzzzzwQwyM3tzzzzyMtsEn7nzzzzw3ns3bDbzzzzwDbsDCTDzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-Raids:="|<>*150$44.zzzzzzzzzzzzzzz0zDn0w7k7lwk61wtsTAsbzCS3nD0zn74wnm1w1l7AwsD0M1nCDXn60An2Mwt7nA1UTCNwn1wDzzzzzzzzzzzzzzy"
-NewUpgrade:="|<>*47$39.zzzzzzzzzzzzzzzzzzrzzAzzwzztVUF0Tz80003zs00U0TzW4603zznXzzzzywzzzU"
-Retry:="|<>*115$29.000000000000000w20024+0047nzk9802EE09l0U2GW194ZY1zzmE0004U000600000000004"
-Settings:="|<>*110$17.zzzzDzs7zX7zjTzSzwMzy7zyTzzzzzzk"
-PortalSelection:="|<>*108$56.zzzzzzzzzzzzzzzzzzyRwjjTzzzzbTvlXzzzztnkQ0zzzzyQ470032AEm5/k1G5+4w12Qw4UEVDWKbzF/6AHzzzzzzzXzzzzzzzzxzy"
-LobbyIcon:="|<>**50$11.TwX9SGwZ1/mLYX+"
-
-StartButton:="|<>*121$25.00003s043y0735U6l2zzQW402wgdrtG4ty9WQzzzzzzzzz"
-RaidSelectButton:="|<>*120$29.00000S3U01a903a7mzwcTbztsFAMVs0EFbs0UDD0xD6TAP6CzzzzzzzzzzU"
-AbilityManager:="|<>*118$65.zzzzzzzzzzz0Tznzv/xzjz3zzbzW7lzTz7zzDz4DXwTyMlWMw0S0UlwY+IZs0w1/9x+493m5t2GLz6AP7z9zlaDzxOzzzzzzzzzxvzzzzzzzzzzzzzzzzzzk"
-
-; === Upgrade Limits === (630, 375, 717, 385)
-Upgrade0:="|<>*49$6.zvlZZUkzzU"
-Upgrade1:="|<>*47$6.zztltsszzzU"
-Upgrade2:="|<>*45$8.zzzCVcHYUM7zzs"
-Upgrade3:="|<>*52$8.zyz6lCG1kTy"
-Upgrade4:="|<>*54$9.zyAVg9kTXzw"
-Upgrade5:="|<>*47$8.zyT3lg/klDy"
-Upgrade6:="|<>*47$6.zzzlXVUkzzU"
-Upgrade7:="|<>*41$10.zzzwBknmSNtDgzzzy"
-Upgrade8:="|<>*69$8.zzz6VgK5mzy"
-Upgrade9:="|<>*48$8.zwu6VAH1WTzzU"
 Upgrade10:="|<>*43$11.zzzztq1c2MEk3Y7zzzs"
 Upgrade11:="|<>*41$11.zzzr1Y2QYt3m7zzzw"
 Upgrade12:="|<>*45$13.zzzzznj0n0Hn9s1w0zzzzy"
@@ -72,3 +58,7 @@ NationalRank:="|<>*125$43.zzzzzzzvzzrzzysnyPzzyQ9z7vzzC4U0kUk700EE003a399VVVn046
 
 ; === Card Selection ===
 CardSelection:="|<>*139$39.00000000Q0k00DykD0011o1M0097zvszWQa6Ng2HYamNAW0VC4GYER/kmIWwgaG94Y9lb90XUvvi7s0000004"
+
+;Outdated FindText
+Retry := "|<>*115$29.000000000000000w20024+0047nzk9802EE09l0U2GW194ZY1zzmE0004U000600000000004"
+StartButton := "|<>*121$25.00003s043y0735U6l2zzQW402wgdrtG4ty9WQzzzzzzzzz"
