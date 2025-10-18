@@ -206,7 +206,7 @@ OpenGithub() {
 }
 
 OpenDiscord() {
-    Run("https://discord.gg/6DWgB9XMTV")
+    Run("https://discord.gg/ycYNunvEzX")
 }
 
 StringJoin(array, delimiter := ", ") {
@@ -657,10 +657,17 @@ PlayHereOrMatchmake() {
     if (Matchmaking.Value && ModesWithMatchmaking(ModeDropdown.Text)) {
         FixClick(488, 350)
         AddToLog("[Info] Waiting for game to start...")
+        ; Failed teleport failsafe
+        TimerManager.Start("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
         while (isInLobby()) {
             Sleep(1000)
+            if (TimerManager.HasExpired("Teleport Failsafe")) {
+                AddToLog("[Failsafe] Teleport seems to have failed, reconnecting...")
+                return Reconnect(true)
+            }
         }
         AddToLog("[Info] Match has been found!")
+        TimerManager.Reset("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
     } else {
         if (isInGame()) {
             FixClick(331, 350)

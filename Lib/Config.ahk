@@ -285,6 +285,8 @@ LoadUniversalSettings() {
             case "Webhook Logs Enabled": WebhookLogsEnabled.Value := value
             case "Private Server Enabled": PrivateServerEnabled.Value := value
             case "Private Server URL": PrivateServerURLBox.Text := value
+            case "Matchmaking Failsafe": MatchmakingFailsafe.Value := value
+            case "Matchmaking Failsafe Timer": MatchmakingFailsafeTimer.Value := value
             case "Placement Pattern": PlacementPatternDropdown.Value := value
             case "Placement Order": PlacementSelection.Value := value
             case "Placement Profile": PlacementProfiles.Value := value
@@ -306,7 +308,6 @@ SaveUniversalSettings() {
         content .= "[Universal Settings]"
         content .= "`nNext Level=" NextLevelBox.Value
         content .= "`nReturn To Lobby=" ReturnLobbyBox.Value
-        content .= "`nMatchmaking Enabled=" Matchmaking.Value
         content .= "`nUsing Mode Configurations=" ModeConfigurations.Value
 
         content .= "`n`n[Webhook Settings]"
@@ -317,6 +318,11 @@ SaveUniversalSettings() {
         content .= "`n`n[Private Server Settings]"
         content .= "`nPrivate Server Enabled=" PrivateServerEnabled.Value
         content .= "`nPrivate Server URL=" PrivateServerURLBox.Text
+
+        content .= "`n`n[Matchmaking Settings]"
+        content .= "`nMatchmaking Enabled=" Matchmaking.Value
+        content .= "`nMatchmaking Failsafe=" MatchmakingFailsafe.Value
+        content .= "`nMatchmaking Failsafe Timer=" MatchmakingFailsafeTimer.Value
 
         content .= "`n`n[Story Settings]"
         content .= "`nStory Difficulty=" StoryDifficulty.Value

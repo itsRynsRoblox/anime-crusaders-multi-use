@@ -11,7 +11,6 @@ UpgradeUnits() {
     ; Auto-upgrade logic
     if (UnitManagerUpgradeSystem.Value) {
         if (AutoUpgrade.Value) {
-            SetAutoUpgradeForAllUnits()
             return HandleUnitManager("Auto-upgrade enabled for all units, monitoring stage.")
         }
     }
@@ -459,7 +458,7 @@ HandleAutoUpgrade() {
 MaxUpgrade() {
     Sleep 500
     ; Check for max text
-    if (ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeText)) {
+    if (ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeText) || ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeTextIdol)) {
         return true
     }
     return false

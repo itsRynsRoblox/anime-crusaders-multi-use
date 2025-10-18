@@ -10,7 +10,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-
+    PlayHereOrMatchmake()
 }
 
 F6:: {
@@ -293,6 +293,7 @@ Reconnect(testing := false) {
     }
 
     if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || testing) {
+        TimerManager.Clear("Teleport Failsafe")
         AddToLog("Disconnected! Attempting to reconnect...")
         sendDCWebhook()
 
@@ -426,9 +427,12 @@ CheckLobby() {
 CheckLoaded() {
     loop {
         Sleep(500)
+
+        Reconnect()
         
         if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
             AddToLog("Successfully Loaded In")
+            TimerManager.Clear("Teleport Failsafe")
             break
         }
 

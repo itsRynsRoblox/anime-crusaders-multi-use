@@ -6,9 +6,8 @@ StartGates() {
     }
 
     SelectGatesByFindText()
-    FixClick(331, 348) ; Click Play Here
     Sleep(500)
-    FixClick(410, 526)
+    PlayHereOrMatchmake()
     RestartStage()
 }
 
@@ -158,12 +157,13 @@ PickNextGate(testing := false) {
     }
     SelectGatesByFindText()
     Sleep (500)
-    FixClick(331, 348) ; Click Play Here
+    PlayHereOrMatchmake()
 }
 
 WalkToCenterOfGateRoom() {
     Walk("s", 3400)
     Walk("d", 1000)
+    ;Walk("s", 800) walks to rocks south
 }
 
 HandleGateEnd() {
@@ -175,6 +175,5 @@ HandleGateEnd() {
     }
     AddToLog("[Info] Game over, selecting next gate")
     PickNextGate()
-    Sleep(2500)
     return RestartStage()
 }

@@ -5,7 +5,7 @@
 
 ; Application Info
 global GameTitle := "Ryn's Anime Crusaders Macro "
-global version := "v1.0"
+global version := "v1.1"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -194,7 +194,7 @@ OpenGuide(*) {
 
 MainUI.SetFont("s9 Bold c" uiTheme[1])
 
-DebugButton := MainUI.Add("Button", "x608 y5 w90 h20 +Center", "Debug")
+DebugButton := MainUI.Add("Button", "x608 y5 w90 h20 +Center Hidden", "Debug")
 
 global guideBtn := MainUI.Add("Button", "x708 y5 w90 h20", "Guide")
 guideBtn.OnEvent("Click", OpenGuide)
@@ -221,7 +221,7 @@ MainUI.SetFont("s9")
 
 global NextLevelBox := MainUI.Add("Checkbox", "x900 y451 cffffff", "Next Level")
 global AutoChallenge := MainUI.Add("Checkbox", "x900 y476 cffffff", "Auto Challenge")
-global Matchmaking := MainUI.Add("Checkbox", "x1035 y476 cffffff", "Matchmaking")
+global Matchmaking := MainUI.Add("Checkbox", "x1030 y476 cffffff", "Matchmaking")
 
 global ReturnLobbyBox := MainUI.Add("Checkbox", "x1150 y476 cffffff Checked", "Return To Lobby")
 
@@ -283,10 +283,13 @@ global WebhookLogsEnabled := MainUI.Add("CheckBox", "x825 y130 Hidden cffffff", 
 global WebhookURLBox := MainUI.Add("Edit", "x1000 y108 w260 h20 Hidden c" uiTheme[6], "")
 
 global PrivateSettingsBorder := MainUI.Add("GroupBox", "x808 y145 w550 h296 +Center Hidden c" uiTheme[1], "Reconnection Settings")
-global PrivateServerEnabled := MainUI.Add("CheckBox", "x825 y175 Hidden cffffff", "Reconnect to Private Server")
-global PrivateServerURLBox := MainUI.Add("Edit", "x1050 y173 w160 h20 Hidden c" uiTheme[6], "")
-PrivateServerTestButton := MainUI.Add("Button", "x1225 y173 w80 h20 Hidden", "Test Link")
+global PrivateServerEnabled := MainUI.Add("CheckBox", "x825 y165 Hidden cffffff", "Reconnect to Private Server")
+global PrivateServerURLBox := MainUI.Add("Edit", "x1050 y163 w160 h20 Hidden c" uiTheme[6], "")
+PrivateServerTestButton := MainUI.Add("Button", "x1225 y163 w80 h20 Hidden", "Test Link")
 PrivateServerTestButton.OnEvent("Click", (*) => Reconnect(true))
+global MatchmakingFailsafe := MainUI.Add("CheckBox", "x825 y185 Hidden cffffff", "Enable Matchmaking Failsafe")
+global MatchmakingFailsafeTimerText := MainUI.Add("Text", "x1050 y188 h20 Hidden c" uiTheme[1], "Time until reconnect:")
+global MatchmakingFailsafeTimer := MainUI.Add("Edit", "x1195 y186 w50 h20 Hidden Number c" uiTheme[6], "60")
 ; === End of Settings GUI ===
 
 ; HotKeys
@@ -420,7 +423,7 @@ AddUnitCard(MainUI, index, x, y) {
     unit.BorderLeft     := AddText(x, y, 2, 45, "+Background" uiTheme[3])
     unit.BorderRight    := AddText(x + 550, y, 2, 45, "+Background" uiTheme[3])
     unit.BorderRight2   := AddText(x + 250, y, 2, 45, "+Background" uiTheme[3])
-    unit.BorderRight3   := AddText(x + 390, y, 2, 45, "+Background" uiTheme[3])
+    unit.BorderRight3   := AddText(x + 420, y, 2, 45, "+Background" uiTheme[3])
 
     ; Main Labels
     MainUI.SetFont("s11 Bold c" uiTheme[1])
@@ -432,12 +435,12 @@ AddUnitCard(MainUI, index, x, y) {
     unit.PriorityText         := AddText(x + 185, y + 2, 60, 20, "BackgroundTrans", "Priority")
 
     MainUI.SetFont("s9 c" uiTheme[1])
-    unit.PlaceAndUpgradeText  := AddText(x + 266, y + 2, 250, 20, "BackgroundTrans", "Place && Upgrade")
-    unit.UpgradeTitle         := AddText(x + 295, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
+    unit.PlaceAndUpgradeText  := AddText(x + 261, y + 2, 250, 20, "BackgroundTrans", "Upgrade While Placing")
+    unit.UpgradeTitle         := AddText(x + 310, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
 
     if (!unitUpgradeLimitDisabled) {
-        unit.UpgradeCapText := AddText(x + 425, y + 2, 250, 20, "BackgroundTrans", "Upgrade Limit")
-        unit.UpgradeLimitTitle := AddText(x + 435, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
+        unit.UpgradeCapText := AddText(x + 440, y + 2, 250, 20, "BackgroundTrans", "Upgrade Limit")
+        unit.UpgradeLimitTitle := AddText(x + 445, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
     }
 
     UnitData.Push(unit)
@@ -466,12 +469,12 @@ upgradeEnabled4 := MainUI.Add("CheckBox", "x1070 y255 w15 h15", "")
 upgradeEnabled5 := MainUI.Add("CheckBox", "x1070 y305 w15 h15", "")
 upgradeEnabled6 := MainUI.Add("CheckBox", "x1070 y355 w15 h15", "")
 
-upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1210 y105 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1210 y155 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1210 y205 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1210 y255 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1210 y305 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1210 y355 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1235 y105 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1235 y155 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1235 y205 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1235 y255 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1235 y305 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1235 y355 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
 
 MainUI.SetFont("s8 c" uiTheme[6])
 
@@ -872,7 +875,7 @@ InitControlGroups() {
 
     ControlGroups["Settings"] := [
         WebhookBorder, WebhookEnabled, WebhookLogsEnabled, WebhookURLBox,
-        PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton,
+        PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
         ZoomSettingsBorder, ZoomText, ZoomBox,
         MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton, CustomPlacementText, CustomPlacementImportButton, CustomPlacementExportButton
