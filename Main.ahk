@@ -24,6 +24,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Challenges.ahk
 #Include %A_ScriptDir%/lib/Modes/Portal.ahk
 #Include %A_ScriptDir%/lib/Modes/Story.ahk
+#Include %A_ScriptDir%/lib/Modes/LegendStages.ahk
 #Include %A_ScriptDir%/lib/Modes/Raid.ahk
 #Include %A_ScriptDir%/lib/Modes/Gates.ahk
 #Include %A_ScriptDir%/lib/Modes/SpiritInvasion.ahk

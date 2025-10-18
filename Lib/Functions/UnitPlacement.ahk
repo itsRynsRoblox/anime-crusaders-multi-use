@@ -261,7 +261,6 @@ PostPlacementChecks() {
         CheckForCardSelection()
     }
 
-    CheckForPortalSelection()
     Reconnect()
 }
 

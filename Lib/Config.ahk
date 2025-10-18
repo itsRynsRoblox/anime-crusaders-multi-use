@@ -92,7 +92,7 @@ SaveSettingsForMode(*) {
         content .= "`nAuto Challenge=" AutoChallenge.Value
 
         content .= "`n`n[Portal Settings]"
-        content .= "`nStart Portal In Lobby=" PortalLobby.Value
+        content .= "`nFarm More Portals=" FarmMorePortals.Value
 
         content .= "`n`n[Gate Settings]"
         content .= "`nPremade Gate Movement=" GateMovement.Value
@@ -617,7 +617,7 @@ InitSettings() {
     UnitConfigMap["Auto Upgrade"] := { control: AutoUpgrade, prop: "Value" }
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
-    UnitConfigMap["Start Portal In Lobby"] := { control: PortalLobby, prop: "Value" }
+    UnitConfigMap["Farm More Portals"] := { control: FarmMorePortals, prop: "Value" }
     UnitConfigMap["Premade Gate Movement"] := { control: GateMovement, prop: "Value" }
 
     UnitConfigMap["Nuke Enabled"] := { control: NukeUnitSlotEnabled, prop: "Value" }

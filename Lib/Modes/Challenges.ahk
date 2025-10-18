@@ -30,5 +30,5 @@ WalkToChallengeRoom() {
 }
 
 TimeForChallenge() {
-    return AutoChallenge.Value && !IsChallengeOnCooldown() && !ModeDropdown.Text = "Custom"
+    return AutoChallenge.Value && !IsChallengeOnCooldown() && ModeDropdown.Text != "Custom"
 }

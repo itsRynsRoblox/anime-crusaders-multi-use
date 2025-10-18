@@ -402,7 +402,6 @@ PostUpgradeChecks() {
         CheckForCardSelection()
     }
 
-    CheckForPortalSelection()
     Reconnect()
 }
 
@@ -457,11 +456,11 @@ HandleAutoUpgrade() {
 
 MaxUpgrade() {
     Sleep 500
-    ; Check for max text
-    if (ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeText) || ok := FindText(&X, &Y, 228, 399, 282, 427, 0.10, 0.10, MaxUpgradeTextIdol)) {
-        return true
-    }
-    return false
+    ok := (
+        FindText(&X, &Y, 192, 396, 317, 432, 0.10, 0.10, MaxUpgradeText)
+        || FindText(&X, &Y, 192, 396, 317, 432, 0.20, 0.20, MaxUpgradeTextIdol)
+    )
+    return ok
 }
 
 UnitManagerUpgrade(slot) {

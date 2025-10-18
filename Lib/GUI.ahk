@@ -5,7 +5,7 @@
 
 ; Application Info
 global GameTitle := "Ryn's Anime Crusaders Macro "
-global version := "v1.1"
+global version := "v1.2"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -334,15 +334,15 @@ CustomPlacementExportButton.OnEvent("Click", (*) => ExportCoordinatesPreset(Plac
 global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Mode Configuration")
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
 
-global StoryBorder := MainUI.Add("GroupBox", "x808 y170 w550 h211 +Center Hidden c" uiTheme[1], "Story Settings")
-global StoryDifficultyText := MainUI.Add("Text", "x825 y195 Hidden", "Story Difficulty")
-global StoryDifficulty := MainUI.Add("DropDownList", "x825 y215 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
+global StoryBorder := MainUI.Add("GroupBox", "x808 y150 w550 h231 +Center Hidden c" uiTheme[1], "Story Settings")
+global StoryDifficultyText := MainUI.Add("Text", "x825 y170 Hidden", "Story Difficulty")
+global StoryDifficulty := MainUI.Add("DropDownList", "x825 y185 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
 
-global PortalBorder := MainUI.Add("GroupBox", "x808 y255 w550 h126 +Center Hidden c" uiTheme[1], "Portal Settings")
-global PortalLobby := MainUI.Add("CheckBox", "x825 y280 Hidden cffffff", "Starting portal from the lobby")
+global GateBorder := MainUI.Add("GroupBox", "x808 y220 w550 h161 +Center Hidden c" uiTheme[1], "Gate Settings")
+global GateMovement := MainUI.Add("CheckBox", "x825 y250 Hidden cffffff", "Use premade movement to walk to the center of the gate room")
 
-global GateBorder := MainUI.Add("GroupBox", "x808 y255 w550 h126 +Center Hidden c" uiTheme[1], "Gate Settings")
-global GateMovement := MainUI.Add("CheckBox", "x825 y280 Hidden cffffff", "Use premade movement to walk to the center of the gate room")
+global PortalBorder := MainUI.Add("GroupBox", "x808 y290 w550 h91 +Center Hidden c" uiTheme[1], "Portal Settings")
+global FarmMorePortals := MainUI.Add("CheckBox", "x825 y310 Hidden cffffff", "Farm more portals when possible if out of portals")
 
 ; === Unit Config GUI ===
 global NukeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Nuke Configuration")
@@ -380,17 +380,16 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Gates", "Raid", "Spirit Invasion", "Custom"])
-global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Gates", "Legend Stage", "Portal", "Raid", "Spirit Invasion", "Custom"])
+global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
-global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Legend Stage #1"] )
-;global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3"])
+global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya", "Nightmare Train"] )
+global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Act 1", "Act 2", "Act 3"])
 global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Amusement Park", "Test"])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
-global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", [""])
-global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Host", "Guest"])
+global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Marine Ford", "Demon District"])
+global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Solo", "Host", "Guest"])
 global ConfirmButton := MainUI.Add("Button", "x1218 y53 w80 h25", "Confirm")
-
 
 LegendDropDown.Visible := false
 RaidDropdown.Visible := false
@@ -695,7 +694,7 @@ UpdateTooltip() {
     global waitingForClick
     if waitingForClick {
         MouseGetPos &x, &y
-        ToolTip "Click anywhere to save coordinates...", x + 10, y + 10  ; Offset tooltip slightly
+        ToolTip "Click anywhere to save coordinates...", x + 5, y - 5  ; Offset tooltip slightly
     } else {
         ToolTip()  ; Hide tooltip when not waiting
         SetTimer UpdateTooltip, 0  ; Stop the timer
@@ -711,6 +710,7 @@ UpdateTooltip() {
             walkStartTime := 0
         }
         RemoveWaiting()
+        ShowPlacements(false)
     }
 }
 
@@ -889,7 +889,8 @@ InitControlGroups() {
     ControlGroups["Mode"] := [
         ModeBorder, ModeConfigurations,
         StoryBorder, StoryDifficultyText, StoryDifficulty,
-        GateBorder, GateMovement
+        GateBorder, GateMovement,
+        PortalBorder, FarmMorePortals
     ]
 
     ControlGroups["Unit"] := [

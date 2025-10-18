@@ -58,7 +58,7 @@ Priority Upgrade=1
 Auto Challenge=0
 
 [Portal Settings]
-Start Portal In Lobby=0
+Farm More Portals=0
 
 [Gate Settings]
 Premade Gate Movement=1

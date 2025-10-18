@@ -10,7 +10,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    PlayHereOrMatchmake()
+    
 }
 
 F6:: {
@@ -18,7 +18,7 @@ F6:: {
 }
 
 F7:: {
-    CopyMouseCoords(true)
+    CopyMouseCoords(false)
 }
 
 F8:: {
@@ -59,7 +59,9 @@ CustomMode() {
 HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
         case "Gates":
-            HandleGateEnd()  
+            HandleGateEnd()
+        case "Portal":
+            HandlePortalEnd(isVictory)    
         Default:
             HandleDefaultEnd()
     }
@@ -111,8 +113,6 @@ MonitorStage() {
         if (HasCards(ModeDropdown.Text)) {
             CheckForCardSelection()
         }
-
-        CheckForPortalSelection()
 
         ; --- Check for wave 50 ---
         HandleNuke()
@@ -293,7 +293,9 @@ Reconnect(testing := false) {
     }
 
     if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || testing) {
-        TimerManager.Clear("Teleport Failsafe")
+        if (MatchmakingFailsafe.Value) {
+            TimerManager.Clear("Teleport Failsafe")
+        }
         AddToLog("Disconnected! Attempting to reconnect...")
         sendDCWebhook()
 
@@ -432,7 +434,9 @@ CheckLoaded() {
         
         if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
             AddToLog("Successfully Loaded In")
-            TimerManager.Clear("Teleport Failsafe")
+            if (MatchmakingFailsafe.Value) {
+                TimerManager.Clear("Teleport Failsafe")
+            }
             break
         }
 
@@ -465,6 +469,9 @@ StartSelectedMode() {
     if (ModeDropdown.Text = "Story") {
         StartStoryMode()
     }
+    else if (ModeDropdown.Text = "Legend Stage") {
+        StartLegendStages()
+    }
     else if (ModeDropdown.Text = "Raid") {
         StartRaidMode()
     }
@@ -472,7 +479,7 @@ StartSelectedMode() {
         CustomMode()
     }
     else if (ModeDropdown.Text = "Portal") {
-        StartPortalMode()
+        StartPortals()
     }
     else if (ModeDropdown.Text = "Gates") {
         StartGates()
@@ -671,11 +678,7 @@ HandleStartButton() {
 
 StartsInLobby(ModeName) {
     ; Array of modes that usually start in lobby
-    static modes := ["Story", "Raid", "Gates", "Spirit Invasion", "Infinity Castle"]
-    
-    ; Special case: If PortalLobby.Value is set, don't start in lobby for "Portal"
-    if (ModeName = "Portal" && !PortalLobby.Value)
-        return false
+    static modes := ["Story", "Legend Stage", "Raid", "Gates", "Portal", "Spirit Invasion", "Infinity Castle"]
 
     ; Check if current mode is in the array
     for mode in modes {

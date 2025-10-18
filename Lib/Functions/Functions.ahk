@@ -33,7 +33,7 @@ getCurrentTime() {
 
 OnModeChange(*) {
     ; Hide all
-    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown]
+    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown]
         ctrl.Visible := false
 
     ; Show based on selection
@@ -41,8 +41,9 @@ OnModeChange(*) {
         case "Story":
             StoryDropdown.Visible := true
             StoryActDropdown.Visible := true
-        case "Legend":
+        case "Legend Stage":
             LegendDropDown.Visible := true
+            LegendActDropdown.Visible := true
         case "Raid":
             RaidDropdown.Visible := RaidActDropdown.Visible := true
         case "Portal":
@@ -658,16 +659,22 @@ PlayHereOrMatchmake() {
         FixClick(488, 350)
         AddToLog("[Info] Waiting for game to start...")
         ; Failed teleport failsafe
-        TimerManager.Start("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
+        if (MatchmakingFailsafe.Value) {
+            TimerManager.Start("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
+        }
         while (isInLobby()) {
             Sleep(1000)
-            if (TimerManager.HasExpired("Teleport Failsafe")) {
-                AddToLog("[Failsafe] Teleport seems to have failed, reconnecting...")
-                return Reconnect(true)
+            if (MatchmakingFailsafe.Value) {
+                if (TimerManager.HasExpired("Teleport Failsafe")) {
+                    AddToLog("[Failsafe] Teleport seems to have failed, reconnecting...")
+                    return Reconnect(true)
+                }
             }
         }
         AddToLog("[Info] Match has been found!")
-        TimerManager.Reset("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
+        if (MatchmakingFailsafe.Value) {
+            TimerManager.Reset("Teleport Failsafe", MatchmakingFailsafeTimer.Value * 1000)
+        }
     } else {
         if (isInGame()) {
             FixClick(331, 350)
@@ -703,4 +710,55 @@ ClickNextLevel(testing := false) {
             }
         }
     }
+}
+
+OpenInventory(tab := "All") {
+    FixClick(40, 320)
+    Sleep(500)
+    if (tab = "Portals") {
+        FixClick(420, 270)
+        Sleep(500)
+    }
+}
+
+ShowPlacements(ShowNumbers := false) {
+    points := UseCustomPoints()
+    if (points.Length = 0) {
+        return
+    }
+
+    AddToLog("[Info] Showing dots where placements are set...")
+
+    global placementDots := []
+    duration := 2000
+    fontSize := 16
+    dotSize := 8
+
+    for i, point in points {
+        dotGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20 +LastFound") ; Transparent, click-through
+
+        if (ShowNumbers) {
+            ; Number mode
+            dotGui.BackColor := "Fuchsia"
+            WinSetTransColor("Fuchsia", dotGui)
+            dotGui.SetFont("s" fontSize " cff0000 bold", "Segoe UI")
+            dotGui.Add("Text", "BackgroundTrans", i)
+            dotGui.Show("AutoSize NA x" (point.x - dotSize) " y" (point.y - dotSize // 2))
+        } else {
+            ; Dot mode - draw a small red square (no text)
+            dotGui.BackColor := "ff0000"
+            ; Set size of dotGui to dotSize x dotSize, position centered on point
+            dotGui.Show("x" (point.x - dotSize) " y" (point.y - dotSize // 2) " w" dotSize " h" dotSize " NA")
+        }
+        placementDots.Push(dotGui)
+    }
+    SetTimer(ClearPreviewDots, -duration)
+}
+
+ClearPreviewDots() {
+    global placementDots
+    for dotGui in placementDots {
+        try dotGui.Destroy()
+    }
+    placementDots := []  ; Clear the list
 }
