@@ -10,6 +10,7 @@ global loss := 0
 global stageStartTime := A_TickCount
 global macroStartTime := A_TickCount
 global currentMap := ""
+global currentGateRank := ""
 
 if (!FileExist("Settings")) {
     DirCreate("Settings")
@@ -65,7 +66,7 @@ SendWebhookWithTime(isWin, stageLength) {
     sessionData := "⌛ Macro Runtime: " macroLength "`n"
     . "⏱️ Stage Length: " stageLength "`n"
     . "🔄 Current Streak: " (currentStreak > 0 ? currentStreak " Win Streak" : Abs(currentStreak) " Loss Streak") "`n"
-    . ":video_game: Current Mode: " (ModeDropdown.Text = "" ? "No Mode Selected" : ModeDropdown.Text) "`n"
+    . ":video_game: Current Mode: " (ModeDropdown.Text = "" ? "No Mode Selected" : GetTextForMode(ModeDropdown.Text)) "`n"
     . ":white_check_mark: Successful Runs: " Wins "`n"
     . "❌ Failed Runs: " loss "`n"
     . ":bar_chart: Total Runs: " (loss+Wins) "`n"
@@ -280,4 +281,13 @@ sendDCWebhook() {
 sendTestWebhook() {
     global Wins := 1
     SendWebhookWithTime(true, 1)
+}
+
+GetTextForMode(mode) {
+    switch mode {
+        case "Gates":
+            return "Gate - " currentGateRank
+        default:
+            return mode
+    }
 }

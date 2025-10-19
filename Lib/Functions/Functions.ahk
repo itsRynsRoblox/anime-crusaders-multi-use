@@ -762,3 +762,7 @@ ClearPreviewDots() {
     }
     placementDots := []  ; Clear the list
 }
+
+isConnectedToInternet() {
+    return DllCall("Wininet.dll\InternetGetConnectedState", "int*", 0, "int", 0)
+}

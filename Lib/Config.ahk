@@ -273,8 +273,19 @@ LoadUniversalSettings() {
             continue
 
         parts := StrSplit(line, "=")
+        key := parts[1]
+        value := ""
 
-        key := parts[1], value := parts[2]
+        if (key = "Private Server URL") {
+            ; Join everything after the first '=' back together for the URL
+            for index, part in parts {
+                if (index > 1)
+                    value .= (value = "" ? "" : "=") . part
+            }
+        } else {
+            ; For other keys, take only the part after first '='
+            value := parts[2]
+        }
 
         switch key {
             case "Return To Lobby": ReturnLobbyBox.Value := value
@@ -284,7 +295,7 @@ LoadUniversalSettings() {
             case "Webhook URL": WebhookURLBox.Text := value
             case "Webhook Logs Enabled": WebhookLogsEnabled.Value := value
             case "Private Server Enabled": PrivateServerEnabled.Value := value
-            case "Private Server URL": PrivateServerURLBox.Text := value
+            case "Private Server URL": PrivateServerURLBox.Value := value  ; note use of .Value
             case "Matchmaking Failsafe": MatchmakingFailsafe.Value := value
             case "Matchmaking Failsafe Timer": MatchmakingFailsafeTimer.Value := value
             case "Placement Pattern": PlacementPatternDropdown.Value := value
@@ -297,7 +308,6 @@ LoadUniversalSettings() {
         }
     }
 }
-
 
 SaveUniversalSettings() {
     try {
@@ -317,7 +327,7 @@ SaveUniversalSettings() {
 
         content .= "`n`n[Private Server Settings]"
         content .= "`nPrivate Server Enabled=" PrivateServerEnabled.Value
-        content .= "`nPrivate Server URL=" PrivateServerURLBox.Text
+        content .= "`nPrivate Server URL=" PrivateServerURLBox.Value
 
         content .= "`n`n[Matchmaking Settings]"
         content .= "`nMatchmaking Enabled=" Matchmaking.Value

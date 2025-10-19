@@ -25,16 +25,17 @@ Raids:="|<>*96$50.000000000D00s0000Dy0T000s7bUAM00T30Tv7wTgNk7znzzz7MzkwsT1Uq7k6
 InfinityCastleUI:="|<>*151$65.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzU1zzzzzzzzw00zzyDzzzzs01zzwDzzzzk03zzsTzzzzU0Dzzkzzzzz3zwty0TUzCS7zk0s0Q0w0Q0DU0k0k0s0M0D00k100k1k0S01k63VUrU0wD3kwD33z3zsS3Vs067y7zkw73k0QCADzVsC7VzsQM033kw31lksk027Vs303VlU0ADXs7073XU0QT7sT0D67zzzrxzzzzw7zzz7kzbzjk00000001s00U"
 
 ; === Upgrade Limits === 279, 311, 377, 334
-Upgrade0:="|<>*96$18.zzzVlVX0Vb4NbANaCNbCNbANb0tbVtbzlVzVzzzzzzU"
-Upgrade1:="|<>*98$15.zzw0VW4AstbbAwtbbAwtbbAwtbyADVzzzzzU"
-Upgrade2:="|<>*97$17.zzz36684Av6NyAnwtbnnCDaQ3Ak6NzskzVzzzzzy"
-Upgrade3:="|<>*96$17.zzz22680AyCNwwnktbsnDtaM3AsCNzskzVzzzzzy"
-Upgrade4:="|<>*96$19.zzzkwsMwQAyTaSDnC9tb0Qn06Nz7AzbaTzX3zVzzzk"
-Upgrade5:="|<>*98$17.zzz226A0AtyNlwnUtbsnDtaQ3AsCNzskzVzzzzzy"
-Upgrade6:="|<>*96$18.zzzVkVXUVb7tbDta0ta4NbANb0tbVtbzlVzVzzzU"
-Upgrade7:="|<>*95$18.zzzV0VW0Va8tbMtbttbltbntbXtbXtbzlVzVzzzzzzU"
-Upgrade8:="|<>*95$18.zzzVVVX0VbANb4tb0tb4NaANb0NbUtbzlVzVzzzzzzU"
+Upgrade0:="|<>*88$22.zzzy3nkMA31XU76CAQMsslX7X6CCAMsllXX76D0QMy7lXzz63zkMTz1zzzy"
+Upgrade1:="|<>*88$18.zzzUz1U11X1lXllXllXllXllXllXllXllXllXzlUz1Vz1zzzU"
+Upgrade2:="|<>*87$21.zzzw7D1UUMAM1lXiCATllXwCAT3lXkyAQDlX0CAM1lXzyA7z1VzsDzzzU"
+Upgrade3:="|<>*89$21.zzzw7z1U08AM1lXwSAT7lXsSAT1lXyCARllX0CAQ3lXzyA7z1VzsDzzzU"
+Upgrade4:="|<>*88$21.zzzw7z1UsMAT7lXlyAQTlXWCAMllW06AE0lXyCATllXzyA7z1VzsDzzzU"
+Upgrade5:="|<>*88$21.zzzw7z1UU8AQ1lXXyAQ7lXUCAQ1lXz6ARllX0CAQ3lXzyA7z1VzsDzzzU"
+Upgrade6:="|<>*89$22.zzzy3tkMC11XkD6CDwMsblXUD6C0QMsllXX76D0QMy3lXzz63zkMTz1zzzy"
+Upgrade7:="|<>*88$22.zzzy3zkM011X076AMQMtXlXwD6DlwMz7lXsz6DXwMwTlXzz63zkMTz1zzzy"
+Upgrade8:="|<>*88$22.zzzy3nkMA31XU76CAQMs1lXkD6C0QMkllXX76C0QMw3lXzz63zkMTz1zzzy"
 Upgrade9:="|<>*90$22.zzzy3bkM871XUD6AQQMlllXU76D0QMzllXyD6C0wMsDlXzz67zkMTz1zzzy"
+
 
 Upgrade10:="|<>*43$11.zzzztq1c2MEk3Y7zzzs"
 Upgrade11:="|<>*41$11.zzzr1Y2QYt3m7zzzw"

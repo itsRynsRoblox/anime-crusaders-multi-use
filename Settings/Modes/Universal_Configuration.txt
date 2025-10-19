@@ -13,7 +13,7 @@ Private Server Enabled=0
 Private Server URL=
 
 [Matchmaking Settings]
-Matchmaking Enabled=0
+Matchmaking Enabled=1
 Matchmaking Failsafe=0
 Matchmaking Failsafe Timer=120
 

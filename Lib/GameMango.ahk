@@ -10,7 +10,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    
+
 }
 
 F6:: {
@@ -293,52 +293,72 @@ Reconnect(testing := false) {
     }
 
     if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || testing) {
+
+        ; Wait until internet is available
+        while !isConnectedToInternet() {
+            AddToLog("❌ No internet connection. Waiting to reconnect...")
+            Sleep(5000) ; wait 5 seconds before checking again
+        }
+
+        AddToLog("✅ Internet connection verified, attempting to reconnect...")
+
         if (MatchmakingFailsafe.Value) {
             TimerManager.Clear("Teleport Failsafe")
         }
         AddToLog("Disconnected! Attempting to reconnect...")
         sendDCWebhook()
 
-        ; Use PrivateServerURLBox.Value instead of file
-        psLink := PrivateServerURLBox.Value
-
-        ; Reconnect to PS
-        if (psLink != "") {
-            AddToLog("Connecting to private server...")
-            Run(psLink)
+        if (PrivateServerEnabled.Value) {
+            psLink := PrivateServerURLBox.Value
+            if (psLink != "") {
+                serverCode := GetPrivateServerCode(psLink)
+                deepLink := "roblox://experiences/start?placeId=107573139811370&linkCode=" serverCode
+                if (WinExist("ahk_exe RobloxPlayerBeta.exe")) {
+                    WinClose("ahk_exe RobloxPlayerBeta.exe")
+                    Sleep(3000)
+                }
+                AddToLog("Connecting to your private server...")
+                Run(serverCode = "" ? psLink : deepLink)
+                loop {
+                    if WinWait("ahk_exe RobloxPlayerBeta.exe", , 15) {
+                        AddToLog("New Roblox Window Found!")
+                        break
+                    } else {
+                        AddToLog("Waiting for new Roblox Window...")
+                        Sleep(1000)
+                    }
+                }
+            }
         } else {
             Run("roblox://placeID=107573139811370")
+            while (isInLobby()) {
+                Sleep(100)
+            }
         }
 
-        Sleep 2000
+        AddToLog("Reconnecting to " GameName "...")
 
-        if WinExist(rblxID) {
-            WinActivate(rblxID)
-            Sleep 1000
-        }
-
-        AddToLog("Reconnecting to Anime Crusaders...")
-
-        while (isInLobby()) {
-            Sleep(100)
-        }
-
-        AddToLog("New session has been detected...")
-
-        loop {
-            FixClick(490, 400)
-            Sleep(1000)
+        while (!isInLobby()) {
             if (WinExist(rblxID)) {
                 WinActivate(rblxID)
+                sizeDown()
             }
-            if (isInLobby()) {
-                AddToLog("Reconnected Successfully!")
-                return StartSelectedMode()
-            } else {
-                Reconnect()
-            }
+            Sleep(1000)
+        }
+
+        if (isInLobby()) {
+            AddToLog("Reconnected Successfully!")
+            return StartSelectedMode()
+        } else {
+            Reconnect()
         }
     }
+}
+
+GetPrivateServerCode(link) {
+    if RegExMatch(link, "privateServerLinkCode=([\w-]+)", &m)
+        return m[1]
+    return ""
 }
 
 HandleAutoAbility() {
@@ -402,16 +422,6 @@ wiggle() {
     MouseMove(1, 1, 5, "R")
     Sleep(30)
     MouseMove(-1, -1, 5, "R")
-}
-
-UpgradeUnit(x, y) {
-    FixClick(x, y)
-    SendInput ("{T}")
-    Sleep (50)
-    SendInput ("{T}")
-    Sleep (50)
-    SendInput ("{T}")
-    Sleep (50)
 }
 
 CheckLobby() {

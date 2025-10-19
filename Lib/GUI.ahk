@@ -4,8 +4,9 @@
 #Include %A_ScriptDir%/lib/Functions/Functions.ahk
 
 ; Application Info
-global GameTitle := "Ryn's Anime Crusaders Macro "
-global version := "v1.2"
+global GameName := "Anime Crusaders"
+global GameTitle := "Ryn's " GameName " Macro "
+global version := "v1.3"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -179,7 +180,7 @@ WinSetTransColor(uiColors["RobloxBox"], MainUI)
 OpenGuide(*) {
     GuideGUI := Gui("+AlwaysOnTop")
     GuideGUI.SetFont("s10 bold", "Segoe UI")
-    GuideGUI.Title := "Ryn's Anime Crusaders Guide"
+    GuideGUI.Title := "Ryn's " GameName " Guide"
 
     GuideGUI.BackColor := "0c000a"
     GuideGUI.MarginX := 20
@@ -189,7 +190,32 @@ OpenGuide(*) {
     GuideGUI.SetFont("s16 bold", "Segoe UI")
     GuideGUI.Add("Picture", " cWhite +Center", "Images\settings-1.png")
     GuideGUI.Add("Picture", " cWhite +Center", "Images\settings-2.png")
+    GuideGUI.Add("Picture", " cWhite +Center", "Images\settings-3.png")
     GuideGUI.Show("Center")
+}
+
+OpenPrivateServerGuide(*) {
+    GuideGUI := Gui("+AlwaysOnTop +Resize", "Ryn's Private Server Guide")
+    GuideGUI.BackColor := "0c000a"
+    GuideGUI.MarginX := 20
+    GuideGUI.MarginY := 20
+
+    ; Reset font for steps
+    GuideGUI.SetFont("s12 bold", "Segoe UI")
+
+    ; Add each step individually
+    GuideGUI.Add("Text", "cWhite", "Step 1. Create a private server")
+    GuideGUI.Add("Text", "cWhite", "Step 2. Name the server however you like")
+    GuideGUI.Add("Text", "cWhite", "Step 3. Configure the private server")
+    GuideGUI.Add("Text", "cWhite", "Step 4. Generate a link for the server")
+    GuideGUI.Add("Text", "cWhite", "Step 5. Paste the link into your browser")
+    GuideGUI.Add("Text", "cWhite", "Step 6. Wait for the link to change into the new version")
+    GuideGUI.Add("Text", "cWhite", "Step 7. Copy the URL")
+    GuideGUI.Add("Text", "cWhite", "Step 8. Paste the URL into the private server section of the macro")
+    GuideGUI.Add("Text", "cWhite", "It should look like this at the end: privateServerLinkCode=12345")
+
+    ; Show GUI
+    GuideGUI.Show("AutoSize Center")
 }
 
 MainUI.SetFont("s9 Bold c" uiTheme[1])
@@ -285,8 +311,10 @@ global WebhookURLBox := MainUI.Add("Edit", "x1000 y108 w260 h20 Hidden c" uiThem
 global PrivateSettingsBorder := MainUI.Add("GroupBox", "x808 y145 w550 h296 +Center Hidden c" uiTheme[1], "Reconnection Settings")
 global PrivateServerEnabled := MainUI.Add("CheckBox", "x825 y165 Hidden cffffff", "Reconnect to Private Server")
 global PrivateServerURLBox := MainUI.Add("Edit", "x1050 y163 w160 h20 Hidden c" uiTheme[6], "")
-PrivateServerTestButton := MainUI.Add("Button", "x1225 y163 w80 h20 Hidden", "Test Link")
+PrivateServerTestButton := MainUI.Add("Button", "x1225 y163 w50 h20 Hidden", "Test")
 PrivateServerTestButton.OnEvent("Click", (*) => Reconnect(true))
+PrivateServerGuideButton := MainUI.Add("Button", "x1285 y163 w50 h20 Hidden", "Guide")
+PrivateServerGuideButton.OnEvent("Click", OpenPrivateServerGuide)
 global MatchmakingFailsafe := MainUI.Add("CheckBox", "x825 y185 Hidden cffffff", "Enable Matchmaking Failsafe")
 global MatchmakingFailsafeTimerText := MainUI.Add("Text", "x1050 y188 h20 Hidden c" uiTheme[1], "Time until reconnect:")
 global MatchmakingFailsafeTimer := MainUI.Add("Edit", "x1195 y186 w50 h20 Hidden Number c" uiTheme[6], "60")
@@ -875,7 +903,7 @@ InitControlGroups() {
 
     ControlGroups["Settings"] := [
         WebhookBorder, WebhookEnabled, WebhookLogsEnabled, WebhookURLBox,
-        PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
+        PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, PrivateServerGuideButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
         ZoomSettingsBorder, ZoomText, ZoomBox,
         MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton, CustomPlacementText, CustomPlacementImportButton, CustomPlacementExportButton

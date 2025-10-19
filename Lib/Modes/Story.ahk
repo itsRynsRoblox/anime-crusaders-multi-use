@@ -26,6 +26,7 @@ StartStoryMode() {
 }
 
 StartStory(map, act) {
+    AddToLog("Starting " map " - " act)
     return StartContent(map, act, GetStoryMap, GetStoryAct, { x: 190, y: 185 }, { x: 340, y: 255 })
 }
 
@@ -41,7 +42,7 @@ GetStoryMap(map) {
         case "Marine's Ford": return {x: 200, y: 295, scrolls: 0}
         case "Karakura Town": return {x: 200, y: 340, scrolls: 0}
         case "Shibuya": return {x: 200, y: 385, scrolls: 0}
-        case "Demon": return {x: 200, y: 430, scrolls: 0}
+        case "Demon District": return {x: 200, y: 430, scrolls: 0}
     }
 }
 

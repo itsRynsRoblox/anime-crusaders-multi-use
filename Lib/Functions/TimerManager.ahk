@@ -23,6 +23,7 @@ class TimerManager {
 
     ; Clears a timer
     static Clear(name) {
+        if this.timers.Has(name)
         this.timers.Delete(name)
     }
 

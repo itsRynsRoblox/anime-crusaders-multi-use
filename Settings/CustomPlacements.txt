@@ -2,7 +2,7 @@
 [Preset 1]
 NoCoordinatesSaved
 [Preset 2]
-NoCoordinatesSaved
+X=312, Y=507
 [Preset 3]
 NoCoordinatesSaved
 [Preset 4]

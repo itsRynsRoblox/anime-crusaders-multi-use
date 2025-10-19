@@ -22,6 +22,7 @@ WalkToGates() {
 }
 
 SelectGatesByFindText() {
+    global currentGateRank
     coordsTop := [
         [162, 257, 281, 274],
         [297, 256, 420, 275],
@@ -117,7 +118,7 @@ SelectGatesByFindText() {
         if (bestInTop) {
             Scroll(3, "WheelUp", 100)
         }
-
+        currentGateRank := bestGate
         SelectGate(bestIndex, mouseCoords)
         return
     }
@@ -163,7 +164,7 @@ PickNextGate(testing := false) {
 WalkToCenterOfGateRoom() {
     Walk("s", 3400)
     Walk("d", 1000)
-    ;Walk("s", 800) walks to rocks south
+    Walk("s", 800) ; walks to rocks south
 }
 
 HandleGateEnd() {
