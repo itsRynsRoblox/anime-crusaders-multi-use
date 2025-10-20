@@ -93,7 +93,7 @@ HandleDefaultEnd() {
 }
 
 MonitorStage() {
-    global Wins, loss, mode, stageStartTime
+    global Wins, loss, stageStartTime
 
     lastClickTime := A_TickCount
 
@@ -110,7 +110,7 @@ MonitorStage() {
         }
 
         ; --- Check for progression or special cases ---
-        if (HasCards(ModeDropdown.Text)) {
+        if (HasCards(ModeDropdown.Text) || HasCards(EventDropdown.Text)) {
             CheckForCardSelection()
         }
 
@@ -186,21 +186,6 @@ ChallengeMovement() {
     SendInput ("{a up}")
 }
 
-PlayHere(mode := "Story") {
-    if (mode = "Story") {
-        FixClick(595, 468) ; click select
-        Sleep(300)
-        FixClick(333, 349) ; click play here
-        Sleep(300)
-        FixClick(410, 525) ; click play
-
-    }
-    else if (mode = "Raid") {
-        FixClick(595, 468) ; click select
-        Sleep(300)
-    }
-}
-
 Zoom() {
     WinActivate(rblxID)
     Sleep 100
@@ -256,11 +241,11 @@ BasicSetup(usedButton := false) {
     Zoom()
 
     ; Teleport to spawn
-    TeleportToSpawn()
+    ;TeleportToSpawn()
     Sleep 300
 
-    if (ModeDropdown.Text = "Gates" && GateMovement.Value) {
-        WalkToCenterOfGateRoom()
+    if (ModeDropdown.Text = "Event" && !usedButton) {
+        HandleEventMovement()
     } else {
         WalkToCoords()
     }
@@ -287,12 +272,12 @@ RestartStage() {
     MonitorStage()
 }
 
-Reconnect(testing := false) {
+Reconnect(force := false) {
     if (WinExist(rblxID)) {
         WinActivate(rblxID)
     }
 
-    if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || testing) {
+    if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || force) {
 
         ; Wait until internet is available
         while !isConnectedToInternet() {
@@ -337,21 +322,53 @@ Reconnect(testing := false) {
         }
 
         AddToLog("Reconnecting to " GameName "...")
+        TimerManager.Start("Reconnect Failsafe", 120 * 1000)
+        attempts := 0
+        maxAttempts := 10
 
         while (!isInLobby()) {
             if (WinExist(rblxID)) {
                 WinActivate(rblxID)
                 sizeDown()
             }
+
+            if (TimerManager.HasExpired("Reconnect Failsafe")) {
+                attempts++
+                AddToLog("[Failsafe] Reconnection failed. Attempt " attempts " of " maxAttempts)
+
+                if (attempts >= maxAttempts) {
+                    AddToLog("[Failsafe] Max attempts reached, game might be shut down")
+                    return
+                }
+
+                ; Try to relaunch Roblox again
+                TimerManager.Clear("Reconnect Failsafe")
+                TimerManager.Start("Reconnect Failsafe", 120 * 1000)
+
+                if (PrivateServerEnabled.Value) {
+                    psLink := PrivateServerURLBox.Value
+                    if (psLink != "") {
+                        serverCode := GetPrivateServerCode(psLink)
+                        deepLink := "roblox://experiences/start?placeId=107573139811370&linkCode=" serverCode
+                        if (WinExist("ahk_exe RobloxPlayerBeta.exe")) {
+                            WinClose("ahk_exe RobloxPlayerBeta.exe")
+                            Sleep(3000)
+                        }
+                        AddToLog("Retrying private server connection...")
+                        Run(serverCode = "" ? psLink : deepLink)
+                        WinWait("ahk_exe RobloxPlayerBeta.exe", , 15)
+                    }
+                } else {
+                    Run("roblox://placeID=107573139811370")
+                    WinWait("ahk_exe RobloxPlayerBeta.exe", , 15)
+                }
+            }
+
             Sleep(1000)
         }
-
-        if (isInLobby()) {
-            AddToLog("Reconnected Successfully!")
-            return StartSelectedMode()
-        } else {
-            Reconnect()
-        }
+        TimerManager.Clear("Reconnect Failsafe")
+        AddToLog("Reconnected Successfully!")
+        return StartSelectedMode()
     }
 }
 
@@ -485,20 +502,17 @@ StartSelectedMode() {
     else if (ModeDropdown.Text = "Raid") {
         StartRaidMode()
     }
-    else if (ModeDropdown.Text = "Custom") {
-        CustomMode()
+    else if (ModeDropdown.Text = "Event") {
+        StartEvent()
     }
     else if (ModeDropdown.Text = "Portal") {
         StartPortals()
     }
-    else if (ModeDropdown.Text = "Gates") {
-        StartGates()
-    }
-    else if (ModeDropdown.Text = "Spirit Invasion") {
-        StartSpiritInvasion()
-    }
     else if (ModeDropdown.Text = "Infinity Castle") {
         StartInfinityCastle()
+    }
+    else if (ModeDropdown.Text = "Custom") {
+        CustomMode()
     }
 }
 
@@ -688,7 +702,7 @@ HandleStartButton() {
 
 StartsInLobby(ModeName) {
     ; Array of modes that usually start in lobby
-    static modes := ["Story", "Legend Stage", "Raid", "Gates", "Portal", "Spirit Invasion", "Infinity Castle"]
+    static modes := ["Story", "Legend Stage", "Raid", "Event", "Portal", "Infinity Castle"]
 
     ; Check if current mode is in the array
     for mode in modes {
@@ -700,7 +714,7 @@ StartsInLobby(ModeName) {
 
 HasCards(ModeName) {
     ; Array of modes that have card selection
-    static modesWithCards := ["Spirit Invasion"]
+    static modesWithCards := ["Spirit Invasion", "Halloween"]
     
     ; Check if current mode is in the array
     for mode in modesWithCards {
@@ -734,5 +748,8 @@ isMenuOpen(name := "") {
     }
     else if (name = "Infinity Castle") {
         return FindText(&X, &Y, 444, 439, 610, 475, 0.20, 0.20, InfinityCastleUI)
+    }
+    else if (name = "Halloween") {
+        return FindText(&X, &Y, 370, 452, 409, 488, 0.20, 0.20, HalloweenUI)
     }
 }

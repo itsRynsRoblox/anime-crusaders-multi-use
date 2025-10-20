@@ -50,10 +50,10 @@ HandlePortalEnd(isVictory := true) {
     return RestartStage()
 }
 
-IsValidPortal(x, y, inGame := false) {
-    Sleep(1000)  ; Allow UI to fully update
-
-    pixelChecks := [{ color: 0x32DD00, x: 100, y: 70, disabledInGame: true }, { color: 0x248FFE, x: 100, y: 100 }]
+IsValidPortal(x, y, inGame := false, testing := false) {
+    Sleep(1000)
+    ;297, 375
+    pixelChecks := [{ color: 0x32DD00, x: 100, y: GetPortalYCoordinates(false), disabledInGame: true }, { color: 0x248FFE, x: 100, y: GetPortalYCoordinates(true) }]
 
     for pixel in pixelChecks {
         ; Skip check if this pixel is disabled in-game
@@ -66,6 +66,11 @@ IsValidPortal(x, y, inGame := false) {
 
         if GetPixel(pixel.color, checkX, checkY, 4, 4, 20) {
             return true
+        }
+
+        if (testing) {
+            MouseMove(checkX, checkY)
+            Sleep (10000)
         }
     }
 }
@@ -124,14 +129,14 @@ SearchAndStartPortal(mapName, portalText, inGame := false) {
             Sleep 500
             wiggle()
             FixClick(portalX, portalY)
-            Sleep 500
+            Sleep 1000
 
             ok := IsValidPortal(portalX, portalY, inGame)
 
             if (ok) {
                 AddToLog("Found " StrReplace(mapName, "_", " ") " Portal, attempting to start...")
                 Sleep 500
-                ClickUsePortal(portalX, portalY, inGame)
+                ClickUsePortal(portalX, portalY, inGame, false)
                 if (!inGame) {
                     if (PortalRoleDropdown.Text = "Host") {
                         AddToLog("Waiting 15 seconds for others to join")
@@ -166,7 +171,7 @@ SearchAndStartPortal(mapName, portalText, inGame := false) {
 }
 
 ClickUsePortal(x, y, inGame := false, testing := false) {
-    pixelChecks := [{ color: 0x32DD00, x: 100, y: 70, disabledInGame: true }, { color: 0x248FFE, x: 100, y: 100 }]
+    pixelChecks := [{ color: 0x32DD00, x: 100, y: GetPortalYCoordinates(false), disabledInGame: true }, { color: 0x248FFE, x: 100, y: GetPortalYCoordinates(true) }]
 
     for pixel in pixelChecks {
         ; Skip check if this pixel is disabled in-game
@@ -253,5 +258,20 @@ SwitchActiveFarm() {
                 AddToLog("No valid story mapping found for " PortalDropdown.Text)
             }
         }
+    }
+}
+
+GetPortalYCoordinates(inGame := false) {
+    switch (PortalDropdown.Text) {
+        case "Demon District":
+            if (inGame) {
+                return 85
+            }
+            return 60
+        case "Marine Ford":
+            if (inGame) {
+                return 70
+            }
+            return 100
     }
 }

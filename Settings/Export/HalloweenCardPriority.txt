@@ -1,0 +1,7 @@
+[CardPriority]
+Tier3TradeOff=1
+Tier2TradeOff=2
+Tier1TradeOff=3
+Tier3BuffCard=4
+Tier2BuffCard=5
+Tier1BuffCard=6

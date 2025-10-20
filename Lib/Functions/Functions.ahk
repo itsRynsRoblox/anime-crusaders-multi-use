@@ -38,6 +38,8 @@ OnModeChange(*) {
 
     ; Show based on selection
     switch ModeDropdown.Text {
+        case "Event":
+            EventDropdown.Visible := true
         case "Story":
             StoryDropdown.Visible := true
             StoryActDropdown.Visible := true
@@ -54,6 +56,14 @@ OnModeChange(*) {
 
     if (ModeConfigurations.Value) {
         LoadUnitSettingsByMode()
+    }
+}
+
+OnEventChange(*) {
+    if (EventDropdown.Text != "") {
+        EventRoleDropdown.Visible := true
+    } else {
+        EventRoleDropdown.Visible := false
     }
 }
 
@@ -114,6 +124,12 @@ OnConfirmClick(*) {
             return
         }
         AddToLog("Selected " RaidDropdown.Text)
+    }
+    else if (ModeDropdown.Text = "Event") {
+        if (EventDropdown.Text = "" || EventRoleDropdown.Text = "") {
+            AddToLog("Please select both Event and Role before confirming")
+            return
+        }
     } else {
         AddToLog("Selected " ModeDropdown.Text " mode")
     }
@@ -131,6 +147,8 @@ OnConfirmClick(*) {
     RaidActDropdown.Visible := false
     PortalDropdown.Visible := false
     PortalRoleDropdown.Visible := false
+    EventDropdown.Visible := false
+    EventRoleDropdown.Visible := false
     ConfirmButton.Visible := false
     modeSelectionGroup.Visible := false
     Hotkeytext.Visible := true
@@ -486,10 +504,13 @@ SearchForImage(X1, Y1, X2, Y2, image) {
 }
 
 OpenCardConfig() {
-    if (ModeDropdown.Text = "Spirit Invasion") {
-        SwitchCardMode("Spirit Invasion")
-    } else {
-        AddToLog("No card configuration available for mode: " (ModeDropdown.Text = "" ? "None" : ModeDropdown.Text))
+    switch (EventDropdown.Text) {
+        case "Spirit Invasion":
+            SwitchCardMode("Spirit Invasion")
+        case "Halloween":
+            SwitchCardMode("Halloween")
+        default:
+            AddToLog("No card configuration available for mode: " (EventDropdown.Text = "" ? "None" : EventDropdown.Text))    
     }
 }
 
@@ -543,8 +564,8 @@ CheckUnitAbilities() {
             return MonitorStage()
         }
 
-        if (CheckForCardSelection()) {
-            SelectCardsByMode()
+        if (HasCards(ModeDropdown.Text) || HasCards(EventDropdown.Text)) {
+            CheckForCardSelection()
         }
 
         if (NukeUnitSlotEnabled.Value && slot = NukeUnitSlot.Value) {
@@ -645,7 +666,7 @@ DoesntHaveSeamless(ModeName) {
 }
 
 ModesWithMatchmaking(ModeName) {
-    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates", "Spirit Invasion"]
+    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates", "Spirit Invasion", "Halloween"]
 
     for mode in modesWithMatchmaking {
         if (mode = ModeName)
@@ -679,9 +700,7 @@ PlayHereOrMatchmake() {
         if (isInGame()) {
             FixClick(331, 350)
         } else {
-            FixClick(331, 350)
-            Sleep(1500)
-            FixClick(410, 525)
+            HandlePlayHere()
         }
     }
 }

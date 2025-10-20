@@ -20,7 +20,7 @@ CreateCardPriorityGui(config) {
         dropDown := CardGUI.Add("DropDownList", Format("x60 y{} w135", yPos), config["options"])
         dropDowns.Push(dropDown)
         AttachDropDownEvent(dropDown, A_Index, OnDropDownChange)
-        AddToLog("Added dropdown " config["options"][A_Index] " with priority " A_Index)
+       ; AddToLog("Added dropdown " config["options"][A_Index] " with priority " A_Index)
     }
 
     groupBoxHeight := yStart + (config["options"].Length * ySpacing - 15)
@@ -47,8 +47,9 @@ OpenCardPriorityPicker() {
 
 
 SelectCardsByMode() {
-    if (ModeDropdown.Text = "Spirit Invasion") {
-        return SelectCards("SpiritInvasion")
+    switch (EventDropdown.Text) {
+        case "Halloween": return SelectCards("Halloween")
+        case "Spirit Invasion": return SelectCards("SpiritInvasion")
     }
     return false
 }
@@ -707,7 +708,7 @@ ImportCardConfig(modeName) {
         FileAppend("[CardPriority]`n", targetFile)
         for index, name in loadedOptions {
             FileAppend(name "=" index "`n", targetFile)
-            AddToLog("Added " name " with priority " index)
+            ;AddToLog("Added " name " with priority " index)
         }
 
         config["options"] := loadedOptions

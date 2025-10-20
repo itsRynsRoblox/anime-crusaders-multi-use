@@ -4,7 +4,7 @@ StartPlacingUnits(untilSuccessful := true) {
     global successfulCoordinates, maxedCoordinates
     successfulCoordinates := []
     maxedCoordinates := []
-    placedCounts := Map()
+    global placedCounts := Map()
 
     ; --- Check if any slot is enabled ---
     anyEnabled := false
@@ -257,7 +257,7 @@ PostPlacementChecks() {
         return MonitorStage()
     }
 
-    if (HasCards(ModeDropdown.Text)) {
+    if (HasCards(ModeDropdown.Text)) || (HasCards(EventDropdown.Text)) {
         CheckForCardSelection()
     }
 

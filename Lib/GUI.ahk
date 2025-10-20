@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.3"
+global version := "v1.5"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -18,7 +18,6 @@ global centerY := 320
 global successfulCoordinates := []
 global totalUnits := Map()
 ;Statistics Tracking
-global mode := ""
 global StartTime := A_TickCount
 global currentTime := GetCurrentTime()
 ; Config and Settings
@@ -82,6 +81,19 @@ global CardModeConfigs := Map(
         "modeName", "SpiritInvasion",
         "title", "Spirit Invasion Card Priority",
         "filePath", "Settings\SpiritInvasionCardPriority.txt",
+        "options", [
+            "Tier3BuffCard",
+            "Tier2BuffCard",
+            "Tier1BuffCard",
+            "Tier1TradeOff",
+            "Tier2TradeOff",
+            "Tier3TradeOff"
+        ]
+    ),
+    "Halloween", Map(
+        "modeName", "Halloween",
+        "title", "Halloween Card Priority",
+        "filePath", "Settings\HalloweenCardPriority.txt",
         "options", [
             "Tier3BuffCard",
             "Tier2BuffCard",
@@ -366,8 +378,12 @@ global StoryBorder := MainUI.Add("GroupBox", "x808 y150 w550 h231 +Center Hidden
 global StoryDifficultyText := MainUI.Add("Text", "x825 y170 Hidden", "Story Difficulty")
 global StoryDifficulty := MainUI.Add("DropDownList", "x825 y185 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
 
+; === Limited Time Modes ===
 global GateBorder := MainUI.Add("GroupBox", "x808 y220 w550 h161 +Center Hidden c" uiTheme[1], "Gate Settings")
 global GateMovement := MainUI.Add("CheckBox", "x825 y250 Hidden cffffff", "Use premade movement to walk to the center of the gate room")
+
+global HalloweenBorder := MainUI.Add("GroupBox", "x808 y225 w550 h161 +Center Hidden c" uiTheme[1], "Halloween Settings")
+global HalloweenMovement := MainUI.Add("CheckBox", "x825 y255 Hidden cffffff", "Use premade movement to walk to down the path a bit")
 
 global PortalBorder := MainUI.Add("GroupBox", "x808 y290 w550 h91 +Center Hidden c" uiTheme[1], "Portal Settings")
 global FarmMorePortals := MainUI.Add("CheckBox", "x825 y310 Hidden cffffff", "Farm more portals when possible if out of portals")
@@ -408,7 +424,9 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Gates", "Legend Stage", "Portal", "Raid", "Spirit Invasion", "Custom"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
+global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
+global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya", "Nightmare Train"] )
@@ -427,6 +445,7 @@ Hotkeytext.Visible := false
 Hotkeytext2.Visible := false
 Hotkeytext3.Visible := false
 ModeDropdown.OnEvent("Change", OnModeChange)
+EventDropdown.OnEvent("Change", OnEventChange)
 StoryDropdown.OnEvent("Change", OnStoryChange)
 LegendDropDown.OnEvent("Change", OnLegendChange)
 RaidDropdown.OnEvent("Change", OnRaidChange)
@@ -917,7 +936,8 @@ InitControlGroups() {
     ControlGroups["Mode"] := [
         ModeBorder, ModeConfigurations,
         StoryBorder, StoryDifficultyText, StoryDifficulty,
-        GateBorder, GateMovement,
+        ;GateBorder, GateMovement,
+        HalloweenBorder, HalloweenMovement,
         PortalBorder, FarmMorePortals
     ]
 

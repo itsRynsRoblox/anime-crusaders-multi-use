@@ -15,8 +15,12 @@ StartInfinityCastle() {
 }
 
 WalkToInfinityCastle() {
-    Walk("w", 4000)
-    Walk("a", 4200)
+    Teleport("Challenge")
+    Walk("a", 3700)
+    Walk("w", 6500)
+    Walk("d", 4000)
+    Walk("w", 800)
+    Walk("d", 500)
 }
 
 ClickNextRoom(testing := false) {

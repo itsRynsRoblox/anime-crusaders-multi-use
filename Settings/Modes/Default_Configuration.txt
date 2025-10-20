@@ -7,7 +7,7 @@ Enabled5=1
 Enabled6=1
 Placement1=1
 Placement2=1
-Placement3=2
+Placement3=3
 Placement4=1
 Placement5=1
 Placement6=1
@@ -58,10 +58,13 @@ Priority Upgrade=1
 Auto Challenge=0
 
 [Portal Settings]
-Farm More Portals=1
+Farm More Portals=0
 
 [Gate Settings]
 Premade Gate Movement=1
+
+[Halloween Settings]
+Premade Halloween Movement=0
 
 [Unit Settings]
 Use Sunwoo Nuke=0

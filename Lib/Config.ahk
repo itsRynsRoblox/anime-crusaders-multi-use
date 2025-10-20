@@ -97,6 +97,9 @@ SaveSettingsForMode(*) {
         content .= "`n`n[Gate Settings]"
         content .= "`nPremade Gate Movement=" GateMovement.Value
 
+        content .= "`n`n[Halloween Settings]"
+        content .= "`nPremade Halloween Movement=" HalloweenMovement.Value
+
         content .= "`n`n[Unit Settings]"
         content .= "`nUse Sunwoo Nuke=" SJWNuke.Value
         content .= "`nSunwoo Nuke Slot=" SJWSlot.Value
@@ -629,6 +632,7 @@ InitSettings() {
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Farm More Portals"] := { control: FarmMorePortals, prop: "Value" }
     UnitConfigMap["Premade Gate Movement"] := { control: GateMovement, prop: "Value" }
+    UnitConfigMap["Premade Halloween Movement"] := { control: HalloweenMovement, prop: "Value" }
 
     UnitConfigMap["Nuke Enabled"] := { control: NukeUnitSlotEnabled, prop: "Value" }
     UnitConfigMap["Nuke Slot"] := { control: NukeUnitSlot, prop: "Value" }

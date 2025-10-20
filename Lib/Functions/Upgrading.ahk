@@ -264,7 +264,7 @@ ProcessUpgrades(slot := false, priorityNum := false, singlePass := false) {
 
 UpgradePlacedUnits() {
     global stage
-    global successfulCoordinates, maxedCoordinates
+    global successfulCoordinates, maxedCoordinates, placedCounts
     global totalUnits := Map(), upgradedCount := Map()
 
     hasUpgradeableUnits := false
@@ -403,13 +403,7 @@ UpgradeUnitLimit(coord, index, upgradeLimit) {
 HandleMaxUpgrade(coord, index) {
     global successfulCoordinates, maxedCoordinates, upgradedCount, totalUnits
 
-    if (IsSet(totalUnits) && IsSet(upgradedCount)) {
-        upgradedCount[coord.slot]++
-        AddToLog("Max upgrade reached for Unit: " coord.slot " (" upgradedCount[coord.slot] "/" totalUnits[coord.slot] ")")
-    } else {
-        AddToLog("Max upgrade reached for Unit: " coord.slot)
-        maxedCoordinates.Push(coord)
-    }
+    AddToLog("Max upgrade reached for Unit: " coord.slot)
     maxedCoordinates.Push(coord)
     successfulCoordinates.RemoveAt(index)
 }
@@ -417,7 +411,7 @@ HandleMaxUpgrade(coord, index) {
 PostUpgradeChecks() {
     HandleAutoAbility()
 
-    if (HasCards(ModeDropdown.Text)) {
+    if (HasCards(ModeDropdown.Text) || HasCards(EventDropdown.Text)) {
         CheckForCardSelection()
     }
 

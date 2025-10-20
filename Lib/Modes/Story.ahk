@@ -15,12 +15,14 @@ StartStoryMode() {
         StoryMovement()
     }
 
-    AddToLog("Starting " currentStoryMap " - " currentStoryAct)
     StartStory(currentStoryMap, currentStoryAct)
 
-    SelectDifficulty("Nightmare")
+    if (currentStoryAct != "Infinite") {
+        SelectDifficulty(StoryDifficulty.Text)
+    }
 
-    ; Handle play mode selection
+    FixClick(595, 468) ; click select
+    Sleep(300)
     PlayHereOrMatchmake()
     RestartStage()
 }

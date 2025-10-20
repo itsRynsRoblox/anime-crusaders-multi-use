@@ -26,11 +26,13 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Story.ahk
 #Include %A_ScriptDir%/lib/Modes/LegendStages.ahk
 #Include %A_ScriptDir%/lib/Modes/Raid.ahk
-#Include %A_ScriptDir%/lib/Modes/Gates.ahk
 #Include %A_ScriptDir%/lib/Modes/SpiritInvasion.ahk
 #Include %A_ScriptDir%/lib/Modes/InfinityCastle.ahk
 
 ; === Limited Time Game Modes ===
+#Include %A_ScriptDir%/lib/Modes/Limited/Events.ahk
+#Include %A_ScriptDir%/lib/Modes/Limited/Gates.ahk
+#Include %A_ScriptDir%/lib/Modes/Limited/Halloween.ahk
 
 ; === Core Mechanics ===
 #Include %A_ScriptDir%/lib/Functions/Functions.ahk

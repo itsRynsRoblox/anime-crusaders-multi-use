@@ -287,6 +287,8 @@ GetTextForMode(mode) {
     switch mode {
         case "Gates":
             return "Gate - " currentGateRank
+        case "Event":
+            return "Event - " EventDropdown.Text " - " EventRoleDropdown.Text    
         default:
             return mode
     }
