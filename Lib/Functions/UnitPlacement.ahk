@@ -23,6 +23,10 @@ StartPlacingUnits(untilSuccessful := true) {
         return MonitorStage()
     }
 
+    if (ActiveAbilityEnabled()) {
+        SetTimer(CheckAutoAbility, GetAutoAbilityTimer())
+    }
+
     ; --- Placement Order Logic ---
     if (PlacementSelection.Text = "By Priority") {
         global slotPriorityList := []
@@ -92,6 +96,15 @@ StartPlacingUnits(untilSuccessful := true) {
         placements := %placements%
         placements := Integer(placements.Text)
 
+        ; Get upgradeEnabled value for this slot
+        upgradeEnabled := "upgradeEnabled" slotNum
+        upgradeEnabled := %upgradeEnabled%
+        upgradeEnabled := upgradeEnabled.Value
+
+        abilityEnabled := "abilityEnabled" slotNum
+        abilityEnabled := %abilityEnabled%
+        abilityEnabled := abilityEnabled.Value
+
         ; Initialize count if not exists
         if !placedCounts.Has(slotNum)
             placedCounts[slotNum] := 0
@@ -130,7 +143,9 @@ StartPlacingUnits(untilSuccessful := true) {
                                     y: point.y,
                                     slot: slotNum,
                                     upgradePriority: GetUpgradePriority(slotNum),
-                                    placementIndex: placementIndex
+                                    placementIndex: placementIndex,
+                                    autoUpgrade: upgradeEnabled,
+                                    hasAbility: abilityEnabled
                                 })
                             }
                             successfulCoordinates.Push({
@@ -138,16 +153,26 @@ StartPlacingUnits(untilSuccessful := true) {
                                 y: point.y,
                                 slot: slotNum,
                                 upgradePriority: GetUpgradePriority(slotNum),
-                                placementIndex: placementIndex
+                                placementIndex: placementIndex,
+                                autoUpgrade: upgradeEnabled,
+                                hasAbility: abilityEnabled
                             })
                             placedCounts[slotNum] += 1
                             AddToLog("Placed Unit " slotNum " (" placedCounts[slotNum] "/" placements ")")
-                            if (!NukeUnitSlotEnabled.Value && slotNum != NukeUnitSlot.Value) {
-                                HandleAutoAbility()
+                            if (upgradeEnabled) {
+                                EnableAutoUpgrade()
                             }
-                            HandleAutoUpgrade()
+                            if (abilityEnabled) {
+                                if (NukeUnitSlotEnabled.Value && slotNum = NukeUnitSlot.Value) {
+                                    AddToLog("Skipping this unit, as it is the nuke unit")
+                                } else {
+                                    hadAbilityOnPlacement := HandleAutoAbility()
+                                    if (hadAbilityOnPlacement) {
+                                        successfulCoordinates[successfulCoordinates.Length].hasAbility := false
+                                    }
+                                }
+                            }
                             FixClick(341, 226) ; close unit ui
-                            UpgradePlacedUnits()
                         } else {
                             PostPlacementChecks()
                         }
@@ -165,28 +190,38 @@ StartPlacingUnits(untilSuccessful := true) {
                                     y: point.y,
                                     slot: slotNum,
                                     upgradePriority: GetUpgradePriority(slotNum),
-                                    placementIndex: placementIndex
+                                    placementIndex: placementIndex,
+                                    autoUpgrade: upgradeEnabled,
+                                    hasAbility: abilityEnabled
                                 })
                             }
-
                             successfulCoordinates.Push({
                                 x: point.x,
                                 y: point.y,
                                 slot: slotNum,
                                 upgradePriority: GetUpgradePriority(slotNum),
-                                placementIndex: placementIndex
+                                placementIndex: placementIndex,
+                                autoUpgrade: upgradeEnabled,
+                                hasAbility: abilityEnabled
                             })
                             placedCounts[slotNum] += 1
                             AddToLog("Placed Unit " slotNum " (" placedCounts[slotNum] "/" placements ")")
-                            if (!NukeUnitSlotEnabled.Value && slotNum != NukeUnitSlot.Value) {
-                                HandleAutoAbility()
+                            if (upgradeEnabled) {
+                                EnableAutoUpgrade()
                             }
-                            HandleAutoUpgrade()
+                            if (abilityEnabled) {
+                                if (NukeUnitSlotEnabled.Value && slotNum = NukeUnitSlot.Value) {
+                                    AddToLog("Skipping this unit, as it is the nuke unit")
+                                } else {
+                                    hadAbilityOnPlacement := HandleAutoAbility()
+                                    if (hadAbilityOnPlacement) {
+                                        successfulCoordinates[successfulCoordinates.Length].hasAbility := false
+                                    }
+                                }
+                            }
                             FixClick(341, 226) ; close unit ui
-                            UpgradePlacedUnits()
                             break ; Move to the next placement spot
                         }
-                        UpgradePlacedUnits()
                         PostPlacementChecks()
                         Sleep(500) ; Prevents spamming clicks too fast
                     }

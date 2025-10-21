@@ -288,8 +288,19 @@ GetTextForMode(mode) {
         case "Gates":
             return "Gate - " currentGateRank
         case "Event":
-            return "Event - " EventDropdown.Text " - " EventRoleDropdown.Text    
+            return EventDropdown.Text " Event - " EventRoleDropdown.Text    
         default:
             return mode
     }
+}
+
+FormatStageTime(ms) {
+    seconds := Floor(ms / 1000)
+    minutes := Floor(seconds / 60)
+    hours := Floor(minutes / 60)
+
+    minutes := Mod(minutes, 60)
+    seconds := Mod(seconds, 60)
+
+    return Format("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }

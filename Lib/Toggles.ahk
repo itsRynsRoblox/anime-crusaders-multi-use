@@ -2,6 +2,6 @@
 
 global debugMessages := false
 
-global autoAbilityDisabled := true
+global autoAbilityDisabled := false
 
 global unitUpgradeLimitDisabled := false

@@ -67,7 +67,7 @@ SaveSettingsForMode(*) {
         ; Start building the content
         content := "[Unit Settings]"
 
-        for settingType in ["Enabled", "Placement", "Priority", "UpgradePriority", "UpgradeEnabled", "UpgradeLimit", "UpgradeLimitEnabled"] {
+        for settingType in ["Enabled", "Placement", "Priority", "UpgradePriority", "UpgradeEnabled", "UpgradeLimit", "UpgradeLimitEnabled", "AbilityEnabled"] {
             loop 6 {
                 index := A_Index
                 setting := %settingType%%index%
@@ -84,12 +84,14 @@ SaveSettingsForMode(*) {
         content .= "`nZoomLevel=" ZoomBox.Value
 
         content .= "`n`n[Upgrade Settings]"
-        content .= "`nAuto Upgrade=" AutoUpgrade.Value
         content .= "`nUnit Manager Upgrade System=" UnitManagerUpgradeSystem.Value
         content .= "`nPriority Upgrade=" PriorityUpgrade.Value
 
         content .= "`n`n[Auto Challenge Settings]"
         content .= "`nAuto Challenge=" AutoChallenge.Value
+        content .= "`nChallenge Team Swap=" ChallengeTeamSwap.Value
+        content .= "`nDefault Team=" NormalTeam.Value
+        content .= "`nChallenge Team=" ChallengeTeam.Value
 
         content .= "`n`n[Portal Settings]"
         content .= "`nFarm More Portals=" FarmMorePortals.Value
@@ -101,8 +103,6 @@ SaveSettingsForMode(*) {
         content .= "`nPremade Halloween Movement=" HalloweenMovement.Value
 
         content .= "`n`n[Unit Settings]"
-        content .= "`nUse Sunwoo Nuke=" SJWNuke.Value
-        content .= "`nSunwoo Nuke Slot=" SJWSlot.Value
         content .= "`nNuke Enabled=" NukeUnitSlotEnabled.Value
         content .= "`nNuke Slot=" NukeUnitSlot.Value
         content .= "`nNuke Coords=" nukeCoords.x "," nukeCoords.y
@@ -615,6 +615,7 @@ InitSettings() {
         UnitConfigMap["UpgradeEnabled" i] := { control: upgradeEnabled%i%, prop: "Value" }
         UnitConfigMap["UpgradeLimitEnabled" i] := { control: upgradeLimitEnabled%i%, prop: "Value" }
         UnitConfigMap["UpgradeLimit" i] := { control: UpgradeLimit%i%, prop: "Text" }
+        UnitConfigMap["AbilityEnabled" i] := { control: abilityEnabled%i%, prop: "Value" }
         UnitConfigMap["Placement" i] := { control: placement%i%, prop: "Text" }
         UnitConfigMap["Priority" i] := { control: priority%i%, prop: "Text" }
         UnitConfigMap["UpgradePriority" i] := { control: UpgradePriority%i%, prop: "Text" }
@@ -625,9 +626,11 @@ InitSettings() {
     UnitConfigMap["AutoAbilityTimer"] := { control: AutoAbilityTimer, prop: "Text" }
 
     UnitConfigMap["Auto Challenge"] := { control: AutoChallenge, prop: "Value" }
+    UnitConfigMap["Challenge Team Swap"] := { control: ChallengeTeamSwap, prop: "Value" }
+    UnitConfigMap["Default Team"] := { control: NormalTeam, prop: "Value" }
+    UnitConfigMap["Challenge Team"] := { control: ChallengeTeam, prop: "Value" }
 
     UnitConfigMap["ZoomLevel"] := { control: ZoomBox, prop: "Text" }
-    UnitConfigMap["Auto Upgrade"] := { control: AutoUpgrade, prop: "Value" }
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Farm More Portals"] := { control: FarmMorePortals, prop: "Value" }

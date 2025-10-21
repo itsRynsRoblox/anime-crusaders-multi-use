@@ -1,11 +1,13 @@
 #Requires AutoHotkey v2.0
 
-StartHalloween() {
-    while !(ok := isMenuOpen("Halloween")) {
-        WalkToHalloween()
+StartHalloween(skipLobby := false) {
+    if (!skipLobby) {
+        while !(ok := isMenuOpen("Halloween")) {
+            WalkToHalloween()
+        }
+        FixClick(473, 473) ; click play
+        PlayHereOrMatchmake()
     }
-    FixClick(473, 473) ; click play
-    PlayHereOrMatchmake()
     RestartStage()
 }
 

@@ -141,6 +141,10 @@ SearchAndStartPortal(mapName, portalText, inGame := false) {
                     if (PortalRoleDropdown.Text = "Host") {
                         AddToLog("Waiting 15 seconds for others to join")
                         Sleep(15000)
+                        FixClick(410, 525)
+                    }
+                    else if (PortalRoleDropdown.Text = "Solo") {
+                        FixClick(410, 525)
                     }
                     WaitForMapChange()
                     return RestartStage()

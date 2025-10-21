@@ -32,9 +32,14 @@ getCurrentTime() {
 }
 
 OnModeChange(*) {
+    global ActiveControlGroup
     ; Hide all
-    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown]
+    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown, EventRoleDropdown, CustomCardDropdown]
         ctrl.Visible := false
+
+    if (ActiveControlGroup = "Mode") {
+        ToggleControlGroup(ModeDropdown.Text)
+    }
 
     ; Show based on selection
     switch ModeDropdown.Text {
@@ -51,7 +56,8 @@ OnModeChange(*) {
         case "Portal":
             PortalDropdown.Visible := PortalRoleDropdown.Visible := true
         case "Custom":
-            ; Add handling if needed
+            CustomCardDropdown.Visible := true
+        default:
     }
 
     if (ModeConfigurations.Value) {
@@ -149,12 +155,17 @@ OnConfirmClick(*) {
     PortalRoleDropdown.Visible := false
     EventDropdown.Visible := false
     EventRoleDropdown.Visible := false
+    CustomCardDropdown.Visible := false
     ConfirmButton.Visible := false
     modeSelectionGroup.Visible := false
     Hotkeytext.Visible := true
     Hotkeytext2.Visible := true
     Hotkeytext3.Visible := true
     global confirmClicked := true
+}
+
+UpdateActiveConfiguration(*) {
+    ToggleControlGroup(ConfigurationDropdown.Text)
 }
 
 FixClick(x, y, LR := "Left", shouldWiggle := false) {
@@ -338,7 +349,7 @@ RotateCameraAngle() {
 }
 
 CloseLobbyPopups() {
-    FixClick(572, 103) ; close leaderboard
+    FixClick(570, 103) ; close leaderboard
     Sleep(500)
     FixClick(410, 420) ; close daily reward
     Sleep(500)
@@ -374,12 +385,6 @@ ClickUnit(slot) {
     Sleep(150)
 }
 
-
-GetAutoAbilityTimer() {
-    seconds := AutoAbilityTimer.Value
-    return Round(seconds * 1000)
-}
-
 ToggleMenu(name := "") {
     if (!name)
         return
@@ -409,7 +414,7 @@ CloseMenu(name := "") {
     key := ""
     clickX := 0, clickY := 0
     if (name = "Unit Manager")
-        key := "C"
+        key := "F"
 
     if (!key)
         return  ; Unknown menu name
@@ -427,9 +432,7 @@ OpenMenu(name := "") {
 
     key := ""
     if (name = "Unit Manager")
-        key := "C"
-    else if (name = "Ability Manager")
-        key := "Z"
+        key := "F"
 
     if (!key)
         return  ; Unknown menu name
@@ -439,33 +442,6 @@ OpenMenu(name := "") {
         Send(key)
         Sleep(1000)
     }
-}
-
-CheckAutoAbility() {
-    global successfulCoordinates
-    global totalUnits
-
-    AddToLog("Checking for unactive abilities...")
-    if (!NukeUnitSlotEnabled.Value) {
-        OpenMenu("Ability Manager")
-    }
-    Sleep (1000)
-
-    if (isMenuOpen("End Screen")) {
-        AddToLog("Stopping auto ability check because the game ended")
-        CloseMenu("Ability Manager")
-        SetTimer(CheckAutoAbility, 0)  ; Stop the timer
-        return
-    }
-
-    if (NukeUnitSlotEnabled.Value) {
-        CheckUnitAbilities()
-    } else {
-        HandleAutoAbilityUnitManager()
-    }
-    Sleep (1000)
-    CloseMenu("Ability Manager")
-    AddToLog("Finished looking for abilities")
 }
 
 CleanString(str) {
@@ -485,7 +461,7 @@ OnPriorityChange(type, priorityNumber, newPriorityNumber) {
 }
 
 CheckForCardSelection() {
-    if (FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection)) {
+    if (isMenuOpen("Card Selection")) {
         SelectCardsByMode()
         return true
     }
@@ -550,36 +526,6 @@ HasMinionInSlot(slot) {
     return false
 }
 
-CheckUnitAbilities() {
-    global successfulCoordinates, maxedCoordinates
-
-    AddToLog("Checking auto abilities of placed units...")
-
-    for coord in successfulCoordinates {
-
-        slot := coord.slot
-
-        if (isMenuOpen("End Screen")) {
-            AddToLog("Stopping auto ability check because the game ended")
-            return MonitorStage()
-        }
-
-        if (HasCards(ModeDropdown.Text) || HasCards(EventDropdown.Text)) {
-            CheckForCardSelection()
-        }
-
-        if (NukeUnitSlotEnabled.Value && slot = NukeUnitSlot.Value) {
-            AddToLog("Skipping nuke unit in slot " slot)
-            continue
-        }
-
-        FixClick(coord.x, coord.y)
-        Sleep(500)
-
-        HandleAutoAbility()
-    }
-}
-
 ; Global variable to track current coordinate mode (default is Screen)
 global currentCoordMode := "Screen"
 global oldCoordMode := ""
@@ -597,11 +543,12 @@ isInLobby() {
 }
 
 isInGame() {
-    return FindText(&X, &Y, 59, 585, 95, 621, 0.20, 0.20, IngameQuests)
+    return FindText(&X, &Y, 59, 585, 95, 621, 0.20, 0.20, IngameQuests) 
+    || isMenuOpen("Unit Manager")
+    || isMenuOpen("Card Selection")
 }
 
 StartContent(mapName, actName, getMapFunc, getActFunc, mapScrollMousePos, actScrollMousePos) {
-    ;AddToLog("Selecting : " mapName " - " actName)
 
     ; Get the map
     Map := getMapFunc.Call(mapName)
@@ -666,7 +613,7 @@ DoesntHaveSeamless(ModeName) {
 }
 
 ModesWithMatchmaking(ModeName) {
-    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Gates", "Spirit Invasion", "Halloween"]
+    static modesWithMatchmaking := ["Story", "Raid", "Portal", "Event"]
 
     for mode in modesWithMatchmaking {
         if (mode = ModeName)
@@ -703,17 +650,6 @@ PlayHereOrMatchmake() {
             HandlePlayHere()
         }
     }
-}
-
-ActiveAbilityEnabled() {
-    if (autoAbilityDisabled) {
-        return false
-    }
-
-    if (AutoAbilityBox.Value) {
-        return true
-    }
-    return false
 }
 
 ClickNextLevel(testing := false) {
@@ -784,4 +720,103 @@ ClearPreviewDots() {
 
 isConnectedToInternet() {
     return DllCall("Wininet.dll\InternetGetConnectedState", "int*", 0, "int", 0)
+}
+
+ChangeCameraMode(mode := "") {
+    AddToLog("Changing camera mode to " mode)
+    SendInput("{Escape}") ; Open Roblox Menu
+    Sleep (1000)
+    FixClick(205, 90) ; Click Settings
+    Sleep (1000)
+    loop 2 {
+        FixClick(336, 209) ; Change Camera Mode
+        Sleep (500)
+    }
+    SendInput("{Escape}") ; Open Roblox Menu
+}
+
+SetupForInfinite() {
+    ChangeCameraMode("Follow")
+    Sleep (1000)
+    ZoomIn()
+    Sleep (1000)
+    ZoomOut()
+    ChangeCameraMode("Default (Classic)")
+    Sleep (1000)
+    SendInput ("{a down}")
+    Sleep 2000
+    SendInput ("{a up}")
+    KeyWait "a"
+}
+
+ZoomIn() {
+    MouseMove 400, 300
+    Sleep 100
+    FixClick(400, 300)
+    Sleep 100
+
+    ; Zoom in smoothly
+    Scroll(10, "WheelUp", 50)
+
+    ; Right-click and drag camera down
+    Sleep 100
+    MouseMove 400, 300  ; Ensure starting point
+    Click "Right Down"
+    Sleep 50
+    MouseMove 400, 400, 20  ; Drag downward over 20ms
+    Sleep 50
+    Click "Right Up"
+    Sleep 100
+}
+
+ZoomOut() {
+    ; Zoom out smoothly
+    Scroll(10, "WheelDown", 50)
+
+    ; Move mouse back to center
+    MouseMove 400, 300
+}
+
+ClickUntilGone(x, y, searchX1, searchY1, searchX2, searchY2, textToFind, offsetX := 0, offsetY := 0, textToFind2 := "") {
+    while (ok := FindText(&X, &Y, searchX1, searchY1, searchX2, searchY2, 0, 0, textToFind) ||
+    textToFind2 && FindText(&X, &Y, searchX1, searchY1, searchX2, searchY2, 0, 0, textToFind2)) {
+        if (offsetX != 0 || offsetY != 0) {
+            FixClick(X + offsetX, Y + offsetY)
+        } else {
+            FixClick(x, y)
+        }
+        Sleep(1000)
+    }
+}
+
+ClickReturnToLobby(testing := false) {
+    while (isMenuOpen("End Screen")) {
+        pixelChecks := [{ color: 0x5AB94A, x: 108, y: 469 }]
+
+        for pixel in pixelChecks {
+            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
+                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
+                if (testing) {
+                    Sleep(1500)
+                }
+            }
+        }
+    }
+    AddToLog("[Info] Returning to lobby")
+    return CheckLobby()
+}
+
+ClickReplay(testing := false) {
+    while (isMenuOpen("End Screen")) {
+        pixelChecks := [{ color: 0xFCE560, x: 270, y: 483 }]
+
+        for pixel in pixelChecks {
+            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
+                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
+                if (testing) {
+                    Sleep(1500)
+                }
+            }
+        }
+    }
 }

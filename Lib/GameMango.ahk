@@ -101,7 +101,7 @@ MonitorStage() {
     FixClick(400, 500)
 
     Loop {
-        Sleep(1000)
+        Sleep(250)
 
         ; --- Anti-AFK ---
         if ((A_TickCount - lastClickTime) >= 10000) {
@@ -136,7 +136,6 @@ MonitorStage() {
         ; --- Close Menus ---
         CloseMenu("Unit Manager")
         Sleep(500)
-        CloseMenu("Ability Manager")
 
         ; --- Endgame Handling ---
         AddToLog("Checking win/loss status")
@@ -166,26 +165,6 @@ MonitorStage() {
     }
 }
 
-ClickThroughDrops() {
-    AddToLog("Clicking through item drops...")
-    Loop 10 {
-        FixClick(400, 495)
-        Sleep(500)
-        if isMenuOpen("End Screen") {
-            return
-        }
-    }
-}
-
-ChallengeMovement() {
-    FixClick(765, 475)
-    Sleep (500)
-    FixClick(300, 415)
-    SendInput ("{a down}")
-    sleep (7000)
-    SendInput ("{a up}")
-}
-
 Zoom() {
     WinActivate(rblxID)
     Sleep 100
@@ -204,13 +183,6 @@ Zoom() {
     
     ; Move mouse back to center
     MouseMove(400, 300)
-}
-
-RestartMatch() {
-    FixClick(233, 10) ;click settings
-    Sleep 300
-    FixClick(338, 253) ;click restart match
-    Sleep 3500
 }
 
 CloseChat() {
@@ -379,59 +351,26 @@ GetPrivateServerCode(link) {
 }
 
 HandleAutoAbility() {
-    if !ActiveAbilityEnabled()
+    if (!ActiveAbilityEnabled()) {
         return
+    }
 
     wiggle()
 
-    pixelChecks := [
-        {color: 0xC22725, x: 539, y: 285},
-        {color: 0xC22725, x: 539, y: 268},
-        {color: 0xC22725, x: 539, y: 303},
+    ; Define your pattern (get the actual string from the FindText tool)
+    AutoAbilityPattern := InactiveAbility
 
-        {color: 0xC22725, x: 326, y: 284}, ; Left Side
-        {color: 0xC22725, x: 326, y: 265},
-        {color: 0xC22725, x: 326, y: 303}
-    ]
+    result := FindText(&X, &Y, 343, 268, 398, 298, 0, 0, AutoAbilityPattern)
 
-    for pixel in pixelChecks {
-        if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-            AddToLog("Enabled Auto Ability")
-            FixClick(pixel.x, pixel.y)
+    if (result) {
+        for each, match in result {
+            x := match.x
+            y := match.y
+            AddToLog("✅ Found and clicked Auto Ability at (" x ", " y ")")
+            FixClick(x, y)
             Sleep(500)
         }
-    }
-}
-
-HandleAutoAbilityUnitManager() {
-    if !ActiveAbilityEnabled()
-        return
-
-    wiggle()
-
-    ; Grid configuration
-    baseX    := 675            ; Left column starting X
-    xOffset  := 95             ; Distance between columns
-    baseY    := 130            ; Top row starting Y
-    yStep    := 60             ; Vertical gap between rows
-    numRows  := 8              ; Total rows to scan
-    numCols  := 2              ; Columns per row
-    color    := 0xC22725       ; Target pixel color
-
-    ; Scan grid
-    Loop numRows {
-        rowIndex := A_Index - 1
-        rowY := baseY + rowIndex * yStep
-
-        Loop numCols {
-            colIndex := A_Index - 1
-            colX := baseX + colIndex * xOffset
-
-            if GetPixel(color, colX, rowY, 4, 4, 20) {
-                FixClick(colX, rowY)
-                Sleep(100)
-            }
-        }
+        return true
     }
 }
 
@@ -449,14 +388,18 @@ CheckLobby() {
         }
         Reconnect()
     }
-    AddToLog("[Info] Returned to lobby, " (TimeForChallenge() ? "starting challenge" : "restarting selected mode"))
+    timeForChallenge := TimeForChallenge()
+    AddToLog("[Info] Returned to lobby, " (timeForChallenge ? "starting challenge" : "restarting selected mode"))
+    if (AutoChallenge.Value && !timeForChallenge) {
+        if (ChallengeTeamSwap.Value) {
+            SwapTeam(false)
+        }
+    }
     return StartSelectedMode()
 }
 
 CheckLoaded() {
     loop {
-        Sleep(500)
-
         Reconnect()
         
         if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
@@ -467,13 +410,12 @@ CheckLoaded() {
             break
         }
 
-        Reconnect()
+        Sleep(500)
     }
 }
 
 StartedGame() {
     global alreadyNuked
-    Sleep(500)
     AddToLog("Game started")
     global stageStartTime := A_TickCount
     alreadyNuked := false
@@ -493,38 +435,22 @@ StartSelectedMode() {
         }
     }
 
-    if (ModeDropdown.Text = "Story") {
-        StartStoryMode()
+    switch (ModeDropdown.Text) {
+        case "Story":
+            StartStoryMode()
+        case "Legend Stage":
+            StartLegendStages()
+        case "Raid":
+            StartRaidMode()
+        case "Event":
+            StartEvent()
+        case "Portal":
+            StartPortals()
+        case "Infinity Castle":
+            StartInfinityCastle()
+        case "Custom":
+            CustomMode()
     }
-    else if (ModeDropdown.Text = "Legend Stage") {
-        StartLegendStages()
-    }
-    else if (ModeDropdown.Text = "Raid") {
-        StartRaidMode()
-    }
-    else if (ModeDropdown.Text = "Event") {
-        StartEvent()
-    }
-    else if (ModeDropdown.Text = "Portal") {
-        StartPortals()
-    }
-    else if (ModeDropdown.Text = "Infinity Castle") {
-        StartInfinityCastle()
-    }
-    else if (ModeDropdown.Text = "Custom") {
-        CustomMode()
-    }
-}
-
-FormatStageTime(ms) {
-    seconds := Floor(ms / 1000)
-    minutes := Floor(seconds / 60)
-    hours := Floor(minutes / 60)
-    
-    minutes := Mod(minutes, 60)
-    seconds := Mod(seconds, 60)
-    
-    return Format("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
 
 ValidateMode() {
@@ -543,146 +469,7 @@ GetNavKeys() {
     return StrSplit(FileExist("Settings\UINavigation.txt") ? FileRead("Settings\UINavigation.txt", "UTF-8") : "\,#,}", ",")
 }
 
-ClickUntilGone(x, y, searchX1, searchY1, searchX2, searchY2, textToFind, offsetX:=0, offsetY:=0, textToFind2:="") {
-    while (ok := FindText(&X, &Y, searchX1, searchY1, searchX2, searchY2, 0, 0, textToFind) || 
-           textToFind2 && FindText(&X, &Y, searchX1, searchY1, searchX2, searchY2, 0, 0, textToFind2)) {
-        if (offsetX != 0 || offsetY != 0) {
-            FixClick(X + offsetX, Y + offsetY)  
-        } else {
-            FixClick(x, y) 
-        }
-        Sleep(1000)
-    }
-}
-
-ClickReturnToLobby(testing := false) {
-    while (isMenuOpen("End Screen")) {
-        pixelChecks := [{ color: 0x5AB94A, x: 108, y: 469 }]
-
-        for pixel in pixelChecks {
-            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
-                if (testing) {
-                    Sleep(1500)
-                }
-            }
-        }
-    }
-    AddToLog("[Info] Returning to lobby")
-    return CheckLobby()
-}
-
-ClickReplay(testing := false) {
-    while (isMenuOpen("End Screen")) {
-        pixelChecks := [{ color: 0xFCE560, x: 270, y: 483 }]
-
-        for pixel in pixelChecks {
-            if GetPixel(pixel.color, pixel.x, pixel.y, 4, 4, 20) {
-                FixClick(pixel.x, pixel.y, (testing ? "Right" : "Left"))
-                if (testing) {
-                    Sleep(1500)
-                }
-            }
-        }
-    }
-}
-
-SetupForInfinite() {
-    ChangeCameraMode("Follow")
-    Sleep (1000)
-    ZoomIn()
-    Sleep (1000)
-    ZoomOut()
-    ChangeCameraMode("Default (Classic)")
-    Sleep (1000)
-    SendInput ("{a down}")
-    Sleep 2000
-    SendInput ("{a up}")
-    KeyWait "a"
-}
-
-ChangeCameraMode(mode := "") {
-    AddToLog("Changing camera mode to " mode)
-    SendInput("{Escape}") ; Open Roblox Menu
-    Sleep (1000)
-    FixClick(205, 90) ; Click Settings
-    Sleep (1000)
-    loop 2 {
-        FixClick(336, 209) ; Change Camera Mode
-        Sleep (500)
-    }
-    SendInput("{Escape}") ; Open Roblox Menu
-}
-
-ZoomIn() {
-    MouseMove 400, 300
-    Sleep 100
-    FixClick(400, 300)
-    Sleep 100
-
-    ; Zoom in smoothly
-    Loop 12 {
-        Send "{WheelUp}"
-        Sleep 50
-    }
-
-    ; Right-click and drag camera down
-    Sleep 100
-    MouseMove 400, 300  ; Ensure starting point
-    Click "Right Down"
-    Sleep 50
-    MouseMove 400, 400, 20  ; Drag downward over 20ms
-    Sleep 50
-    Click "Right Up"
-    Sleep 100
-}
-
-ZoomOut() {
-    ; Zoom out smoothly
-    Loop 10 {
-        Send "{WheelDown}"
-        Sleep 50
-    }
-
-    ; Move mouse back to center
-    MouseMove 400, 300
-}
-
-DetectAngle(mode := "Story") {
-    switch mode {
-        case "Story":
-            firstAngle := GetPixel(0xAC7841, 407, 92, 2, 2, 10)
-            secondAngle := GetPixel(0xD77106, 407, 92, 2, 2, 10)
-            if (firstAngle) {
-                AddToLog("Spawn Angle: Left")
-                return 1
-            } else if (secondAngle) {
-                AddToLog("Spawn Angle: Right")
-                return 2
-            } else {
-                AddToLog("Spawn Angle: Unknown | Color: " PixelGetColor(407, 92) )
-                return 3
-            }
-
-        case "Raid":
-            firstAngle := GetPixel(0xB74D0D, 414, 49, 2, 2, 10)
-            secondAngle := GetPixel(0x71250F, 414, 49, 2, 2, 10)
-            if (firstAngle) {
-                AddToLog("Spawn Angle: Left")
-                return 1
-            } else if (secondAngle) {
-                AddToLog("Spawn Angle: Right")
-                return 2
-            } else {
-                AddToLog("Spawn Angle: Unknown | Color: " PixelGetColor(414, 49) )
-                return 3
-            }
-    }
-    return 0
-}
-
-HandleStageEnd(waveRestart := false) {
-    global challengeStartTime
+HandleStageEnd() {
     AddToLog("Stage ended during upgrades, proceeding to results")
     ResetPlacementTracking()
     return MonitorStage()
@@ -706,18 +493,6 @@ StartsInLobby(ModeName) {
 
     ; Check if current mode is in the array
     for mode in modes {
-        if (mode = ModeName)
-            return true
-    }
-    return false
-}
-
-HasCards(ModeName) {
-    ; Array of modes that have card selection
-    static modesWithCards := ["Spirit Invasion", "Halloween"]
-    
-    ; Check if current mode is in the array
-    for mode in modesWithCards {
         if (mode = ModeName)
             return true
     }
@@ -751,5 +526,9 @@ isMenuOpen(name := "") {
     }
     else if (name = "Halloween") {
         return FindText(&X, &Y, 370, 452, 409, 488, 0.20, 0.20, HalloweenUI)
+    }
+    else if (name = "Card Selection") {
+        return FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection) 
+        || FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelectionHighlighted)
     }
 }

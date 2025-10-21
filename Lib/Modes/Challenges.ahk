@@ -4,6 +4,10 @@
 StartChallenge(maxAttempts := 5) {
     attempts := 0
 
+    if (ChallengeTeamSwap.Value) {
+        SwapTeam(true)
+    }
+
     while (attempts < maxAttempts && !(ok := isMenuOpen("Matchmaking"))) {
         WalkToChallengeRoom()
         attempts += 1
@@ -12,6 +16,9 @@ StartChallenge(maxAttempts := 5) {
     if (attempts >= maxAttempts) {
         AddToLog("Failed to start challenge after " attempts " attempts. Giving up.")
         SetChallengeCooldown()
+        if (ChallengeTeamSwap.Value) {
+            SwapTeam(false)
+        }
         return StartSelectedMode()
     }
 
@@ -31,4 +38,41 @@ WalkToChallengeRoom() {
 
 TimeForChallenge() {
     return AutoChallenge.Value && !IsChallengeOnCooldown() && ModeDropdown.Text != "Custom"
+}
+
+GetTeam(map) {
+    switch map {
+        case "1": return { x: 535, y: 300, scrolls: 0 }
+        case "2": return { x: 535, y: 365, scrolls: 0 }
+        case "3": return { x: 535, y: 435, scrolls: 0 }
+        case "4": return { x: 535, y: 360, scrolls: 1 }
+        case "5": return { x: 535, y: 425, scrolls: 1 }
+    }
+}
+
+SwapTeam(forChallenge := true) {
+
+    SendInput("K") ; open units
+    Sleep(750)
+    FixClick(610, 245) ; open team menu
+    Sleep(750)
+
+    Team := GetTeam(forChallenge ? ChallengeTeam.Value : NormalTeam.Value)
+    if !Team {
+        return false
+    }
+
+    ; Scroll map if needed
+    if Team.scrolls > 0 {
+        MouseMove(538, 263)
+        Scroll(Team.scrolls, 'WheelDown', 250)
+    }
+
+    Sleep(1000)
+    FixClick(Team.x, Team.y)
+    Sleep(1000)
+    FixClick(574, 220) ; close team menu
+    Sleep(750)
+    SendInput("K")
+    return true
 }

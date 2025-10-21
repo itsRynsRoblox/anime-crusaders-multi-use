@@ -25,4 +25,4 @@ Placement Pattern=1
 Placement Order=2
 Placement Profile=1
 Placement Speed=3
-Place Until Successful=0
+Place Until Successful=1

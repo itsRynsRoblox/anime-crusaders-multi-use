@@ -26,13 +26,13 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Story.ahk
 #Include %A_ScriptDir%/lib/Modes/LegendStages.ahk
 #Include %A_ScriptDir%/lib/Modes/Raid.ahk
-#Include %A_ScriptDir%/lib/Modes/SpiritInvasion.ahk
 #Include %A_ScriptDir%/lib/Modes/InfinityCastle.ahk
 
 ; === Limited Time Game Modes ===
 #Include %A_ScriptDir%/lib/Modes/Limited/Events.ahk
 #Include %A_ScriptDir%/lib/Modes/Limited/Gates.ahk
 #Include %A_ScriptDir%/lib/Modes/Limited/Halloween.ahk
+#Include %A_ScriptDir%/lib/Modes/Limited/SpiritInvasion.ahk
 
 ; === Core Mechanics ===
 #Include %A_ScriptDir%/lib/Functions/Functions.ahk
@@ -44,6 +44,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Functions/CardManager.ahk
 #Include %A_ScriptDir%/lib/Functions/CooldownManager.ahk
 #Include %A_ScriptDir%/lib/Functions/TimerManager.ahk
+#Include %A_ScriptDir%/lib/Functions/AutoAbilityManager.ahk
 
 ; === Webhook Integration ===
 #Include %A_ScriptDir%/lib/WebhookSettings.ahk

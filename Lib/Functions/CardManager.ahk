@@ -45,11 +45,13 @@ OpenCardPriorityPicker() {
     CardGUI.Show()
 }
 
-
 SelectCardsByMode() {
     switch (EventDropdown.Text) {
         case "Halloween": return SelectCards("Halloween")
         case "Spirit Invasion": return SelectCards("SpiritInvasion")
+    }
+    switch (ModeDropdown.Text) {
+        case "Custom": return SelectCards(RegExReplace(CustomCardDropdown.Text, "\s+", ""))
     }
     return false
 }
@@ -127,12 +129,18 @@ SelectCards(eventName) {
     )
 
     foundCards := Map()
+    if (ModeDropdown.Text = "Event") {
+        if (EventDropdown.Text = "Halloween") {
+            AddToLog("Waiting for Halloween cards to spawn...")
+            Sleep(2000)
+        }
+    }
     for index, slot in cardSlots {
         MouseMove(slot.clickX, slot.clickY)
         Sleep(250)
 
         ; OCR
-        orcResult := OCRFromFile(slot.ocrX1, slot.ocrY1, slot.ocrX2, slot.ocrY2, 5.0, true)
+        orcResult := OCRFromFile(slot.ocrX1, slot.ocrY1, slot.ocrX2, slot.ocrY2, 5.0, false)
         ocrCleaned := RegExReplace(orcResult, "\\s+|!", "")
 
         if (ocrCleaned != "") {
@@ -723,11 +731,38 @@ ImportCardConfig(modeName) {
     }
 }
 
-
 ExportAllCardConfigs() {
     global CardModeConfigs
 
     for modeName, config in CardModeConfigs {
         ExportCardConfig(modeName)
     }
+}
+
+HasCards(ModeName) {
+    ; Array of modes that have card selection
+    static modesWithCards := ["Spirit Invasion", "Halloween", "Custom"]
+
+    ; Check if current mode is in the array
+    for mode in modesWithCards {
+        if (mode = ModeName)
+            return true
+    }
+    return false
+}
+
+StartCardChecker() {
+    SetTimer(() => CheckForCards(ModeDropdown.Text, EventDropdown.Text), 500)
+}
+
+CheckForCards(mode, eventMode) {
+    if (HasCards(mode) || HasCards(eventMode)) {
+        if (isMenuOpen("Card Selection")) {
+            SelectCardsByMode()
+        }
+    }
+}
+
+StopCardChecker() {
+    SetTimer(() => CheckForCards("", ""), 0)
 }

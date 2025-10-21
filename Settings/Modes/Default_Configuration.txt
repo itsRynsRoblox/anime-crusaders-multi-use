@@ -7,7 +7,7 @@ Enabled5=1
 Enabled6=1
 Placement1=1
 Placement2=1
-Placement3=3
+Placement3=1
 Placement4=1
 Placement5=1
 Placement6=1
@@ -41,16 +41,21 @@ UpgradeLimitEnabled3=0
 UpgradeLimitEnabled4=0
 UpgradeLimitEnabled5=0
 UpgradeLimitEnabled6=0
+AbilityEnabled1=0
+AbilityEnabled2=0
+AbilityEnabled3=0
+AbilityEnabled4=0
+AbilityEnabled5=0
+AbilityEnabled6=0
 
 [Auto Ability Settings]
-AutoAbility=0
-AutoAbilityTimer=60
+AutoAbility=1
+AutoAbilityTimer=10
 
 [Zoom Settings]
 ZoomLevel=20
 
 [Upgrade Settings]
-Auto Upgrade=0
 Unit Manager Upgrade System=1
 Priority Upgrade=1
 
@@ -67,8 +72,6 @@ Premade Gate Movement=1
 Premade Halloween Movement=0
 
 [Unit Settings]
-Use Sunwoo Nuke=0
-Sunwoo Nuke Slot=0
 Nuke Enabled=0
 Nuke Slot=1
 Nuke Coords=282,291

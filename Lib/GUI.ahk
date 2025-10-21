@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.5"
+global version := "v1.5.3"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -232,21 +232,23 @@ OpenPrivateServerGuide(*) {
 
 MainUI.SetFont("s9 Bold c" uiTheme[1])
 
-DebugButton := MainUI.Add("Button", "x608 y5 w90 h20 +Center Hidden", "Debug")
+ActiveConfigurationText:= MainUI.Add("Text", "x858 y7 +Center c" uiTheme[1], "Active Configuration: ")
+ConfigurationDropdown := MainUI.Add("DropDownList", "x1008 y5 w90 h180 +Center Choose1", ["Unit", "Challenge", "Cards", "Mode", "Nuke", "Upgrade"])
+ConfigurationDropdown.OnEvent("Change", UpdateActiveConfiguration)
 
-global guideBtn := MainUI.Add("Button", "x708 y5 w90 h20", "Guide")
+global guideBtn := MainUI.Add("Button", "x1108 y5 w90 h20", "Guide")
 guideBtn.OnEvent("Click", OpenGuide)
 
-global cardButton := MainUI.Add("Button", "x808 y5 w90 h20", "Card Config")
+global cardButton := MainUI.Add("Button", "x808 y5 w90 h20 Hidden", "Card Config")
 cardButton.OnEvent("Click", (*) => OpenCardConfig())
 
-global unitButton := MainUI.Add("Button", "x908 y5 w90 h20", "Unit Config")
+global unitButton := MainUI.Add("Button", "x908 y5 w90 h20 Hidden", "Unit Config")
 unitButton.OnEvent("Click", (*) => ToggleControlGroup("Unit"))
 
-global upgradeButton := MainUI.Add("Button", "x1008 y5 w90 h20", "Upgrades")
+global upgradeButton := MainUI.Add("Button", "x1008 y5 w90 h20 Hidden", "Upgrades")
 upgradeButton.OnEvent("Click", (*) => ToggleControlGroup("Upgrade"))
 
-global modeButton := MainUI.Add("Button", "x1108 y5 w90 h20", "Mode Config")
+global modeButton := MainUI.Add("Button", "x1108 y5 w90 h20 Hidden", "Mode Config")
 modeButton.OnEvent("Click", (*) => ToggleControlGroup("Mode"))
 
 global settingsBtn := MainUI.Add("Button", "x1208 y5 w90 h20", "Settings")
@@ -260,12 +262,13 @@ MainUI.SetFont("s9")
 global NextLevelBox := MainUI.Add("Checkbox", "x900 y451 cffffff", "Next Level")
 global AutoChallenge := MainUI.Add("Checkbox", "x900 y476 cffffff", "Auto Challenge")
 global Matchmaking := MainUI.Add("Checkbox", "x1030 y476 cffffff", "Matchmaking")
+global PlaceUntilSuccessful := MainUI.Add("CheckBox", "x1145 y476 cffffff", "Place until successful")
 
 global ReturnLobbyBox := MainUI.Add("Checkbox", "x1150 y476 cffffff Checked", "Return To Lobby")
 
 global AutoAbilityBox := MainUI.Add("CheckBox", "x1005 y451 cffffff Checked " (autoAbilityDisabled ? "Hidden" : ""), "Auto Ability")
-global AutoAbilityText := MainUI.Add("Text", "x1125 y451 " (autoAbilityDisabled ? " Hidden " : "") " c" uiTheme[1], "Auto Ability Timer:")
-global AutoAbilityTimer := MainUI.Add("Edit", "x1255 y449 w60 h20 " (autoAbilityDisabled ? "Hidden" : "") " cBlack Number", "60")
+global AutoAbilityText := MainUI.Add("Text", "x1105 y451 " (autoAbilityDisabled ? " Hidden " : "") " c" uiTheme[1], "| Auto Ability Timer:")
+global AutoAbilityTimer := MainUI.Add("Edit", "x1245 y449 w60 h20 " (autoAbilityDisabled ? "Hidden" : "") " cBlack Number", "60")
 
 PlacementPatternText := MainUI.Add("Text", "x815 y390 w125 h20", "Placement Pattern")
 global PlacementPatternDropdown := MainUI.Add("DropDownList", "x825 y410 w100 h180 Choose2 +Center", ["Circle", "Custom", "Grid", "3x3 Grid", "Spiral", "Up and Down", "Random"])
@@ -350,9 +353,6 @@ global UpgradeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidde
 global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use the Unit Manager to upgrade your units")
 global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y130 cffffff Hidden", "Use Unit Priority while upgrading")
 
-global AutoUpgradeBorder := MainUI.Add("GroupBox", "x808 y170 w550 h210 +Center Hidden c" uiTheme[1], "Auto-Upgrade Settings")
-global AutoUpgrade := MainUI.Add("CheckBox", "x825 y197 Hidden cffffff", "Enable Auto-Upgrading")
-
 global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Settings")
 global ZoomText := MainUI.Add("Text", "x1018 y230 Hidden c" uiTheme[1], "Zoom Level:")
 global ZoomBox := MainUI.Add("Edit", "x1115 y228 w30 h20 Hidden cBlack Number", "20")
@@ -374,21 +374,34 @@ CustomPlacementExportButton.OnEvent("Click", (*) => ExportCoordinatesPreset(Plac
 global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Mode Configuration")
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
 
-global StoryBorder := MainUI.Add("GroupBox", "x808 y150 w550 h231 +Center Hidden c" uiTheme[1], "Story Settings")
-global StoryDifficultyText := MainUI.Add("Text", "x825 y170 Hidden", "Story Difficulty")
-global StoryDifficulty := MainUI.Add("DropDownList", "x825 y185 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
+; === Normal Modes ===
+global StoryBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Story Settings")
+global StoryDifficultyText := MainUI.Add("Text", "x825 y110 Hidden", "Story Difficulty:")
+global StoryDifficulty := MainUI.Add("DropDownList", "x935 y108 w100 h180 Hidden Choose1 +Center", ["Normal", "Hard"])
+global PortalBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Portal Settings")
+global FarmMorePortals := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Farm more portals when possible if out of portals")
+global ChallengeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Auto Challenge Settings")
+global ChallengeTeamSwap := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Swap Teams for Auto Challenge")
+global ChallengeTeamText := MainUI.Add("Text", "x825 y140 Hidden", "Challenge Team:")
+global ChallengeTeam := MainUI.Add("DropDownList", "x940 y138 w60 h180 Hidden Choose1 +Center", ["1", "2", "3", "4", "5"])
+global NormalTeamText := MainUI.Add("Text", "x825 y170 Hidden", "Default Team:")
+global NormalTeam := MainUI.Add("DropDownList", "x940 y168 w60 h180 Hidden Choose1 +Center", ["1", "2", "3", "4", "5"])
 
 ; === Limited Time Modes ===
-global GateBorder := MainUI.Add("GroupBox", "x808 y220 w550 h161 +Center Hidden c" uiTheme[1], "Gate Settings")
-global GateMovement := MainUI.Add("CheckBox", "x825 y250 Hidden cffffff", "Use premade movement to walk to the center of the gate room")
+global EventBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Event Configuration")
+global GateMovement := MainUI.Add("CheckBox", "x825 y250 Hidden cffffff", "[Gates] Use pre-configured movement")
+global HalloweenMovement := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "[Halloween] Use pre-configured movement")
 
-global HalloweenBorder := MainUI.Add("GroupBox", "x808 y225 w550 h161 +Center Hidden c" uiTheme[1], "Halloween Settings")
-global HalloweenMovement := MainUI.Add("CheckBox", "x825 y255 Hidden cffffff", "Use premade movement to walk to down the path a bit")
+; === Card Config GUI ===
+global CardBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Card Priority")
+global SpiritInvasionCardText := MainUI.Add("Text", "x825 y110 Hidden cffffff", "Spirit Invasion Cards: ")
+global SpiritInvasionCardButton := MainUI.Add("Button", "x975 y108 w80 h20 Hidden cffffff", "Edit Cards")
+SpiritInvasionCardButton.OnEvent("Click", (*) => SwitchCardMode("Spirit Invasion"))
+global HalloweenCardText := MainUI.Add("Text", "x825 y140 Hidden cffffff", "Halloween Cards: ")
+global HalloweenCardButton := MainUI.Add("Button", "x975 y138 w80 h20 Hidden cffffff", "Edit Cards")
+HalloweenCardButton.OnEvent("Click", (*) => SwitchCardMode("Halloween"))
 
-global PortalBorder := MainUI.Add("GroupBox", "x808 y290 w550 h91 +Center Hidden c" uiTheme[1], "Portal Settings")
-global FarmMorePortals := MainUI.Add("CheckBox", "x825 y310 Hidden cffffff", "Farm more portals when possible if out of portals")
-
-; === Unit Config GUI ===
+; === Nuke Config GUI ===
 global NukeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Nuke Configuration")
 global NukeUnitSlotEnabled := MainUI.Add("Checkbox", "x825 y113 Hidden Choose1 cffffff Checked", "Nuke Unit | Slot")
 global NukeUnitSlot := MainUI.Add("DropDownList", "x960 y110 w100 h180 Hidden Choose1", ["1", "2", "3", "4", "5", "6"])
@@ -401,12 +414,6 @@ global NukeDelayText := MainUI.Add("Text", "x1120 y140 Hidden cffffff", "Nuke De
 global NukeDelay := MainUI.Add("Edit", "x1210 y138 w40 h20 Hidden cBlack Number", "0")
 NukeDelay.OnEvent("Change", (*) => ValidateEditBox(NukeDelay))
 
-; === Disbled At The Moment ===
-global SJWNuke := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use SJW Nuke")
-global SJWSlotText := MainUI.Add("Text", "x825 y130 Hidden cffffff", "SJW Slot")
-global SJWSlot := MainUI.Add("DropDownlist", "x905 y128 w45 Hidden Choose0 +Center", ["1", "2", "3", "4", "5", "6"])
-; === End of Disabled At The Moment ===
-
 global UnitBorder := MainUI.Add("GroupBox", "x808 y161 w550 h220 +Center Hidden" uiTheme[1], "Unit Configuration")
 global MinionSlot1 := MainUI.Add("CheckBox", "x825 y181 cffffff Hidden", "Slot 1 has minion")
 global MinionSlot2 := MainUI.Add("CheckBox", "x1015 y181 cffffff Hidden", "Slot 2 has minion")
@@ -415,8 +422,8 @@ global MinionSlot4 := MainUI.Add("CheckBox", "x825 y206 cffffff Hidden", "Slot 4
 global MinionSlot5 := MainUI.Add("CheckBox", "x1015 y206 cffffff Hidden", "Slot 5 has minion")
 global MinionSlot6 := MainUI.Add("CheckBox", "x1200 y206 cffffff Hidden", "Slot 6 has minion")
 
-global PlacementBorder := MainUI.Add("GroupBox", "x808 y225 w550 h155 +Center Hidden" uiTheme[1], "Unit Placement Configuration")
-global PlaceUntilSuccessful := MainUI.Add("CheckBox", "x825 y245 cffffff Hidden", "Attempt same placement spot until successful")
+global PlacementBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Placement Configuration")
+
 ; === End Unit Config GUI ===
 
 GithubButton.OnEvent("Click", (*) => OpenGithub())
@@ -425,6 +432,7 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
 global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
+global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
@@ -480,9 +488,11 @@ AddUnitCard(MainUI, index, x, y) {
     unit.PlacementText        := AddText(x + 90, y + 2, 80, 20, "+BackgroundTrans", "Placements")
     unit.PriorityText         := AddText(x + 185, y + 2, 60, 20, "BackgroundTrans", "Priority")
 
+    MainUI.SetFont("s7 c" uiTheme[1])
+    ;unit.PlaceAndUpgradeText := AddText(x + 258, y + 2, 250, 20, "BackgroundTrans", "Auto Upgrade After Placement")
     MainUI.SetFont("s9 c" uiTheme[1])
-    unit.PlaceAndUpgradeText  := AddText(x + 261, y + 2, 250, 20, "BackgroundTrans", "Upgrade While Placing")
-    unit.UpgradeTitle         := AddText(x + 310, y + 20, 250, 25, "+BackgroundTrans", "Enabled")
+    unit.AutoUpgradeTitle         := AddText(x + 275, y + 5, 250, 25, "+BackgroundTrans", "Enable Auto Upgrade")
+    unit.AutoAbilityTitle := AddText(x + 275, y + 25, 250, 25, "+BackgroundTrans", "Enable Auto Ability")
 
     if (!unitUpgradeLimitDisabled) {
         unit.UpgradeCapText := AddText(x + 440, y + 2, 250, 20, "BackgroundTrans", "Upgrade Limit")
@@ -508,12 +518,19 @@ enabled4 := MainUI.Add("CheckBox", "x818 y255 w15 h15", "")
 enabled5 := MainUI.Add("CheckBox", "x818 y305 w15 h15", "")
 enabled6 := MainUI.Add("CheckBox", "x818 y355 w15 h15", "")
 
-upgradeEnabled1 := MainUI.Add("CheckBox", "x1070 y105 w15 h15", "")
-upgradeEnabled2 := MainUI.Add("CheckBox", "x1070 y155 w15 h15", "")
-upgradeEnabled3 := MainUI.Add("CheckBox", "x1070 y205 w15 h15", "")
-upgradeEnabled4 := MainUI.Add("CheckBox", "x1070 y255 w15 h15", "")
-upgradeEnabled5 := MainUI.Add("CheckBox", "x1070 y305 w15 h15", "")
-upgradeEnabled6 := MainUI.Add("CheckBox", "x1070 y355 w15 h15", "")
+upgradeEnabled1 := MainUI.Add("CheckBox", "x1065 y90 w15 h15", "")
+upgradeEnabled2 := MainUI.Add("CheckBox", "x1065 y140 w15 h15", "")
+upgradeEnabled3 := MainUI.Add("CheckBox", "x1065 y190 w15 h15", "")
+upgradeEnabled4 := MainUI.Add("CheckBox", "x1065 y240 w15 h15", "")
+upgradeEnabled5 := MainUI.Add("CheckBox", "x1065 y290 w15 h15", "")
+upgradeEnabled6 := MainUI.Add("CheckBox", "x1065 y340 w15 h15", "")
+
+abilityEnabled1 := MainUI.Add("CheckBox", "x1065 y110 w15 h15", "")
+abilityEnabled2 := MainUI.Add("CheckBox", "x1065 y160 w15 h15", "")
+abilityEnabled3 := MainUI.Add("CheckBox", "x1065 y210 w15 h15", "")
+abilityEnabled4 := MainUI.Add("CheckBox", "x1065 y260 w15 h15", "")
+abilityEnabled5 := MainUI.Add("CheckBox", "x1065 y310 w15 h15", "")
+abilityEnabled6 := MainUI.Add("CheckBox", "x1065 y360 w15 h15", "")
 
 upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1235 y105 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
 upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1235 y155 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
@@ -892,11 +909,11 @@ DeleteCoordsForPreset(index) {
 InitControlGroups() {
     global ControlGroups
 
-    ControlGroups["Default"] := []
+    ControlGroups["Unit"] := []
 
     Blacklist := [""]
 
-    for name in ["Placement", "enabled", "priority", "upgradePriority", "upgradeEnabled", "upgradeLimitEnabled", "upgradeLimit"] {
+    for name in ["Placement", "enabled", "priority", "upgradePriority", "upgradeEnabled", "upgradeLimitEnabled", "upgradeLimit", "abilityEnabled"] {
         loop 6 {
             varName := name . A_Index
             baseName := RegExReplace(varName, "\d+$")
@@ -914,7 +931,7 @@ InitControlGroups() {
                 continue
 
             if IsSet(%varName%)  ; Check if the variable exists
-                ControlGroups["Default"].Push(%varName%)
+                ControlGroups["Unit"].Push(%varName%)
             else
                 AddToLog("Variable " . varName . " does not exist!")
         }
@@ -929,23 +946,41 @@ InitControlGroups() {
     ]
 
     ControlGroups["Upgrade"] := [
-        UpgradeBorder, UnitManagerUpgradeSystem, PriorityUpgrade,
-        AutoUpgradeBorder, AutoUpgrade
+        UpgradeBorder, UnitManagerUpgradeSystem, PriorityUpgrade
     ]
 
     ControlGroups["Mode"] := [
         ModeBorder, ModeConfigurations,
         StoryBorder, StoryDifficultyText, StoryDifficulty,
-        ;GateBorder, GateMovement,
-        HalloweenBorder, HalloweenMovement,
+    ]
+
+    ControlGroups["Placement"] := [
+        UnitBorder,
+        PlacementBorder
+    ]
+
+    ControlGroups["Event"] := [
+        EventBorder, HalloweenMovement
+    ]
+
+    ControlGroups["Story"] := [
+        StoryBorder, StoryDifficultyText, StoryDifficulty
+    ]
+
+    ControlGroups["Portal"] := [
         PortalBorder, FarmMorePortals
     ]
 
-    ControlGroups["Unit"] := [
-        UnitBorder,
-        NukeBorder, NukeUnitSlotEnabled, NukeUnitSlot, NukeCoordinatesText, NukeCoordinatesButton, NukeAtSpecificWave, NukeWave, NukeDelayText, NukeDelay,
-        MinionSlot1, MinionSlot2, MinionSlot3, MinionSlot4, MinionSlot5, MinionSlot6,
-        PlacementBorder, PlaceUntilSuccessful
+    ControlGroups["Challenge"] := [
+        ChallengeBorder, ChallengeTeamSwap, ChallengeTeamText, ChallengeTeam, NormalTeamText, NormalTeam
+    ]
+
+    ControlGroups["Cards"] := [
+        CardBorder, SpiritInvasionCardText, SpiritInvasionCardButton, HalloweenCardText, HalloweenCardButton
+    ]
+
+    ControlGroups["Nuke"] := [
+        NukeBorder, NukeUnitSlotEnabled, NukeUnitSlot, NukeCoordinatesText, NukeCoordinatesButton, NukeAtSpecificWave, NukeWave, NukeDelayText, NukeDelay
     ]
 }
 
@@ -953,8 +988,7 @@ InitControlGroups() {
 ShowOnlyControlGroup(groupName) {
     global ControlGroups
     if !ControlGroups.Has(groupName) {
-        AddToLog("Invalid control group: " groupName)
-        return
+        return false
     }
 
     for name, groupControls in ControlGroups {
@@ -964,20 +998,25 @@ ShowOnlyControlGroup(groupName) {
                 ctrl.Visible := shouldShow
         }
     }
+    return true
 }
 
 ToggleControlGroup(groupName) {
     global ActiveControlGroup
-    if (ActiveControlGroup = groupName) {
-        ShowOnlyControlGroup("Default")
-        ActiveControlGroup := ""
-        AddToLog("Displaying: Default UI")
-        SetUnitCardVisibility(true)
-    } else {
-        ShowOnlyControlGroup(groupName)
-        ActiveControlGroup := groupName
+    if (groupName = "Mode") {
+        ActiveControlGroup := "Mode"
+    }
+    if (groupName = "Settings") {
+        if (ActiveControlGroup = "Settings") {
+            groupName := "Unit"
+            ActiveControlGroup := "Unit"
+        } else {
+            ActiveControlGroup := "Settings"
+        }
+    }
+    if (ShowOnlyControlGroup((groupName = "Mode" ? ModeDropdown.Text : groupName))) {
         AddToLog("Displaying: " (groupName = "Settings" ? "Settings UI" : groupName " Settings UI"))
-        SetUnitCardVisibility(false)
+        SetUnitCardVisibility((groupName = "Unit") ? true : false)
     }
 }
 
