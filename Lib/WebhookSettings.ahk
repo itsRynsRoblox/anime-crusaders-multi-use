@@ -121,7 +121,19 @@ CropImage(pBitmap, x, y, width, height) {
 }
 
 TextWebhook() {
-    global lastlog
+    global lastlog, WebhookURL, webhook
+
+    ; Check if WebhookURL is initialized and valid
+    if (!IsSet(WebhookURL) || WebhookURL = "" || !(WebhookURL ~=
+        "i)^https?:\/\/discord\.com\/api\/webhooks\/(\d{18,19})\/[\w-]{68}$")) {
+        AddToLog("Webhook URL is missing or invalid - skipping webhook")
+        return
+    }
+
+    ; Build webhook object if not already initialized
+    if !IsObject(webhook) {
+        webhook := WebHookBuilder(WebhookURL)
+    }
 
     ; Calculate the runtime
     ElapsedTimeMs := A_TickCount - StartTime
@@ -146,9 +158,7 @@ TextWebhook() {
 }
 
 WebhookLog() {
-    if (webhookURL ~= 'i)https?:\/\/discord\.com\/api\/webhooks\/(\d{18,19})\/[\w-]{68}') {
-        TextWebhook()
-    } 
+    TextWebhook()
 }
 
 WebhookScreenshot(title, description, color := 0x0dffff, status := "") {
@@ -288,7 +298,7 @@ GetTextForMode(mode) {
         case "Gates":
             return "Gate - " currentGateRank
         case "Event":
-            return EventDropdown.Text " Event - " EventRoleDropdown.Text    
+            return EventDropdown.Text " Event - " (EventRoleDropdown.Text = "Solo" ? Matchmaking.Value ? "Matchmaking" : "Solo" : EventRoleDropdown.Text)
         default:
             return mode
     }

@@ -43,3 +43,18 @@ HandleEventMovement() {
             }
     }
 }
+
+HandleEventEnd() {
+    if (TimeForChallenge()) {
+        AddToLog("[Info] Game over, starting challenge")
+        return ClickReturnToLobby()
+    }
+
+    if (Matchmaking.Value) {
+        AddToLog("[Info] Game over, returning to lobby for matchmaking")
+        return ClickReturnToLobby()
+    } else {
+        AddToLog("[Info] Game over, restarting stage")
+        return RestartStage()
+    }
+}

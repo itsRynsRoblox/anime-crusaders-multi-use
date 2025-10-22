@@ -49,8 +49,8 @@ AbilityEnabled5=0
 AbilityEnabled6=0
 
 [Auto Ability Settings]
-AutoAbility=1
-AutoAbilityTimer=10
+AutoAbility=0
+AutoAbilityTimer=60
 
 [Zoom Settings]
 ZoomLevel=20
@@ -61,6 +61,9 @@ Priority Upgrade=1
 
 [Auto Challenge Settings]
 Auto Challenge=0
+Challenge Team Swap=0
+Default Team=1
+Challenge Team=1
 
 [Portal Settings]
 Farm More Portals=0

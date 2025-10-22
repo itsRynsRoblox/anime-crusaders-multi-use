@@ -58,8 +58,8 @@ CustomMode() {
 
 HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
-        case "Gates":
-            HandleGateEnd()
+        case "Event":
+            HandleEventEnd()
         case "Portal":
             HandlePortalEnd(isVictory)    
         Default:
@@ -78,7 +78,7 @@ HandleDefaultEnd() {
     if (NextLevelBox.Value) {
         if (lastResult = "win") {
             AddToLog("[Info] Game over, starting next level")
-            ;ClickNextLevel()
+            ClickNextLevel()
             return RestartStage()
         }
     } else {
@@ -135,10 +135,10 @@ MonitorStage() {
 
         ; --- Close Menus ---
         CloseMenu("Unit Manager")
-        Sleep(500)
 
         ; --- Endgame Handling ---
         AddToLog("Checking win/loss status")
+        Sleep(1000)
         stageEndTime := A_TickCount
         stageLength := FormatStageTime(stageEndTime - stageStartTime)
         result := true
@@ -296,7 +296,6 @@ Reconnect(force := false) {
         AddToLog("Reconnecting to " GameName "...")
         TimerManager.Start("Reconnect Failsafe", 120 * 1000)
         attempts := 0
-        maxAttempts := 10
 
         while (!isInLobby()) {
             if (WinExist(rblxID)) {
@@ -306,12 +305,7 @@ Reconnect(force := false) {
 
             if (TimerManager.HasExpired("Reconnect Failsafe")) {
                 attempts++
-                AddToLog("[Failsafe] Reconnection failed. Attempt " attempts " of " maxAttempts)
-
-                if (attempts >= maxAttempts) {
-                    AddToLog("[Failsafe] Max attempts reached, game might be shut down")
-                    return
-                }
+                AddToLog("[Failsafe] Reconnection failed. Attempt: " attempts)
 
                 ; Try to relaunch Roblox again
                 TimerManager.Clear("Reconnect Failsafe")

@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.5.3"
+global version := "v1.5.4"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -57,7 +57,6 @@ uiTheme.Push("0xffffff")    ; Border color
 uiTheme.Push("0c000a")  ; Accent color
 uiTheme.Push("0x3d3c36")   ; Trans color
 uiTheme.Push("000000")    ; Textbox color
-;uiTheme.Push("00ffb3") ; HighLight
 uiTheme.Push("00a2ff") ; HighLight
 ;Logs/Save settings
 global currentOutputFile := A_ScriptDir "\Logs\LogFile.txt"
@@ -628,7 +627,7 @@ AddToLog(current) {
 
     ; Store last log and optionally send webhook
     lastlog := current
-    if (WebhookLogsEnabled.Value && WebhookEnabled.Value)
+    if (WebhookLogsEnabled.Value && WebhookEnabled.Value && scriptInitialized)
         WebhookLog()
 }
 
@@ -1015,7 +1014,7 @@ ToggleControlGroup(groupName) {
         }
     }
     if (ShowOnlyControlGroup((groupName = "Mode" ? ModeDropdown.Text : groupName))) {
-        AddToLog("Displaying: " (groupName = "Settings" ? "Settings UI" : groupName " Settings UI"))
+       ; AddToLog("Displaying: " (groupName = "Settings" ? "Settings UI" : groupName " Settings UI"))
         SetUnitCardVisibility((groupName = "Unit") ? true : false)
     }
 }
