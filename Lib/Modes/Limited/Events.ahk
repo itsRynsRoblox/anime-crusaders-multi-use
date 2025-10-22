@@ -55,6 +55,7 @@ HandleEventEnd() {
         return ClickReturnToLobby()
     } else {
         AddToLog("[Info] Game over, restarting stage")
+        ClickReplay()
         return RestartStage()
     }
 }

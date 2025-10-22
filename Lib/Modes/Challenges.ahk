@@ -1,7 +1,9 @@
 #Requires AutoHotkey v2.0
 
+global challengeMap := ""
 
 StartChallenge(maxAttempts := 5) {
+    global challengeMap
     attempts := 0
 
     if (ChallengeTeamSwap.Value) {
@@ -23,8 +25,9 @@ StartChallenge(maxAttempts := 5) {
     }
 
     AddToLog("Starting Challenge")
-    FixClick(330, 350)
+    FixClick(330, 350) ; click play here
     Sleep(500)
+    challengeMap := DetectMapForChallenge()
     FixClick(410, 525) ; click play
     SetChallengeCooldown()
     RestartStage()
@@ -75,4 +78,35 @@ SwapTeam(forChallenge := true) {
     Sleep(750)
     SendInput("K")
     return true
+}
+
+DetectMapForChallenge() {
+    AddToLog("Identifying map for challenge...")
+    startTime := A_TickCount
+    maxWait := 5000
+    loop {
+        ; Check if we waited more than maxWait for votestart
+        if (A_TickCount - startTime > maxWait) {
+            AddToLog("Could not detect map after 5 seconds.")
+            return "no map found"
+        }
+
+        mapPatterns := Map(
+            "Planet Namak", PlanetNamak,
+            "Marine's Ford", MarinesFord,
+            "Karakura Town", KarakuraTown,
+            "Shibuya", Shibuya,
+            "Demon District", DemonDistrict
+        )
+
+        for mapName, pattern in mapPatterns {
+            if (ok := FindText(&X, &Y, 28, 213, 234, 258, 0.10, 0.10, pattern)) {
+                AddToLog("Detected map: " mapName)
+                return mapName
+            }
+        }
+
+        Sleep 250
+        Reconnect()
+    }
 }

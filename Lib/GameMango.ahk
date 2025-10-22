@@ -10,15 +10,16 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-
+    ExportWalkCoords(WalkMapDropdown.Text)
 }
 
 F6:: {
-
+    ImportWalkCoordsFromFile()
 }
 
 F7:: {
-    CopyMouseCoords(false)
+    HandleAutoAbility()
+    ;CopyMouseCoords(false)
 }
 
 F8:: {

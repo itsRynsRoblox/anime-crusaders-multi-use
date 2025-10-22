@@ -49,7 +49,7 @@ AbilityEnabled5=0
 AbilityEnabled6=0
 
 [Auto Ability Settings]
-AutoAbility=0
+AutoAbility=1
 AutoAbilityTimer=60
 
 [Zoom Settings]

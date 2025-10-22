@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.5.4"
+global version := "v1.5.5"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -31,7 +31,7 @@ global waitingState := Map()
 ;Custom Unit Placement
 global waitingForClick := false
 global savedCoords := [[], []]  ; Index-based: one array for each preset
-global savedWalkCoords := [[], []]  ; Index-based: one array for each preset
+global savedWalkCoords := Map()
 ;Nuke Ability
 global nukeCoords := []
 ;Hotkeys
@@ -231,8 +231,8 @@ OpenPrivateServerGuide(*) {
 
 MainUI.SetFont("s9 Bold c" uiTheme[1])
 
-ActiveConfigurationText:= MainUI.Add("Text", "x858 y7 +Center c" uiTheme[1], "Active Configuration: ")
-ConfigurationDropdown := MainUI.Add("DropDownList", "x1008 y5 w90 h180 +Center Choose1", ["Unit", "Challenge", "Cards", "Mode", "Nuke", "Upgrade"])
+ActiveConfigurationText:= MainUI.Add("Text", "x840 y7 +Center c" uiTheme[1], "Active Configuration: ")
+ConfigurationDropdown := MainUI.Add("DropDownList", "x990 y4.5 w110 h180 +Center Choose1", ["Unit", "Challenge", "Cards", "Map Movement", "Mode", "Nuke", "Upgrade"])
 ConfigurationDropdown.OnEvent("Change", UpdateActiveConfiguration)
 
 global guideBtn := MainUI.Add("Button", "x1108 y5 w90 h20", "Guide")
@@ -302,18 +302,6 @@ customPlacementClearButton.OnEvent("Click", (*) => DeleteCoordsForPreset(Placeme
 fixCameraText := MainUI.Add("Text", "x505 y642 w60 h20 +Left", "Camera")
 fixCameraButton := MainUI.Add("Button", "x490 y662 w80 h20", "Fix")
 fixCameraButton.OnEvent("Click", (*) => BasicSetup(true))
-
-; === Custom Walk Settings ===
-global CustomWalkSettings := MainUI.Add("GroupBox", "x600 y632 w190 h60 +Center c" uiTheme[1], "Custom Walk Settings")
-customWalkButton := MainUI.Add("Button", "x610 y662 w45 h20", "Set")
-customWalkButton.OnEvent("Click", (*) => StartWalkCapture())
-
-customWalkTestButton := MainUI.Add("Button", "x673 y662 w45 h20", "Test")
-customWalkTestButton.OnEvent("Click", (*) => WalkToCoords())
-
-customWalkClearButton := MainUI.Add("Button", "x735 y662 w45 h20", "Clear")
-customWalkClearButton.OnEvent("Click", (*) => DeleteWalkCoordsForPreset(PlacementProfiles.Value))
-; === End of Custom Walk Settings ===
 
 ; === Settings GUI ===
 global WebhookBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Webhook Settings")
@@ -422,8 +410,22 @@ global MinionSlot5 := MainUI.Add("CheckBox", "x1015 y206 cffffff Hidden", "Slot 
 global MinionSlot6 := MainUI.Add("CheckBox", "x1200 y206 cffffff Hidden", "Slot 6 has minion")
 
 global PlacementBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Placement Configuration")
-
 ; === End Unit Config GUI ===
+
+;=== Custom Walk GUI ===
+global CustomWalkBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Custom Walk Configuration")
+global WalkMapText := MainUI.Add("Text", "x875 y110 Hidden cffffff", "Map:")
+global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w125 h180 Choose1 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District", "Halloween", "Spirit Invasion"])
+MovementSetButton := MainUI.Add("Button", "x1060 y110 w80 h20 Hidden", "Set")
+MovementSetButton.OnEvent("Click", (*) => StartWalkCapture())
+MovementClearButton := MainUI.Add("Button", "x1160 y110 w80 h20 Hidden", "Clear")
+MovementClearButton.OnEvent("Click", (*) => DeleteWalkCoordsForPreset(WalkMapDropdown.Text))
+MovementTestButton := MainUI.Add("Button", "x1260 y110 w80 h20 Hidden", "Test")
+MovementTestButton.OnEvent("Click", (*) => WalkToCoords())
+
+MovementImport := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
+MovementExport := MainUI.Add("Picture", "x845 y108 w20 h20 +BackgroundTrans Hidden", Export)
+;=== End Custom Walk GUI ===
 
 GithubButton.OnEvent("Click", (*) => OpenGithub())
 DiscordButton.OnEvent("Click", (*) => OpenDiscord())
@@ -431,7 +433,7 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
 global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
-global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
+global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden Choose1", ["Halloween", "Spirit Invasion"])
 global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
@@ -789,37 +791,33 @@ UpdateTooltip() {
 
     if waitingForClick {
         if (WaitingFor("Walk")) {
-            presetIndex := PlacementProfiles.Value
+            mode := ModeDropdown.Text
+            mapName := (mode = "Event") ? EventDropdown.Text : WalkMapDropdown.Text
 
-            if (presetIndex < 1)
-            {
-                if (debugMessages) {
-                    AddToLog("⚠️ Invalid preset index: " presetIndex)
-                }
+            if (mapName = "") {
+                AddToLog("⚠️ No map selected.")
                 return
             }
 
             MouseGetPos(&x, &y)
             SetTimer(UpdateTooltip, 0)
 
-            ; === Delay handling ===
             if (!walkStartTime) {
                 walkStartTime := A_TickCount
                 delay := 0
             } else {
                 delay := A_TickCount - walkStartTime
-                walkStartTime := A_TickCount ; Reset for next click
+                walkStartTime := A_TickCount
             }
 
-            coords := GetOrInitWalkCoords(presetIndex)
-            coords.Push({x: x, y: y, delay: delay}) ; Store delay with coords
-            savedWalkCoords[presetIndex] := coords
+            coords := GetOrInitWalkCoords(mapName)
+            coords.Push({ x: x, y: y, delay: delay, mapName: mapName })
+            savedWalkCoords[mapName] := coords
 
             ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
             delaySeconds := Round(delay / 1000, 1)
-            AddToLog("📌 [Preset: " PlacementProfiles.Text "] Saved → X: " x ", Y: " y ", Delay: " delaySeconds "s | Set: " coords.Length)
+            AddToLog("📌 [Map: " mapName "] Saved → X: " x ", Y: " y ", Delay: " delaySeconds "s | Set: " coords.Length)
             SetTimer(ClearToolTip, -1200)
-            ; Test Walk
             FixClick(x, y, "Right")
         }
         else if (WaitingFor("Nuke")) {
@@ -980,6 +978,10 @@ InitControlGroups() {
 
     ControlGroups["Nuke"] := [
         NukeBorder, NukeUnitSlotEnabled, NukeUnitSlot, NukeCoordinatesText, NukeCoordinatesButton, NukeAtSpecificWave, NukeWave, NukeDelayText, NukeDelay
+    ]
+
+    ControlGroups["Map Movement"] := [
+        CustomWalkBorder, WalkMapText, WalkMapDropdown, MovementSetButton, MovementClearButton, MovementTestButton, MovementImport, MovementExport
     ]
 }
 
