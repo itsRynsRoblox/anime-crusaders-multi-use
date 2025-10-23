@@ -23,6 +23,5 @@ Story Difficulty=1
 [Placement Settings]
 Placement Pattern=1
 Placement Order=2
-Placement Profile=1
-Placement Speed=3
+Placement Speed=2
 Place Until Successful=1

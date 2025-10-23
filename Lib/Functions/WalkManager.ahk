@@ -130,7 +130,7 @@ LoadCustomWalk() {
 PrintSavedCoordsSummary() {
     global savedWalkCoords
     for mapName, coords in savedWalkCoords {
-        AddToLog("Map: " mapName " has " coords.Length() " coordinates saved.")
+        AddToLog("Map: " mapName " has " coords.Length " coordinates saved.")
     }
 }
 
@@ -168,6 +168,8 @@ global challengeMap
             return PortalDropdown.Text
         case "Event":
             return EventDropdown.Text
+        case "Custom":
+            return WalkMapDropdown.Text    
     }
     return ""
 }

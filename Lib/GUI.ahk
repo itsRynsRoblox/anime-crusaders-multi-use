@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.5.5"
+global version := "v1.5.6"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -30,7 +30,7 @@ global firstStartup := true
 global waitingState := Map()
 ;Custom Unit Placement
 global waitingForClick := false
-global savedCoords := [[], []]  ; Index-based: one array for each preset
+global savedCoords := Map()
 global savedWalkCoords := Map()
 ;Nuke Ability
 global nukeCoords := []
@@ -272,11 +272,8 @@ global AutoAbilityTimer := MainUI.Add("Edit", "x1245 y449 w60 h20 " (autoAbility
 PlacementPatternText := MainUI.Add("Text", "x815 y390 w125 h20", "Placement Pattern")
 global PlacementPatternDropdown := MainUI.Add("DropDownList", "x825 y410 w100 h180 Choose2 +Center", ["Circle", "Custom", "Grid", "3x3 Grid", "Spiral", "Up and Down", "Random"])
 
-PlacementProfilesText := MainUI.Add("Text", "x1100 y390 w125 h20", "Placement Presets")
-global PlacementProfiles := MainUI.Add("DropDownList", "x1110 y410 w100 h180 Choose1 +Center", ["Story", "Raid", "Portals", "Gates", "Custom #1", "Custom #2", "Custom #3", "Custom #4"])
-
-PlaceSpeedText := MainUI.Add("Text", "x956 y390 w115 h20", "Placement Speed")
-global PlaceSpeed := MainUI.Add("DropDownList", "x963 y410 w100 h180 Choose3 +Center", ["Super Fast (1s)", "Fast (1.5s)", "Default (2s)", "Slow (2.5s)", "Very Slow (3s)", "Toaster (4s)"])
+PlaceSpeedText := MainUI.Add("Text", "x1025 y390 w115 h20", "Placement Speed")
+global PlaceSpeed := MainUI.Add("Edit", "x1055 y410 w60 h20 cBlack Number", "2")
 
 PlacementSelectionText := MainUI.Add("Text", "x1245 y390 w115 h20", "Placement Order")
 global PlacementSelection := MainUI.Add("DropDownList", "x1250 y410 w100 h180 Choose1 +Center", ["Default", "By Priority"])
@@ -287,22 +284,6 @@ Hotkeytext2 := MainUI.Add("Text", "x807 y50 w200 h30", F2Key ": Start Macro")
 Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h30", F3Key ": Stop Macro")
 GithubButton := MainUI.Add("Picture", "x30 y640", GithubImage)
 DiscordButton := MainUI.Add("Picture", "x112 y645 w60 h34 +BackgroundTrans cffffff", DiscordImage)
-
-global CustomSettings := MainUI.Add("GroupBox", "x190 y632 w390 h60 +Center c" uiTheme[1], "Custom Placement Settings")
-
-customPlacementImportButton := AddUI("Picture", "x205 y652 w27 h27 +BackgroundTrans", Import, (*) => ImportCoordinatesPreset())
-customPlacementExportButton := AddUI("Picture", "x255 y652 w27 h27 +BackgroundTrans", Export, (*) => ExportCoordinatesPreset(PlacementProfiles.Value))
-
-customPlacementButton := MainUI.Add("Button", "x300 y662 w80 h20", "Set")
-customPlacementButton.OnEvent("Click", (*) => StartCoordCapture())
-
-customPlacementClearButton := MainUI.Add("Button", "x395 y662 w80 h20", "Clear")
-customPlacementClearButton.OnEvent("Click", (*) => DeleteCoordsForPreset(PlacementProfiles.Value))
-
-fixCameraText := MainUI.Add("Text", "x505 y642 w60 h20 +Left", "Camera")
-fixCameraButton := MainUI.Add("Button", "x490 y662 w80 h20", "Fix")
-fixCameraButton.OnEvent("Click", (*) => BasicSetup(true))
-
 ; === Settings GUI ===
 global WebhookBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Webhook Settings")
 global WebhookEnabled := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Webhook Enabled")
@@ -351,12 +332,6 @@ global UnitImportButton := MainUI.Add("Button", "x1180 y258 w80 h20 Hidden", "Im
 UnitImportButton.OnEvent("Click", (*) => ImportSettingsFromFile())
 global UnitExportButton := MainUI.Add("Button", "x1265 y258 w80 h20 Hidden", "Export")
 UnitExportButton.OnEvent("Click", (*) => ExportUnitConfig())
-
-global CustomPlacementText := MainUI.Add("Text", "x1200 y290 w140 h20 Hidden cffffff", "Custom Placements")
-global CustomPlacementImportButton := MainUI.Add("Button", "x1180 y318 w80 h20 Hidden", "Import")
-CustomPlacementImportButton.OnEvent("Click", (*) => ImportCoordinatesPreset())
-global CustomPlacementExportButton := MainUI.Add("Button", "x1265 y318 w80 h20 Hidden", "Export")
-CustomPlacementExportButton.OnEvent("Click", (*) => ExportCoordinatesPreset(PlacementProfiles.Value))
 
 global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Mode Configuration")
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
@@ -415,17 +390,48 @@ global PlacementBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hid
 ;=== Custom Walk GUI ===
 global CustomWalkBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Custom Walk Configuration")
 global WalkMapText := MainUI.Add("Text", "x875 y110 Hidden cffffff", "Map:")
-global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w125 h180 Choose1 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District", "Halloween", "Spirit Invasion"])
-MovementSetButton := MainUI.Add("Button", "x1060 y110 w80 h20 Hidden", "Set")
+global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose1 +Center Hidden", [
+    "Custom",
+    "Planet Namak",
+    "Marine's Ford",
+    "Karakura Town",
+    "Shibuya",
+    "Demon District",
+    "Halloween",
+    "Spirit Invasion"
+])
+MovementSetButton := MainUI.Add("Button", "x1130 y110 w60 h20 Hidden", "Set")
 MovementSetButton.OnEvent("Click", (*) => StartWalkCapture())
-MovementClearButton := MainUI.Add("Button", "x1160 y110 w80 h20 Hidden", "Clear")
+MovementClearButton := MainUI.Add("Button", "x1205 y110 w60 h20 Hidden", "Clear")
 MovementClearButton.OnEvent("Click", (*) => DeleteWalkCoordsForPreset(WalkMapDropdown.Text))
-MovementTestButton := MainUI.Add("Button", "x1260 y110 w80 h20 Hidden", "Test")
+MovementTestButton := MainUI.Add("Button", "x1280 y110 w60 h20 Hidden", "Test")
 MovementTestButton.OnEvent("Click", (*) => WalkToCoords())
-
 MovementImport := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
 MovementExport := MainUI.Add("Picture", "x845 y108 w20 h20 +BackgroundTrans Hidden", Export)
-;=== End Custom Walk GUI ===
+
+; === Custom Placement Settings ===
+global CustomSettings := MainUI.Add("GroupBox", "x190 y632 w605 h60 +Center c" uiTheme[1], "Custom Placement Settings")
+PlacementSettingsImportButton := AddUI("Picture", "x200 y652 w27 h27 +BackgroundTrans", Import, (*) => ImportCustomCoords())
+PlacementSettingsExportButton := AddUI("Picture", "x235 y652 w27 h27 +BackgroundTrans", Export, (*) => ExportCustomCoords(CustomPlacementMapDropdown.Text))
+CustomPlacementMap := MainUI.Add("Text", "x275 y655 w60 h20 +Left", "Map:")
+global CustomPlacementMapDropdown := MainUI.Add("DropDownList", "x310 y653 w180 h200 Choose1 +Center", [
+    "Custom",
+    "Planet Namak",
+    "Marine's Ford",
+    "Karakura Town",
+    "Shibuya",
+    "Demon District",
+    "Halloween",
+    "Spirit Invasion"
+])
+
+CustomPlacementButton := MainUI.Add("Button", "x495 y655 w85 h20", "Set")
+CustomPlacementButton.OnEvent("Click", (*) => StartCoordinateCapture())
+CustomPlacementClearButton := MainUI.Add("Button", "x595 y655 w85 h20", "Clear")
+CustomPlacementClearButton.OnEvent("Click", (*) => DeleteCustomCoordsForPreset(CustomPlacementMapDropdown.Text))
+fixCameraButton := MainUI.Add("Button", "x695 y655 w85 h20", "Fix Camera")
+fixCameraButton.OnEvent("Click", (*) => BasicSetup(true))
+; === End of Custom Placement Settings ===
 
 GithubButton.OnEvent("Click", (*) => OpenGithub())
 DiscordButton.OnEvent("Click", (*) => OpenDiscord())
@@ -731,30 +737,6 @@ checkSizeTimer() {
     }
 }
 
-StartCoordCapture() {
-    global savedCoords
-    global placement1, placement2, placement3, placement4, placement5, placement6
-
-    presetIndex := PlacementProfiles.Value
-
-    ; Retrieve values from dropdowns
-    totalEnabled := placement1.Value + placement2.Value + placement3.Value + placement4.Value + placement5.Value + placement6.Value
-
-    ; Stop coordinate capture if the max total is reached
-    if savedCoords[presetIndex].Length >= totalEnabled {
-        AddToLog("Max total coordinates reached. Stopping coordinate capture.")
-        return
-    }
-
-    if (WinExist(rblxID)) {
-        WinActivate(rblxID)
-    }
-
-    AddWaitingFor("Custom Coords")
-    AddToLog("Press LShift to stop coordinate capture")
-    SetTimer UpdateTooltip, 50  ; Update tooltip position every 50ms
-}
-
 UpdateTooltip() {
     global waitingForClick
     if waitingForClick {
@@ -830,77 +812,32 @@ UpdateTooltip() {
             RemoveWaiting()
         }
         else {
-            presetIndex := PlacementProfiles.Value
+            mode := ModeDropdown.Text
+            mapName := (mode = "Event") ? EventDropdown.Text : CustomPlacementMapDropdown.Text
 
-            if (presetIndex < 1)
-            {
-                if (debugMessages) {
-                    AddToLog("⚠️ Invalid preset index: " presetIndex)
-                }
+            if (mapName = "") {
+                AddToLog("⚠️ No map selected.")
                 return
             }
-
-            totalEnabled := placement1.Value + placement2.Value + placement3.Value + placement4.Value + placement5.Value + placement6.Value
 
             MouseGetPos(&x, &y)
             SetTimer(UpdateTooltip, 0)
 
-            ; Use your function here
-            coords := GetOrInitPresetCoords(presetIndex)
-            coords.Push({x: x, y: y})
-            savedCoords[presetIndex] := coords  ; Not strictly needed, but OK for clarity
+            coords := GetOrInitCustomCoords(mapName)
+            coords.Push({ x: x, y: y, mapName: mapName })
+            savedCoords[mapName] := coords
 
-            ToolTip("Coords Set: " coords.Length " / Total Enabled: " totalEnabled, x + 10, y + 10)
-            AddToLog("📌 [Preset: " PlacementProfiles.Text "] Saved → X: " x ", Y: " y " | Set: " coords.Length " / Enabled: " totalEnabled)
+            ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
+            AddToLog("📌 [Map: " mapName "] Saved → X: " x ", Y: " y " | Set: " coords.Length)
             SetTimer(ClearToolTip, -1200)
-
-            if coords.Length >= totalEnabled {
-                AddToLog("✅ [Preset " PlacementProfiles.Text "] All coordinates set, stopping capture.")
-                RemoveWaiting()
-            }
         }
     }
-}
-
-GetOrInitPresetCoords(index) {
-    global savedCoords
-    if !IsObject(savedCoords)
-        savedCoords := []
-
-    ; Extend the array up to the index if needed
-    while (savedCoords.Length < index)
-        savedCoords.Push([])
-
-    if !IsObject(savedCoords[index])
-        savedCoords[index] := []
-
-    return savedCoords[index]
 }
 
 ClearToolTip() {
     ToolTip()  ; Properly clear tooltip
     Sleep 100  ; Small delay to ensure clearing happens across all systems
     ToolTip()  ; Redundant clear to catch edge cases
-}
-
-DeleteCoordsForPreset(index) {
-    global savedCoords
-
-    ; Ensure savedCoords is initialized as an object
-    if !IsObject(savedCoords)
-        savedCoords := []
-
-    ; Extend the array up to the index if needed
-    while (savedCoords.Length < index)
-        savedCoords.Push([])
-
-    ; Check if the preset has coordinates (i.e., non-empty)
-    if (savedCoords[index].Length > 0) {
-        savedCoords[index] := []  ; Clear the coordinates for the specified preset
-        AddToLog("🗑️ Cleared coordinates for Preset: " PlacementProfiles.Text)
-    } else {
-        AddToLog("⚠️ No coordinates to clear for Preset: " PlacementProfiles.Text)
-    }
 }
 
 InitControlGroups() {
@@ -939,7 +876,7 @@ InitControlGroups() {
         PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, PrivateServerGuideButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
         ZoomSettingsBorder, ZoomText, ZoomBox,
-        MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton, CustomPlacementText, CustomPlacementImportButton, CustomPlacementExportButton
+        MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton
     ]
 
     ControlGroups["Upgrade"] := [

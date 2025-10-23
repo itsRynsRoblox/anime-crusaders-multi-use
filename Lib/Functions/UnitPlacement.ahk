@@ -300,9 +300,8 @@ PostPlacementChecks() {
 }
 
 GetPlacementSpeed() {
-    speeds := [1000, 1500, 2000, 2500, 3000, 4000]  ; Array of sleep values
-    speedIndex := PlaceSpeed.Value  ; Get the selected speed value
-
-    if speedIndex is number  ; Ensure it's a number
-        return speeds[speedIndex]  ; Use the value directly from the array
+    if (PlaceSpeed.Value = 0) {
+        return 1
+    }
+    return PlaceSpeed.Value
 }

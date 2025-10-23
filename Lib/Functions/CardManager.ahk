@@ -716,11 +716,11 @@ ImportCardConfig(modeName) {
         FileAppend("[CardPriority]`n", targetFile)
         for index, name in loadedOptions {
             FileAppend(name "=" index "`n", targetFile)
-            ;AddToLog("Added " name " with priority " index)
         }
 
         config["options"] := loadedOptions
         AddToLog("✅ Imported and replaced card config for mode: " modeName)
+        SaveNewCardConfigToFile(modeName)
 
         ; Update all the dropdowns
         for index, dd in dropDowns {

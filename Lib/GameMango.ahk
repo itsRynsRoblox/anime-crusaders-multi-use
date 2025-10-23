@@ -10,16 +10,14 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    ExportWalkCoords(WalkMapDropdown.Text)
+    StartHalloween(true)
 }
 
 F6:: {
-    ImportWalkCoordsFromFile()
 }
 
 F7:: {
-    HandleAutoAbility()
-    ;CopyMouseCoords(false)
+    CopyMouseCoords(false)
 }
 
 F8:: {
@@ -383,9 +381,9 @@ CheckLobby() {
         }
         Reconnect()
     }
-    timeForChallenge := TimeForChallenge()
-    AddToLog("[Info] Returned to lobby, " (timeForChallenge ? "starting challenge" : "restarting selected mode"))
-    if (AutoChallenge.Value && !timeForChallenge) {
+    isTimeForChallenge := TimeForChallenge()
+    AddToLog("[Info] Returned to lobby, " (isTimeForChallenge ? "starting challenge" : "restarting selected mode"))
+    if (AutoChallenge.Value && !isTimeForChallenge) {
         if (ChallengeTeamSwap.Value) {
             SwapTeam(false)
         }

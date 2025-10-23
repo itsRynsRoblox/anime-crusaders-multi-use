@@ -678,7 +678,8 @@ OpenInventory(tab := "All") {
 
 ShowPlacements(ShowNumbers := false) {
     points := UseCustomPoints()
-    if (points.Length = 0) {
+
+    if (!points) {
         return
     }
 

@@ -45,6 +45,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Functions/CooldownManager.ahk
 #Include %A_ScriptDir%/lib/Functions/TimerManager.ahk
 #Include %A_ScriptDir%/lib/Functions/AutoAbilityManager.ahk
+#Include %A_ScriptDir%/lib/Functions/CustomPlacements.ahk
 
 ; === Webhook Integration ===
 #Include %A_ScriptDir%/lib/WebhookSettings.ahk

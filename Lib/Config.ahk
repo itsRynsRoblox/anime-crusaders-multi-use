@@ -179,87 +179,6 @@ LoadUnitSettingsByMode() {
     AddToLog("✅ Settings successfully loaded for mode: " mode)
 }
 
-
-
-SaveCustomPlacements() {
-    global savedCoords
-
-    ; Ensure Settings folder exists
-    settingsDir := A_ScriptDir "\Settings"
-    if !DirExist(settingsDir)
-        DirCreate(settingsDir)
-
-    placementFile := settingsDir "\CustomPlacements.txt"
-
-    ; Optionally delete the old file first
-    if FileExist(placementFile)
-        FileDelete(placementFile)
-
-    placementData := "[SavedCoordinates]`n"
-
-    for presetIndex, _ in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] {
-        placementData .= Format("[Preset {1}]`n", presetIndex)
-
-        if (IsSet(savedCoords) && savedCoords.Length >= presetIndex && savedCoords[presetIndex].Length > 0) {
-            for coord in savedCoords[presetIndex] {
-                placementData .= Format("X={1}, Y={2}`n", coord.x, coord.y)
-            }
-        } else {
-            placementData .= "NoCoordinatesSaved`n"
-        }
-    }
-    FileAppend(placementData, placementFile)
-}
-
-LoadCustomPlacements() {
-    global savedCoords
-
-    savedCoords := []  ; Reinitialize
-    placementFile := A_ScriptDir "\Settings\CustomPlacements.txt"
-
-    ; Create the file with a default header if it doesn't exist
-    if !FileExist(placementFile) {
-        ; Ensure the directory exists
-        if !DirExist(A_ScriptDir "\Settings")
-            DirCreate(A_ScriptDir "\Settings")
-        SaveCustomPlacements()
-    }
-
-    content := FileRead(placementFile)
-    lines := StrSplit(content, "`n")
-
-    currentPreset := 0
-
-    for line in lines {
-        line := Trim(line)
-        if (line = "" || line = "[SavedCoordinates]")
-            continue
-
-        ; Detect preset header
-        if RegExMatch(line, "^\[Preset (\d+)\]$", &match) {
-            currentPreset := match[1] + 0
-
-            ; Ensure array size
-            while (savedCoords.Length < currentPreset)
-                savedCoords.Push([])
-
-            continue
-        }
-
-        if (line = "NoCoordinatesSaved") {
-            savedCoords[currentPreset] := []
-            continue
-        }
-
-        ; Parse "X=..., Y=..." format
-        coordParts := StrSplit(line, ", ")
-        x := StrReplace(coordParts[1], "X=")
-        y := StrReplace(coordParts[2], "Y=")
-
-        savedCoords[currentPreset].Push({ x: x, y: y })
-    }
-}
-
 LoadUniversalSettings() {
     universalFile := A_ScriptDir "\Settings\Modes\Universal_Configuration.txt"
     if !FileExist(universalFile) {
@@ -303,7 +222,6 @@ LoadUniversalSettings() {
             case "Matchmaking Failsafe Timer": MatchmakingFailsafeTimer.Value := value
             case "Placement Pattern": PlacementPatternDropdown.Value := value
             case "Placement Order": PlacementSelection.Value := value
-            case "Placement Profile": PlacementProfiles.Value := value
             case "Placement Speed": PlaceSpeed.Value := value
             case "Place Until Successful": PlaceUntilSuccessful.Value := value
             case "Story Difficulty": StoryDifficulty.Value := value
@@ -343,7 +261,6 @@ SaveUniversalSettings() {
         content .= "`n`n[Placement Settings]"
         content .= "`nPlacement Pattern=" PlacementPatternDropdown.Value
         content .= "`nPlacement Order=" PlacementSelection.Value
-        content .= "`nPlacement Profile=" PlacementProfiles.Value
         content .= "`nPlacement Speed=" PlaceSpeed.Value
         content .= "`nPlace Until Successful=" PlaceUntilSuccessful.Value
 
@@ -392,38 +309,6 @@ ImportSettingsFromFile() {
 
     ; Finalize
     AddToLog("📥 Imported settings from external file!")
-}
-
-ExportCoordinatesPreset(presetIndex) {
-    global savedCoords
-
-    if !IsSet(savedCoords) || savedCoords.Length < presetIndex || savedCoords[presetIndex].Length = 0 {
-        AddToLog("⚠️ No coordinates saved for Preset " presetIndex)
-        return
-    }
-
-    ; Ensure export directory
-    exportDir := A_ScriptDir "\Settings\Export"
-    if !DirExist(exportDir)
-        DirCreate(exportDir)
-
-    file := exportDir "\Preset" presetIndex ".txt"
-
-    exportData := Format("[Preset {1}]`n", presetIndex)
-    for coord in savedCoords[presetIndex] {
-        exportData .= Format("X={1}, Y={2}`n", coord.x, coord.y)
-    }
-
-    try {
-        if FileExist(file)
-            FileDelete(file)
-        FileAppend(exportData, file)
-    } catch {
-        AddToLog "❌ Failed to save preset"
-        return
-    }
-
-    AddToLog("✅ Preset " presetIndex " exported to: Settings\Export\Preset" presetIndex ".txt")
 }
 
 ImportCoordinatesPreset() {
