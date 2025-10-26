@@ -82,6 +82,9 @@ SaveSettingsForMode(*) {
 
         content .= "`n`n[Zoom Settings]"
         content .= "`nZoomLevel=" ZoomBox.Value
+        content .= "`nUse Zoom Tech=" ZoomTech.Value
+        content .= "`nZoom In Then Out=" ZoomInOption.Value
+        content .= "`nTeleport To Spawn=" ZoomTeleport.Value
 
         content .= "`n`n[Upgrade Settings]"
         content .= "`nUnit Manager Upgrade System=" UnitManagerUpgradeSystem.Value
@@ -118,8 +121,8 @@ SaveSettingsForMode(*) {
 
         FileAppend(content, settingsFile)
         SaveCustomPlacements()
-        SaveCustomWalk()
         SaveUniversalSettings()
+        SaveAllMovements()
         AddToLog("✅ Saved settings for mode: " gameMode)
         SaveAllConfigs()
     }
@@ -173,9 +176,8 @@ LoadUnitSettingsByMode() {
     LoadCustomPlacements()
     InitControlGroups()
     LoadUniversalSettings()
-    LoadCustomWalk()
     LoadAllCardConfig()
-
+    LoadAllMovements()
     AddToLog("✅ Settings successfully loaded for mode: " mode)
 }
 
@@ -436,7 +438,12 @@ InitSettings() {
     UnitConfigMap["Default Team"] := { control: NormalTeam, prop: "Value" }
     UnitConfigMap["Challenge Team"] := { control: ChallengeTeam, prop: "Value" }
 
+    ; Zoom Tech Settings
     UnitConfigMap["ZoomLevel"] := { control: ZoomBox, prop: "Text" }
+    UnitConfigMap["Use Zoom Tech"] := { control: ZoomTech, prop: "Value" }
+    UnitConfigMap["Zoom In Then Out"] := { control: ZoomInOption, prop: "Value" }
+    UnitConfigMap["Teleport To Spawn"] := { control: ZoomTeleport, prop: "Value" }
+
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Farm More Portals"] := { control: FarmMorePortals, prop: "Value" }

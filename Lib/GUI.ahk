@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.5.6"
+global version := "v1.6.9"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
@@ -31,7 +31,12 @@ global waitingState := Map()
 ;Custom Unit Placement
 global waitingForClick := false
 global savedCoords := Map()
+; Custom Walk
 global savedWalkCoords := Map()
+global recording := false
+global allWalks := Map()
+global keyDownTimes := Map()
+global lastActionTime := 0
 ;Nuke Ability
 global nukeCoords := []
 ;Hotkeys
@@ -275,13 +280,13 @@ global PlacementPatternDropdown := MainUI.Add("DropDownList", "x825 y410 w100 h1
 PlaceSpeedText := MainUI.Add("Text", "x1025 y390 w115 h20", "Placement Speed")
 global PlaceSpeed := MainUI.Add("Edit", "x1055 y410 w60 h20 cBlack Number", "2")
 
-PlacementSelectionText := MainUI.Add("Text", "x1245 y390 w115 h20", "Placement Order")
-global PlacementSelection := MainUI.Add("DropDownList", "x1250 y410 w100 h180 Choose1 +Center", ["Default", "By Priority"])
+PlacementSelectionText := MainUI.Add("Text", "x1240 y390 w115 h20", "Placement Order")
+global PlacementSelection := MainUI.Add("DropDownList", "x1245 y410 w100 h180 Choose1 +Center", ["Default", "By Priority"])
 
 placementSaveText := MainUI.Add("Text", "x807 y451 w80 h20", "Save Config")
 Hotkeytext := MainUI.Add("Text", "x807 y35 w200 h30", F1Key ": Fix Roblox Position")
 Hotkeytext2 := MainUI.Add("Text", "x807 y50 w200 h30", F2Key ": Start Macro")
-Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h30", F3Key ": Stop Macro")
+Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h20", F3Key ": Stop Macro")
 GithubButton := MainUI.Add("Picture", "x30 y640", GithubImage)
 DiscordButton := MainUI.Add("Picture", "x112 y645 w60 h34 +BackgroundTrans cffffff", DiscordImage)
 ; === Settings GUI ===
@@ -321,9 +326,12 @@ global UpgradeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidde
 global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use the Unit Manager to upgrade your units")
 global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y130 cffffff Hidden", "Use Unit Priority while upgrading")
 
-global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Settings")
+global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Tech Settings")
 global ZoomText := MainUI.Add("Text", "x1018 y230 Hidden c" uiTheme[1], "Zoom Level:")
 global ZoomBox := MainUI.Add("Edit", "x1115 y228 w30 h20 Hidden cBlack Number", "20")
+global ZoomTech := MainUI.Add("Checkbox", "x1018 y260 Hidden Checked c" uiTheme[1], "Enable Zoom Tech")
+global ZoomInOption := MainUI.Add("Checkbox", "x1018 y290 Hidden Checked c" uiTheme[1], "Zoom in then out")
+global ZoomTeleport := MainUI.Add("Checkbox", "x1018 y320 Hidden Checked c" uiTheme[1], "Teleport to spawn")
 ZoomBox.OnEvent("Change", (*) => ValidateEditBox(ZoomBox))
 
 global MiscSettingsBorder := MainUI.Add("GroupBox", "x1163 y205 w195 h176 +Center Hidden c" uiTheme[1], "Import/Export")
@@ -396,18 +404,22 @@ global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose
     "Marine's Ford",
     "Karakura Town",
     "Shibuya",
+    "Shibuya (Destroyed)",
     "Demon District",
+    "Nightmare Train",
     "Halloween",
     "Spirit Invasion"
 ])
 MovementSetButton := MainUI.Add("Button", "x1130 y110 w60 h20 Hidden", "Set")
-MovementSetButton.OnEvent("Click", (*) => StartWalkCapture())
+MovementSetButton.OnEvent("Click", StartRecordingWalk)
 MovementClearButton := MainUI.Add("Button", "x1205 y110 w60 h20 Hidden", "Clear")
-MovementClearButton.OnEvent("Click", (*) => DeleteWalkCoordsForPreset(WalkMapDropdown.Text))
+MovementClearButton.OnEvent("Click", ClearMovement)
 MovementTestButton := MainUI.Add("Button", "x1280 y110 w60 h20 Hidden", "Test")
-MovementTestButton.OnEvent("Click", (*) => WalkToCoords())
+MovementTestButton.OnEvent("Click", (*) => StartWalk(true))
 MovementImport := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
+MovementImport.OnEvent("Click", (*) => ImportMovements())
 MovementExport := MainUI.Add("Picture", "x845 y108 w20 h20 +BackgroundTrans Hidden", Export)
+MovementExport.OnEvent("Click", (*) => ExportMovements(WalkMapDropdown.Text))
 
 ; === Custom Placement Settings ===
 global CustomSettings := MainUI.Add("GroupBox", "x190 y632 w605 h60 +Center c" uiTheme[1], "Custom Placement Settings")
@@ -420,7 +432,9 @@ global CustomPlacementMapDropdown := MainUI.Add("DropDownList", "x310 y653 w180 
     "Marine's Ford",
     "Karakura Town",
     "Shibuya",
+    "Shibuya (Destroyed)", 
     "Demon District",
+    "Nightmare Train",
     "Halloween",
     "Spirit Invasion"
 ])
@@ -438,13 +452,13 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Infinity Castle", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
 global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden Choose1", ["Halloween", "Spirit Invasion"])
 global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
-global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya", "Nightmare Train"] )
+global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya (Destroyed)", "Nightmare Train"] )
 global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Act 1", "Act 2", "Act 3"])
 global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Amusement Park", "Test"])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
@@ -750,21 +764,23 @@ UpdateTooltip() {
 
 ~LShift::
 {
-    global waitingForClick, walkStartTime
+    global waitingForClick, recording
     if waitingForClick {
         AddToLog("Stopping coordinate capture")
-        if (WaitingFor("Walk")) {
-            walkStartTime := 0
+        if (WaitingFor("Placements")) {
+            SaveCustomPlacements()
         }
         RemoveWaiting()
         ShowPlacements(false)
+    }
+    if (recording) {
+        StopRecordingWalk()
     }
 }
 
 ~LButton::
 {
     global waitingForClick, savedCoords
-    global savedWalkCoords, walkStartTime
     global nukeCoords
     global placement1, placement2, placement3, placement4, placement5, placement6
 
@@ -772,37 +788,7 @@ UpdateTooltip() {
         return
 
     if waitingForClick {
-        if (WaitingFor("Walk")) {
-            mode := ModeDropdown.Text
-            mapName := (mode = "Event") ? EventDropdown.Text : WalkMapDropdown.Text
-
-            if (mapName = "") {
-                AddToLog("⚠️ No map selected.")
-                return
-            }
-
-            MouseGetPos(&x, &y)
-            SetTimer(UpdateTooltip, 0)
-
-            if (!walkStartTime) {
-                walkStartTime := A_TickCount
-                delay := 0
-            } else {
-                delay := A_TickCount - walkStartTime
-                walkStartTime := A_TickCount
-            }
-
-            coords := GetOrInitWalkCoords(mapName)
-            coords.Push({ x: x, y: y, delay: delay, mapName: mapName })
-            savedWalkCoords[mapName] := coords
-
-            ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
-            delaySeconds := Round(delay / 1000, 1)
-            AddToLog("📌 [Map: " mapName "] Saved → X: " x ", Y: " y ", Delay: " delaySeconds "s | Set: " coords.Length)
-            SetTimer(ClearToolTip, -1200)
-            FixClick(x, y, "Right")
-        }
-        else if (WaitingFor("Nuke")) {
+        if (WaitingFor("Nuke")) {
             MouseGetPos(&x, &y)
             SetTimer(UpdateTooltip, 0)
             nukeCoords := {x: x, y: y}
@@ -875,7 +861,7 @@ InitControlGroups() {
         WebhookBorder, WebhookEnabled, WebhookLogsEnabled, WebhookURLBox,
         PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, PrivateServerGuideButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
-        ZoomSettingsBorder, ZoomText, ZoomBox,
+        ZoomSettingsBorder, ZoomText, ZoomBox, ZoomTech, ZoomInOption,
         MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton
     ]
 
@@ -921,7 +907,6 @@ InitControlGroups() {
         CustomWalkBorder, WalkMapText, WalkMapDropdown, MovementSetButton, MovementClearButton, MovementTestButton, MovementImport, MovementExport
     ]
 }
-
 
 ShowOnlyControlGroup(groupName) {
     global ControlGroups

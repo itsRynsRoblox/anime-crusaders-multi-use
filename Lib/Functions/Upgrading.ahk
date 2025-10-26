@@ -152,6 +152,10 @@ ProcessUpgrades(slot := false, priorityNum := false) {
         slotDone := true
 
         for index, coord in successfulCoordinates {
+
+            if (coord.autoUpgrade)
+                continue
+
             if ((!slot || coord.slot = slot) && (!priorityNum || coord.upgradePriority = priorityNum)) {
                 slotDone := false  ; Found unit to upgrade => not done yet
 
@@ -161,10 +165,11 @@ ProcessUpgrades(slot := false, priorityNum := false) {
 
                 if (MaxUpgrade()) {
                     HandleMaxUpgrade(coord, index)
+                    CloseUnitUI()
                 }
 
                 if (!UnitManagerUpgradeSystem.Value) {
-                    FixClick(341, 226)
+                    CloseUnitUI()
                 }
 
                 PostUpgradeChecks(coord)

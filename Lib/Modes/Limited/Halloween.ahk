@@ -27,3 +27,21 @@ WalkDownPath() {
         Walk("d", 300)
     }
 }
+
+isWrongHalloweenAngle() {
+    return GetPixel(0x2D0109, 47, 121, 2, 2, 10)
+}
+
+FixHalloweenAngle() {
+    if (isWrongHalloweenAngle() && EventDropdown.Text = "Halloween" && !isInChallenge()) {
+        loop 2 {
+            SendInput ("{Left up}")
+            Sleep 200
+            SendInput ("{Left down}")
+            Sleep 750
+            SendInput ("{Left up}")
+            KeyWait "Left" ; Wait for key to be fully processed
+        }
+      ;  Zoom()
+    }
+}

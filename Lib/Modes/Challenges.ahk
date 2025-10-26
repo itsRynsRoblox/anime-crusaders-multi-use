@@ -110,3 +110,23 @@ DetectMapForChallenge() {
         Reconnect()
     }
 }
+
+isInChallenge() {
+    global challengeMap
+    if (challengeMap != "no map found" && challengeMap != "") {
+        return true
+    }
+}
+
+ResetChallengeMap() {
+    global challengeMap
+    challengeMap := ""
+}
+
+TestChallenge() {
+    global challengeMap
+    challengeMap := "Shibuya"
+    SetChallengeCooldown()
+    Sleep(500)
+    MonitorStage()
+}

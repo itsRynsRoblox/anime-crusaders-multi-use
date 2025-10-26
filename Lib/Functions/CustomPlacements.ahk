@@ -94,13 +94,12 @@ LoadCustomPlacements() {
             continue
 
         parts := StrSplit(line, ",")
-        if (parts.Length < 4)
+        if (parts.Length < 3)
             continue
 
         mapName := parts[1]
         x := parts[2] + 0
         y := parts[3] + 0
-        delay := parts[4] + 0
 
         if !savedCoords.Has(mapName)
             savedCoords[mapName] := []
@@ -134,6 +133,16 @@ DeleteCustomCoordsForPreset(mapName) {
 }
 
 GetPlacementsForMode(mode) {
+    global challengeMap, castleMap
+
+    if (isInChallenge()) {
+        return challengeMap
+    }
+
+    if (isInInfinityCastle()) {
+        return castleMap
+    }
+
     switch mode {
         case "Story":
             return StoryDropdown.Text
@@ -144,7 +153,7 @@ GetPlacementsForMode(mode) {
         case "Portal":
             return PortalDropdown.Text
         case "Event":
-            return EventDropdown.Text    
+            return EventDropdown.Text
         case "Custom":
             return CustomPlacementMapDropdown.Text    
     }
@@ -170,7 +179,7 @@ ExportCustomCoords(mapName) {
     }
 
     for _, point in savedCoords[mapName] {
-        line := mapName "," point.x "," point.y "," point.delay "`n"
+        line := mapName "," point.x "," point.y "`n"
         file.Write(line)
     }
 
@@ -207,18 +216,17 @@ ImportCustomCoords() {
             continue
 
         parts := StrSplit(line, ",")
-        if parts.Length < 4
+        if parts.Length < 3
             continue
 
         mapName := Trim(parts[1])
         x := parts[2] + 0
         y := parts[3] + 0
-        delay := parts[4] + 0
 
         if importedMap = ""
             importedMap := mapName  ; Use map from first line
 
-        coordList.Push({ x: x, y: y, delay: delay, mapName: mapName })
+        coordList.Push({ x: x, y: y, mapName: mapName })
     }
 
     if coordList.Length = 0 {

@@ -54,6 +54,9 @@ AutoAbilityTimer=60
 
 [Zoom Settings]
 ZoomLevel=20
+Use Zoom Tech=1
+Zoom In Then Out=1
+Teleport To Spawn=1
 
 [Upgrade Settings]
 Unit Manager Upgrade System=1

@@ -15,6 +15,7 @@ CheckAutoAbility() {
             continue
 
         if (ProcessAbility(coord)) {
+            CloseUnitUI()
             successfulCoordinates[index].hasAbility := false
         }
     }
@@ -25,6 +26,7 @@ CheckAutoAbility() {
             continue
 
         if (ProcessAbility(coord)) {
+            CloseUnitUI()
             maxedCoordinates[index].hasAbility := false
         }
     }
@@ -73,6 +75,8 @@ ProcessAbility(coord) {
         return true
     }
 
+    CloseUnitUI()
+
     return false
 }
 
@@ -90,4 +94,33 @@ ActiveAbilityEnabled() {
         return true
     }
     return false
+}
+
+HandleAutoAbility() {
+    if (!ActiveAbilityEnabled()) {
+        return
+    }
+
+    wiggle()
+
+    ; Define your pattern (get the actual string from the FindText tool)
+    AutoAbilityPattern := InactiveAbility
+
+    result := FindText(&X, &Y, 343, 268, 398, 298, 0, 0, AutoAbilityPattern)
+
+    if (result) {
+        for each, match in result {
+            x := match.x
+            y := match.y
+            AddToLog("✅ Found and clicked Auto Ability at (" x ", " y ")")
+            FixClick(x, y)
+            Sleep(500)
+        }
+        return true
+    }
+}
+
+CloseUnitUI() {
+    FixClick(341, 226)
+    Sleep(250)
 }

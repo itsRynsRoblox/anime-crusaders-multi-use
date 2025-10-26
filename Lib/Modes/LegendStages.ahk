@@ -19,6 +19,8 @@ StartLegendStages() {
     SelectLegendStage()
     StartLegendStage(currentMap, currentAct)
 
+    FixClick(594, 467) ;click select
+    Sleep(750)
     ; Handle play mode selection
     PlayHereOrMatchmake()
     RestartStage()
@@ -36,7 +38,7 @@ StartLegendStage(map, act) {
 GetLegendMap(map) {
 
     RaidMapNames := [
-        "Shibuya", "Nightmare Train"
+        "Shibuya (Destroyed)", "Nightmare Train"
     ]
 
     baseX := 195

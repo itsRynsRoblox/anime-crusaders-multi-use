@@ -10,18 +10,19 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    StartHalloween(true)
+
 }
 
 F6:: {
+
 }
 
 F7:: {
-    CopyMouseCoords(false)
+    CopyMouseCoords(true)
 }
 
 F8:: {
-    Run (A_ScriptDir "\Lib\Tools\FindText.ahk")
+   Run (A_ScriptDir "\Lib\Tools\FindText.ahk")
 }
 
 StartMacro(*) {
@@ -56,6 +57,17 @@ CustomMode() {
 }
 
 HandleEndScreen(isVictory := true) {
+
+    if (TimeForChallenge()) {
+        AddToLog("[Info] Game over, starting challenge")
+        return ClickReturnToLobby()
+    }
+
+    if (isInChallenge()) {
+        AddToLog("[Info] Challenge over, returning to lobby")
+        return ClickReturnToLobby()
+    }
+
     Switch ModeDropdown.Text {
         case "Event":
             HandleEventEnd()
@@ -68,11 +80,6 @@ HandleEndScreen(isVictory := true) {
 
 HandleDefaultEnd() {
     global lastResult
-
-    if (TimeForChallenge()) {
-        AddToLog("[Info] Game over, starting challenge")
-        return ClickReturnToLobby()
-    }
 
     if (NextLevelBox.Value) {
         if (lastResult = "win") {
@@ -170,12 +177,14 @@ Zoom() {
     MouseMove(400, 300)
     Sleep 100
 
-    ; Zoom in smoothly
-    Scroll(20, "WheelUp", 50)
+    if (ZoomInOption.Value) {
+        ; Zoom in smoothly
+        Scroll(20, "WheelUp", 50)
 
-    ; Look down
-    Click
-    MouseMove(400, 400)  ; Move mouse down to angle camera down
+        ; Look down
+        Click
+        MouseMove(400, 400)  ; Move mouse down to angle camera down
+    }
     
     ; Zoom back out smoothly
     Scroll(Integer(ZoomBox.Value), "WheelDown", 50)
@@ -194,6 +203,10 @@ CloseChat() {
 BasicSetup(usedButton := false) {
     global firstStartup
 
+    if(!WinActivate(rblxID)) {
+        WinActivate(rblxID)
+    }
+
     if (!firstStartup) {
         if (!DoesntHaveSeamless(ModeDropdown.Text)) {
             return
@@ -201,24 +214,26 @@ BasicSetup(usedButton := false) {
     }
 
     CloseChat()
-    Sleep 300
-    FixClick(496, 104) ; Closes Player leaderboard
-    Sleep 300
+    Sleep 750
 
     if (ModeDropdown.Text = "Custom" && !usedButton) {
         return
     }
 
-    Zoom()
+    if (ZoomTech.Value) {
+        Zoom()
+    }
 
-    ; Teleport to spawn
-    ;TeleportToSpawn()
+    FixHalloweenAngle()
+    Sleep(300)
+
+    CloseLeaderboard(false)
     Sleep 300
 
-    if (ModeDropdown.Text = "Event" && !usedButton) {
-        HandleEventMovement()
-    } else {
-        WalkToCoords()
+    if (!StartWalk(usedButton)) {
+        if (ModeDropdown.Text = "Event") {
+            HandleEventMovement()
+        }
     }
 
     if (!usedButton) {
@@ -227,6 +242,9 @@ BasicSetup(usedButton := false) {
 }
     
 RestartStage() {
+
+    ; Special Cases
+    DetectInfinityCastleMap()
     
     ; Wait for loading
     CheckLoaded()
@@ -343,30 +361,6 @@ GetPrivateServerCode(link) {
     return ""
 }
 
-HandleAutoAbility() {
-    if (!ActiveAbilityEnabled()) {
-        return
-    }
-
-    wiggle()
-
-    ; Define your pattern (get the actual string from the FindText tool)
-    AutoAbilityPattern := InactiveAbility
-
-    result := FindText(&X, &Y, 343, 268, 398, 298, 0, 0, AutoAbilityPattern)
-
-    if (result) {
-        for each, match in result {
-            x := match.x
-            y := match.y
-            AddToLog("✅ Found and clicked Auto Ability at (" x ", " y ")")
-            FixClick(x, y)
-            Sleep(500)
-        }
-        return true
-    }
-}
-
 wiggle() {
     MouseMove(1, 1, 5, "R")
     Sleep(30)
@@ -374,6 +368,7 @@ wiggle() {
 }
 
 CheckLobby() {
+    global firstStartup
     loop {
         Sleep 1000
         if (isInLobby()) {
@@ -383,11 +378,14 @@ CheckLobby() {
     }
     isTimeForChallenge := TimeForChallenge()
     AddToLog("[Info] Returned to lobby, " (isTimeForChallenge ? "starting challenge" : "restarting selected mode"))
+    firstStartup := true
     if (AutoChallenge.Value && !isTimeForChallenge) {
-        if (ChallengeTeamSwap.Value) {
+        if (ChallengeTeamSwap.Value && isInChallenge()) {
             SwapTeam(false)
         }
     }
+    ResetInfinityCastleMap()
+    ResetChallengeMap()
     return StartSelectedMode()
 }
 
@@ -523,5 +521,8 @@ isMenuOpen(name := "") {
     else if (name = "Card Selection") {
         return FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection) 
         || FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelectionHighlighted)
+    }
+    else if (name = "Stage Info") {
+        return GetPixel(0xFFE700, 659, 76, 2, 2, 5)
     }
 }

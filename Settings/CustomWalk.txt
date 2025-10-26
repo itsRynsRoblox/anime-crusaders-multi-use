@@ -1,2 +1,0 @@
-Planet Namak,386,452,0
-Planet Namak,538,391,718

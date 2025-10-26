@@ -172,7 +172,7 @@ StartPlacingUnits(untilSuccessful := true) {
                                     }
                                 }
                             }
-                            FixClick(341, 226) ; close unit ui
+                            CloseUnitUI()
                         } else {
                             PostPlacementChecks()
                         }

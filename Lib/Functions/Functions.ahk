@@ -349,7 +349,7 @@ RotateCameraAngle() {
 }
 
 CloseLobbyPopups() {
-    FixClick(570, 103) ; close leaderboard
+    CloseLeaderboard()
     Sleep(500)
     FixClick(410, 420) ; close daily reward
     Sleep(500)
@@ -416,6 +416,9 @@ CloseMenu(name := "") {
     if (name = "Unit Manager")
         key := "F"
 
+    if (name = "Stage Info")
+        key := "C"
+
     if (!key)
         return  ; Unknown menu name
 
@@ -433,6 +436,9 @@ OpenMenu(name := "") {
     key := ""
     if (name = "Unit Manager")
         key := "F"
+
+    if (name = "Stage Info")
+        key := "C"
 
     if (!key)
         return  ; Unknown menu name
@@ -603,7 +609,7 @@ TeleportToSpawn() {
 
 DoesntHaveSeamless(ModeName) {
 
-    static modesWithoutSeamless := ["Gates"]
+    static modesWithoutSeamless := ["Gates", "Infinity Castle"]
 
     for mode in modesWithoutSeamless {
         if (mode = ModeName)
@@ -819,5 +825,13 @@ ClickReplay(testing := false) {
                 }
             }
         }
+    }
+}
+
+CloseLeaderboard(inLobby := true) {
+    if (inLobby) {
+        FixClick(572, 104)
+    } else {
+        FixClick(495, 104)
     }
 }
