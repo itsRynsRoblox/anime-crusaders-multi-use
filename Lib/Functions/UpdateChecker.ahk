@@ -70,50 +70,53 @@ CheckForUpdates() {
             fileName := A_Temp "\" assets[1]["name"]
             Download(downloadUrl, fileName)
 
-            ; --- Extract update ---
-            extractDir := A_Temp "\update_extract"
+            ; --- Create a unique script-local temp extraction folder ---
+            extractDir := A_ScriptDir "\update_extract_" A_TickCount
             DirCreate(extractDir)
-            try {
-                psCmd := Format('powershell -NoProfile -Command "Expand-Archive -Force ' '{}' ' ' '{}' '"', fileName, extractDir)
-                RunWait(psCmd, , "Hide")
-            } catch Error {
-                AddToLog("❌ Failed to extract ZIP")
-                MainUI.Opt("+AlwaysOnTop")
-                return
-            }
 
-            ; --- Backup Settings ---
+            ; --- Extract update ZIP to this folder ---
+            psCmd := Format('powershell -NoProfile -Command "Expand-Archive -Force ' '{}' ' ' '{}' '"', fileName,
+                extractDir)
+            RunWait(psCmd, , "Hide")
+
+            ; --- Backup user Settings ---
             settingsDir := A_ScriptDir "\Settings"
             if DirExist(settingsDir) {
                 backupDir := A_ScriptDir "\Settings_Backup_" version
                 DirCreate(backupDir)
                 DirCopy(settingsDir, backupDir, true)
-                AddToLog("💾 Backed up settings to Settings\Settings_Backup_" version)
+                AddToLog("💾 Backed up settings to " backupDir)
             }
 
-            ; --- Install update ---
+            ; --- Copy all update files except overwrite Settings ---
             loop files, extractDir "\*", "D"  ; Directories
             {
-                dest := A_ScriptDir "\" A_LoopFileName
                 if (A_LoopFileName = "Settings") {
-                    ; Copy files inside Settings only if they don't exist
+                    ; Copy each file inside Settings only if it doesn't already exist
                     loop files, A_LoopFileFullPath "\*", "F" {
-                        destFile := settingsDir "\" A_LoopFileName
+                        relPath := StrReplace(A_LoopFileFullPath, extractDir "\Settings\", "")
+                        destFile := settingsDir "\" relPath
                         if !FileExist(destFile)
                             FileCopy(A_LoopFileFullPath, destFile)
                     }
                     continue
                 }
+
+                dest := A_ScriptDir "\" A_LoopFileName
                 DirCopy(A_LoopFileFullPath, dest, true)
             }
 
             ; Copy top-level files
             loop files, extractDir "\*", "F" {
-                destFile := A_ScriptDir "\" A_LoopFileName
-                FileCopy(A_LoopFileFullPath, destFile, true)  ; overwrite top-level files
+                ; Skip any files that would go into Settings
+                if !InStr(A_LoopFileFullPath, extractDir "\Settings\")
+                    FileCopy(A_LoopFileFullPath, A_ScriptDir "\" A_LoopFileName, true)
             }
 
-            AddToLog("✅ Update installed successfully, restarting...")
+            ; --- Clean up temp extraction folder ---
+            DirDelete(extractDir, true)
+            AddToLog("✅ Update installed successfully")
+
             Sleep(2000)
             Run(A_ScriptFullPath)
             ExitApp

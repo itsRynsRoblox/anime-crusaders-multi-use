@@ -283,11 +283,6 @@ ResetPlacementTracking() {
 PostPlacementChecks() {
     HandleStartButton()
 
-    if (isInLobby() && !isInGame()) {
-        AddToLog("Found in lobby, restarting mode if possible")
-        return CheckLobby()
-    }
-
     if isMenuOpen("End Screen") {
         return MonitorStage()
     }
