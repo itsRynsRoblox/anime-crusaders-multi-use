@@ -98,69 +98,59 @@ OnRaidChange(*) {
 }
 
 OnConfirmClick(*) {
-    if (ModeDropdown.Text = "") {
-        AddToLog("Please select a gamemode before confirming")
-        return
+    mode := ModeDropdown.Text
+    if (mode = "") {
+        return AddToLog("Please select a gamemode before confirming")
     }
 
-    ; For Story mode, check if both Story and Act are selected
-    if (ModeDropdown.Text = "Story") {
-        if (StoryDropdown.Text = "" || StoryActDropdown.Text = "") {
-            AddToLog("Please select both Story and Act before confirming")
+    ; Define validation rules
+    switch mode {
+        case "Story":
+            if (StoryDropdown.Text = "" || StoryActDropdown.Text = "")
+                return AddToLog("Please select both Story and Act before confirming")
+            AddToLog("Selected " StoryDropdown.Text)
+
+        case "Legend Stage":
+            if (LegendDropDown.Text = "" or LegendActDropdown.Text = "")
+                return AddToLog("Please select both Legend Stage and Act before confirming")
+            AddToLog("Selected " LegendDropDown.Text)
+
+        case "Custom":
+            AddToLog("Selected Custom")
+
+        case "Raid":
+            if (RaidDropdown.Text = "")
+                return AddToLog("Please select both Raid and Act before confirming")
+            AddToLog("Selected " RaidDropdown.Text)
+
+        case "Event":
+            if (EventDropdown.Text = "" || EventRoleDropdown.Text = "")
+                return AddToLog("Please select both Event and Role before confirming")
+
+        case "Challenge":
+            AddToLog("This is used to store your Auto Challenge settings only")
             return
-        }
-        AddToLog("Selected " StoryDropdown.Text)
-    }
-    ; For Legend mode, check if both Legend and Act are selected
-    else if (ModeDropdown.Text = "Legend") {
-        if (LegendDropDown.Text = "") {
-            AddToLog("Please select both Legend Stage and Act before confirming")
-            return
-        }
-        AddToLog("Selected " LegendDropDown.Text)
-    }
-    ; For Custom mode, check if coords are empty
-    else if (ModeDropdown.Text = "Custom") {
-        AddToLog("Selected Custom")
-    }
-    ; For Raid mode, check if both Raid and RaidAct are selected
-    else if (ModeDropdown.Text = "Raid") {
-        if (RaidDropdown.Text = "") {
-            AddToLog("Please select both Raid and Act before confirming")
-            return
-        }
-        AddToLog("Selected " RaidDropdown.Text)
-    }
-    else if (ModeDropdown.Text = "Event") {
-        if (EventDropdown.Text = "" || EventRoleDropdown.Text = "") {
-            AddToLog("Please select both Event and Role before confirming")
-            return
-        }
-    } else {
-        AddToLog("Selected " ModeDropdown.Text " mode")
+
+        default:
+            AddToLog("Selected " mode)
     }
 
-    if (StartsInLobby(ModeDropdown.Text)) {
+    ; Optional reminder
+    if (StartsInLobby(mode))
         AddToLog("[Reminder] Please rejoin the game to use default camera position")
-    }
 
-    ; Hide all controls if validation passes
-    ModeDropdown.Visible := false
-    StoryDropdown.Visible := false
-    StoryActDropdown.Visible := false
-    LegendDropDown.Visible := false
-    RaidDropdown.Visible := false
-    RaidActDropdown.Visible := false
-    PortalDropdown.Visible := false
-    PortalRoleDropdown.Visible := false
-    EventDropdown.Visible := false
-    EventRoleDropdown.Visible := false
-    CustomCardDropdown.Visible := false
-    ConfirmButton.Visible := false
-    modeSelectionGroup.Visible := false
-    Hotkeytext.Visible := true
-    Hotkeytext2.Visible := true
-    Hotkeytext3.Visible := true
+    ; Hide all UI elements after confirmation
+    for ctrl in [
+        ModeDropdown, StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown,
+        RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown,
+        EventRoleDropdown, CustomCardDropdown, ConfirmButton, modeSelectionGroup
+    ]
+        ctrl.Visible := false
+
+    ; Show relevant hotkey texts
+    for ctrl in [Hotkeytext, Hotkeytext2, Hotkeytext3]
+        ctrl.Visible := true
+
     global confirmClicked := true
 }
 

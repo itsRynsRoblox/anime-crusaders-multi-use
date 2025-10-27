@@ -5,6 +5,7 @@ global activeHotkeys := []
 global firstKeyPressed := false
 
 Walk(direction, duration) {
+    key := "{" . direction . " up}"
     key := "{" . direction . " down}"
     SendInput(key)
     Sleep(duration)
@@ -17,7 +18,7 @@ Walk(direction, duration) {
 GetMapForMode(mode) {
 global challengeMap, castleMap
 
-    if (TimeForChallenge()) {
+    if (isInChallenge()) {
         return challengeMap
     }
 
@@ -139,6 +140,7 @@ StartWalk(testing := false) {
 
     for entry in data {
         AddToLog("[Walking] Sending Key: " entry.key ", Duration: " entry.duration "ms , Delay: " entry.delay "ms")
+        Send("{" entry.key " up}") ; release key in case it's already down
         Sleep(entry.delay)
         Send("{" entry.key " down}")
         Sleep(entry.duration)

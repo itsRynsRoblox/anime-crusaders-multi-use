@@ -4,13 +4,14 @@ global macroStartTime := A_TickCount
 global stageStartTime := A_TickCount
 global cachedCardPriorities := Map()
 LoadKeybindSettings()  ; Load saved keybinds
+CheckForUpdates()
 Hotkey(F1Key, (*) => moveRobloxWindow())
 Hotkey(F2Key, (*) => StartMacro())
 Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-
+    ClickNextRoom(true)
 }
 
 F6:: {
@@ -93,7 +94,11 @@ HandleDefaultEnd() {
         } else {
             AddToLog("[Info] Game over, " (ModeDropdown.Text = "Infinity Castle" ? "retrying room" : " replaying stage"))
         }
-        ClickReplay()
+        if (ModeDropdown.Text = "Infinity Castle") {
+            ClickNextRoom()
+        } else {
+            ClickReplay()
+        }
         return RestartStage()
     }
 }
@@ -379,9 +384,12 @@ CheckLobby() {
     isTimeForChallenge := TimeForChallenge()
     AddToLog("[Info] Returned to lobby, " (isTimeForChallenge ? "starting challenge" : "restarting selected mode"))
     firstStartup := true
-    if (AutoChallenge.Value && !isTimeForChallenge) {
-        if (ChallengeTeamSwap.Value && isInChallenge()) {
+    if (AutoChallenge.Value && !isTimeForChallenge && isInChallenge) {
+        if (ChallengeTeamSwap.Value) {
             SwapTeam(false)
+        }
+        if (ModeConfigurations.Value) {
+            LoadUnitSettingsByMode(ModeDropdown.Text)
         }
     }
     ResetInfinityCastleMap()

@@ -6,8 +6,11 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.6.9"
+global version := "v1.7.1"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
+; Update Checker
+global repoOwner := "itsRynsRoblox"
+global repoName := "anime-crusaders-multi-use"
 ;Coordinate and Positioning Variables
 global targetWidth := 816
 global targetHeight := 638
@@ -186,7 +189,7 @@ loop 7 {
         text := "➤ Original Creator: Ryn (@TheRealTension)"
         color := uiColors["ProcessHighlight"]
     }
-    process := MainUI.Add("Text", Format("x810 y{} w538 h18 +BackgroundTrans c{}", baseY + yOffset, color), text)
+    process := MainUI.Add("Text", Format("x810 y{} w600 h18 +BackgroundTrans c{}", baseY + yOffset, color), text)
     processList.Push(process)
 }
 
@@ -334,12 +337,8 @@ global ZoomInOption := MainUI.Add("Checkbox", "x1018 y290 Hidden Checked c" uiTh
 global ZoomTeleport := MainUI.Add("Checkbox", "x1018 y320 Hidden Checked c" uiTheme[1], "Teleport to spawn")
 ZoomBox.OnEvent("Change", (*) => ValidateEditBox(ZoomBox))
 
-global MiscSettingsBorder := MainUI.Add("GroupBox", "x1163 y205 w195 h176 +Center Hidden c" uiTheme[1], "Import/Export")
-global UnitConfigText := MainUI.Add("Text", "x1200 y230 w120 h20 Hidden cffffff", "Unit Configuration")
-global UnitImportButton := MainUI.Add("Button", "x1180 y258 w80 h20 Hidden", "Import")
-UnitImportButton.OnEvent("Click", (*) => ImportSettingsFromFile())
-global UnitExportButton := MainUI.Add("Button", "x1265 y258 w80 h20 Hidden", "Export")
-UnitExportButton.OnEvent("Click", (*) => ExportUnitConfig())
+global MiscSettingsBorder := MainUI.Add("GroupBox", "x1163 y205 w195 h176 +Center Hidden c" uiTheme[1], "Update Settings")
+global UpdateChecker := MainUI.Add("Checkbox", "x1175 y230 Hidden cffffff", "Enable update checker")
 
 global ModeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Mode Configuration")
 global ModeConfigurations := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Enable Per-Mode Unit Settings")
@@ -452,7 +451,7 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Infinity Castle", "Legend Stage", "Portal", "Raid", "Event", "Custom"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Infinity Castle", "Legend Stage", "Portal", "Raid", "Event", "Challenge", "Custom"])
 global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden Choose1", ["Halloween", "Spirit Invasion"])
 global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
@@ -862,7 +861,7 @@ InitControlGroups() {
         PrivateSettingsBorder, PrivateServerEnabled, PrivateServerURLBox, PrivateServerTestButton, PrivateServerGuideButton, MatchmakingFailsafe, MatchmakingFailsafeTimer, MatchmakingFailsafeTimerText,
         KeybindBorder, F1Text, F1Box, F2Text, F2Box, F3Text, F3Box, F4Text, F4Box, keybindSaveBtn,
         ZoomSettingsBorder, ZoomText, ZoomBox, ZoomTech, ZoomInOption,
-        MiscSettingsBorder, UnitConfigText, UnitImportButton, UnitExportButton
+        MiscSettingsBorder, UpdateChecker
     ]
 
     ControlGroups["Upgrade"] := [
@@ -929,7 +928,7 @@ ToggleControlGroup(groupName) {
     if (groupName = "Mode") {
         ActiveControlGroup := "Mode"
     }
-    if (groupName = "Settings") {
+    else if (groupName = "Settings") {
         if (ActiveControlGroup = "Settings") {
             groupName := "Unit"
             ActiveControlGroup := "Unit"
@@ -937,8 +936,10 @@ ToggleControlGroup(groupName) {
             ActiveControlGroup := "Settings"
         }
     }
-    if (ShowOnlyControlGroup((groupName = "Mode" ? ModeDropdown.Text : groupName))) {
-       ; AddToLog("Displaying: " (groupName = "Settings" ? "Settings UI" : groupName " Settings UI"))
+    else {
+        ActiveControlGroup := groupName
+    }
+    if (ShowOnlyControlGroup((groupName = "Mode" ? ModeDropdown.Text = "" ? groupName : ModeDropdown.Text : groupName))) {
         SetUnitCardVisibility((groupName = "Unit") ? true : false)
     }
 }

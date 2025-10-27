@@ -47,6 +47,9 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Functions/AutoAbilityManager.ahk
 #Include %A_ScriptDir%/lib/Functions/CustomPlacements.ahk
 
+; === Update Checker ===
+#Include %A_ScriptDir%/lib/Functions/UpdateChecker.ahk
+
 ; === Webhook Integration ===
 #Include %A_ScriptDir%/lib/WebhookSettings.ahk
 

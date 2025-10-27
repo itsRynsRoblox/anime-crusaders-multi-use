@@ -6,6 +6,10 @@ StartChallenge(maxAttempts := 5) {
     global challengeMap
     attempts := 0
 
+    if (ModeConfigurations.Value) {
+        LoadUnitSettingsByMode("Challenge")
+    }
+
     if (ChallengeTeamSwap.Value) {
         SwapTeam(true)
     }
@@ -20,6 +24,9 @@ StartChallenge(maxAttempts := 5) {
         SetChallengeCooldown()
         if (ChallengeTeamSwap.Value) {
             SwapTeam(false)
+        }
+        if (ModeConfigurations.Value) {
+            LoadUnitSettingsByMode(ModeDropdown.Text)
         }
         return StartSelectedMode()
     }
@@ -54,7 +61,8 @@ GetTeam(map) {
 }
 
 SwapTeam(forChallenge := true) {
-
+    CloseLeaderboard()
+    Sleep(500)
     SendInput("K") ; open units
     Sleep(750)
     FixClick(610, 245) ; open team menu

@@ -90,12 +90,6 @@ SaveSettingsForMode(*) {
         content .= "`nUnit Manager Upgrade System=" UnitManagerUpgradeSystem.Value
         content .= "`nPriority Upgrade=" PriorityUpgrade.Value
 
-        content .= "`n`n[Auto Challenge Settings]"
-        content .= "`nAuto Challenge=" AutoChallenge.Value
-        content .= "`nChallenge Team Swap=" ChallengeTeamSwap.Value
-        content .= "`nDefault Team=" NormalTeam.Value
-        content .= "`nChallenge Team=" ChallengeTeam.Value
-
         content .= "`n`n[Portal Settings]"
         content .= "`nFarm More Portals=" FarmMorePortals.Value
 
@@ -128,12 +122,15 @@ SaveSettingsForMode(*) {
     }
 }
 
-LoadUnitSettingsByMode() {
+LoadUnitSettingsByMode(mode := "") {
     global UnitConfigMap, nukeCoords
 
     InitSettings()
 
-    local mode := ModeDropdown.Text
+    ; If no mode was passed, use dropdown or default
+    if (mode = "")
+        mode := ModeDropdown.Text
+
     if !mode
         mode := "Default"
 
@@ -152,7 +149,7 @@ LoadUnitSettingsByMode() {
 
     for line in lines {
         line := Trim(line)
-        if line = "" || InStr(line, "[")
+        if (line = "" || InStr(line, "["))
             continue
 
         parts := StrSplit(line, "=")
@@ -228,6 +225,15 @@ LoadUniversalSettings() {
             case "Place Until Successful": PlaceUntilSuccessful.Value := value
             case "Story Difficulty": StoryDifficulty.Value := value
             case "Matchmaking Enabled": Matchmaking.Value := value
+
+            ; Auto Challenge
+            case "Auto Challenge": AutoChallenge.Value := value
+            case "Challenge Team Swap": ChallengeTeamSwap.Value := value
+            case "Default Team": NormalTeam.Value := value
+            case "Challenge Team": ChallengeTeam.Value := value
+
+            ; Update
+            case "Check for Updates": UpdateChecker.Value := value
         }
     }
 }
@@ -265,6 +271,15 @@ SaveUniversalSettings() {
         content .= "`nPlacement Order=" PlacementSelection.Value
         content .= "`nPlacement Speed=" PlaceSpeed.Value
         content .= "`nPlace Until Successful=" PlaceUntilSuccessful.Value
+
+        content .= "`n`n[Auto Challenge Settings]"
+        content .= "`nAuto Challenge=" AutoChallenge.Value
+        content .= "`nChallenge Team Swap=" ChallengeTeamSwap.Value
+        content .= "`nDefault Team=" NormalTeam.Value
+        content .= "`nChallenge Team=" ChallengeTeam.Value
+        
+        content .= "`n`n[Update Settings]"
+        content .= "`nCheck for Updates=" UpdateChecker.Value
 
         FileAppend(content, universalFile)
     }
@@ -432,11 +447,6 @@ InitSettings() {
     ; Other controls
     UnitConfigMap["AutoAbility"] := { control: AutoAbilityBox, prop: "Value" }
     UnitConfigMap["AutoAbilityTimer"] := { control: AutoAbilityTimer, prop: "Text" }
-
-    UnitConfigMap["Auto Challenge"] := { control: AutoChallenge, prop: "Value" }
-    UnitConfigMap["Challenge Team Swap"] := { control: ChallengeTeamSwap, prop: "Value" }
-    UnitConfigMap["Default Team"] := { control: NormalTeam, prop: "Value" }
-    UnitConfigMap["Challenge Team"] := { control: ChallengeTeam, prop: "Value" }
 
     ; Zoom Tech Settings
     UnitConfigMap["ZoomLevel"] := { control: ZoomBox, prop: "Text" }
