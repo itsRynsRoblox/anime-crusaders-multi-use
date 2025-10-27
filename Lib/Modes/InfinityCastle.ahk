@@ -95,12 +95,16 @@ DetectInfinityCastleMap() {
     startTime := A_TickCount
 
     loop {
+
+        if (isInGame()) {
+            AddToLog("Loaded in before map detected, attempting failsafe...")
+            return DetectMapForInfinityCastle()
+        }
+
         if (A_TickCount - startTime > 300000) {
-            if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
-                AddToLog("Loaded in before map detected, attempting failsafe...")
-                return DetectMapForInfinityCastle()
-            }
-            return "no map found"
+            AddToLog("Could not detect map after 5 minutes, reconnecting...")
+            Reconnect(true)
+            return
         }
 
         loadingScreens := Map(
@@ -129,5 +133,22 @@ DetectInfinityCastleMap() {
 
         Sleep 250
         Reconnect()
+    }
+}
+
+HandleInfinityCastleEnd(isVictory := true) {
+    if (TimeForChallenge()) {
+        AddToLog("[Info] Game over, starting challenge")
+        return ClickReturnToLobby()
+    }
+
+    if (isVictory) {
+        AddToLog("[Info] Game over, going to next room")
+        ClickNextRoom()
+        return RestartStage()
+    } else {
+        AddToLog("[Info] Game over, restarting stage")
+        ClickReplay()
+        return RestartStage()
     }
 }

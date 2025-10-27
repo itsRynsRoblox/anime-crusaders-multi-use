@@ -24,17 +24,37 @@ CheckForUpdates() {
     latestVersion := file["tag_name"]
     assets := file["assets"]
 
+    ; --- Read release title and description (changelog) ---
+    releaseTitle := file.Has("name") ? file["name"] : latestVersion
+    if file.Has("body") && file["body"] != ""
+        releaseNotes := file["body"]
+    else
+        releaseNotes := "(No changelog or description provided for this release.)"
+
+    ; Clean up for readability
+    releaseNotes := StrReplace(releaseNotes, "`r", "")
+    releaseNotes := StrReplace(releaseNotes, "`n`n", "`n")
+
     ; --- Compare versions ---
     comparison := VerCompare(version, latestVersion)
 
     if (comparison < 0) {
         MainUI.Opt("-AlwaysOnTop")
-        ; --- Prompt the user for update ---
-        MsgBoxResult := MsgBox(
-            "There is a new update available!`nCurrent: " version " → Latest: v" latestVersion "`n`nDo you want to download and install it now?`n`nNote: This will create a backup of your settings folder",
-            "New Update Available",
-            "YesNo"
-        )
+
+        ; Truncate long changelog for readability
+        if StrLen(releaseNotes) > 1200
+            releaseNotes := SubStr(releaseNotes, 1, 1200) "`n... (truncated)"
+
+        ; --- Prompt user for update ---
+        msg :=
+            (
+                "Current: " version " → Latest: v" latestVersion
+                "`n`n" releaseNotes
+                "`n`nDo you want to download and install it now?"
+                "`n`nNote: Your Settings folder will be backed up and preserved."
+            )
+
+        MsgBoxResult := MsgBox(msg, "New Update Available", "YesNo")
 
         if (MsgBoxResult = "Yes") {
             AddToLog("⬇️ Accepted update, starting download...")
@@ -56,7 +76,6 @@ CheckForUpdates() {
             try {
                 psCmd := Format('powershell -NoProfile -Command "Expand-Archive -Force ' '{}' ' ' '{}' '"', fileName, extractDir)
                 RunWait(psCmd, , "Hide")
-                AddToLog("📦 Extracted update to: " extractDir)
             } catch Error {
                 AddToLog("❌ Failed to extract ZIP")
                 MainUI.Opt("+AlwaysOnTop")
@@ -73,10 +92,29 @@ CheckForUpdates() {
             }
 
             ; --- Install update ---
-            DirCopy(extractDir, A_ScriptDir, true)
+            loop files, extractDir "\*", "D"  ; Directories
+            {
+                dest := A_ScriptDir "\" A_LoopFileName
+                if (A_LoopFileName = "Settings") {
+                    ; Copy files inside Settings only if they don't exist
+                    loop files, A_LoopFileFullPath "\*", "F" {
+                        destFile := settingsDir "\" A_LoopFileName
+                        if !FileExist(destFile)
+                            FileCopy(A_LoopFileFullPath, destFile)
+                    }
+                    continue
+                }
+                DirCopy(A_LoopFileFullPath, dest, true)
+            }
+
+            ; Copy top-level files
+            loop files, extractDir "\*", "F" {
+                destFile := A_ScriptDir "\" A_LoopFileName
+                FileCopy(A_LoopFileFullPath, destFile, true)  ; overwrite top-level files
+            }
+
             AddToLog("✅ Update installed successfully, restarting...")
             Sleep(2000)
-            ; --- Restart the script ---
             Run(A_ScriptFullPath)
             ExitApp
         } else {

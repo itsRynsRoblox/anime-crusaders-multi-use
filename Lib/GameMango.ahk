@@ -11,7 +11,7 @@ Hotkey(F3Key, (*) => Reload())
 Hotkey(F4Key, (*) => TogglePause())
 
 F5:: {
-    ClickNextRoom(true)
+
 }
 
 F6:: {
@@ -72,6 +72,8 @@ HandleEndScreen(isVictory := true) {
     Switch ModeDropdown.Text {
         case "Event":
             HandleEventEnd()
+        case "Infinity Castle":
+            HandleInfinityCastleEnd(isVictory)    
         case "Portal":
             HandlePortalEnd(isVictory)    
         Default:
@@ -89,16 +91,8 @@ HandleDefaultEnd() {
             return RestartStage()
         }
     } else {
-        if (lastResult = "win") {
-            AddToLog("[Info] Game over, " (ModeDropdown.Text = "Infinity Castle" ? "starting next room" : " replaying stage"))
-        } else {
-            AddToLog("[Info] Game over, " (ModeDropdown.Text = "Infinity Castle" ? "retrying room" : " replaying stage"))
-        }
-        if (ModeDropdown.Text = "Infinity Castle") {
-            ClickNextRoom()
-        } else {
-            ClickReplay()
-        }
+        AddToLog("[Info] Game over, replaying stage")
+        ClickReplay()
         return RestartStage()
     }
 }

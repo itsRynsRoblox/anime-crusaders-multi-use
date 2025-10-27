@@ -27,7 +27,7 @@ Placement Speed=2
 Place Until Successful=1
 
 [Auto Challenge Settings]
-Auto Challenge=1
+Auto Challenge=0
 Challenge Team Swap=0
 Default Team=1
 Challenge Team=1
