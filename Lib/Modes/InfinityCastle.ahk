@@ -49,6 +49,7 @@ DetectMapForInfinityCastle() {
     AddToLog("Identifying map for Infinity Castle...")
     loop {
         if (isInGame()) {
+            CloseLeaderboard(false)
             OpenMenu("Stage Info")
             break
         }
