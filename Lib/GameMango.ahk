@@ -19,7 +19,7 @@ F6:: {
 }
 
 F7:: {
-    CopyMouseCoords(true)
+    CopyMouseCoords(false)
 }
 
 F8:: {

@@ -45,14 +45,24 @@ DetectMapForInfinityCastle() {
     if (ModeDropdown.Text != "Infinity Castle" or isInChallenge()) {
         return
     }
+
     AddToLog("Identifying map for Infinity Castle...")
-    OpenMenu("Stage Info")
+    loop {
+        if (isInGame()) {
+            OpenMenu("Stage Info")
+            break
+        }
+        Sleep 250
+    }
+
     startTime := A_TickCount
     maxWait := 5000
+
     loop {
         ; Check if we waited more than maxWait for votestart
         if (A_TickCount - startTime > maxWait) {
             AddToLog("Could not detect map after 5 seconds.")
+            CloseMenu("Stage Info")
             return "no map found"
         }
 
@@ -61,7 +71,10 @@ DetectMapForInfinityCastle() {
             "Marine's Ford", MarinesFordInfinityCastle,
             "Karakura Town", KarakuraTownInfinityCastle,
             "Shibuya", ShibuyaInfinityCastle,
-            "Demon District", DemonDistrictInfinityCastle
+            "Demon District", DemonDistrictInfinityCastle,
+            ;"Nightmare Train: Act 1", NightmareTrainAct1InfinityCastle,
+            "Nightmare Train: Act 2", NightmareTrainAct2InfinityCastle,
+            "Nightmare Train: Act 3", NightmareTrainAct3InfinityCastle
         )
 
         for mapName, pattern in mapPatterns {
@@ -72,6 +85,7 @@ DetectMapForInfinityCastle() {
                 return mapName
             }
         }
+
         Sleep 250
         Reconnect()
     }
@@ -95,7 +109,6 @@ DetectInfinityCastleMap() {
     startTime := A_TickCount
 
     loop {
-
         if (isInGame()) {
             AddToLog("Loaded in before map detected, attempting failsafe...")
             return DetectMapForInfinityCastle()
@@ -112,15 +125,28 @@ DetectInfinityCastleMap() {
             "Marine's Ford", [MarinesFordLoadingScreen],
             "Karakura Town", [KarakuraTownLoadingScreen],
             "Shibuya", [ShibuyaLoadingScreen],
-            "Demon District", [DemonDistrictLoadingScreen]
+            "Shibuya (Destroyed)", [ShibuyaDestroyedLoadingScreen],
+            "Demon District", [DemonDistrictLoadingScreen],
+            "Nightmare Train: Act 1", [NightmareTrainAct1LoadingScreen],
+            "Nightmare Train: Act 2", [NightmareTrainAct2LoadingScreen],
+            "Nightmare Train: Act 3", [NightmareTrainAct3LoadingScreen]
         )
 
         for mapName, patterns in loadingScreens {
             try {
-                for pattern in patterns {  ; Iterate through multiple images for each map
+                for pattern in patterns {
                     if (ok := ImageSearch(&X, &Y, 0, 0, A_ScreenWidth, A_ScreenHeight, "*10 " pattern)) {
+
+                        ; If it's Nightmare Train Act 2 or 3, rerun the other detection method
+                        if (mapName = "Nightmare Train: Act 2" or mapName = "Nightmare Train: Act 3") {
+                            AddToLog("Nightmare Train Act 2 or 3 detected, running secondary detection...")
+                            return DetectMapForInfinityCastle()
+                        }
+
                         AddToLog("Detected Map: " mapName)
+
                         castleMap := mapName
+
                         return mapName
                     }
                 }
@@ -147,8 +173,7 @@ HandleInfinityCastleEnd(isVictory := true) {
         ClickNextRoom()
         return RestartStage()
     } else {
-        AddToLog("[Info] Game over, restarting stage")
-        ClickReplay()
-        return RestartStage()
+        AddToLog("[Info] Game over, returning to lobby")
+        return ClickReturnToLobby()
     }
 }

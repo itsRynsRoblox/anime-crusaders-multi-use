@@ -598,6 +598,8 @@ TeleportToSpawn() {
 }
 
 DoesntHaveSeamless(ModeName) {
+    if (IsInChallenge())
+        return true
 
     static modesWithoutSeamless := ["Gates", "Infinity Castle"]
 
