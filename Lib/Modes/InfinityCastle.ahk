@@ -73,8 +73,8 @@ DetectMapForInfinityCastle() {
             "Shibuya", ShibuyaInfinityCastle,
             "Demon District", DemonDistrictInfinityCastle,
             ;"Nightmare Train: Act 1", NightmareTrainAct1InfinityCastle,
-            "Nightmare Train: Act 2", NightmareTrainAct2InfinityCastle,
-            "Nightmare Train: Act 3", NightmareTrainAct3InfinityCastle
+            "Nightmare Train - Act 2", NightmareTrainAct2InfinityCastle,
+            "Nightmare Train - Act 3", NightmareTrainAct3InfinityCastle
         )
 
         for mapName, pattern in mapPatterns {
@@ -127,18 +127,18 @@ DetectInfinityCastleMap() {
             "Shibuya", [ShibuyaLoadingScreen],
             "Shibuya (Destroyed)", [ShibuyaDestroyedLoadingScreen],
             "Demon District", [DemonDistrictLoadingScreen],
-            "Nightmare Train: Act 1", [NightmareTrainAct1LoadingScreen],
-            "Nightmare Train: Act 2", [NightmareTrainAct2LoadingScreen],
-            "Nightmare Train: Act 3", [NightmareTrainAct3LoadingScreen]
+            "Nightmare Train - Act 1", [NightmareTrainAct1LoadingScreen],
+            "Nightmare Train - Act 2", [NightmareTrainAct2LoadingScreen],
+            "Nightmare Train - Act 3", [NightmareTrainAct3LoadingScreen]
         )
 
         for mapName, patterns in loadingScreens {
             try {
                 for pattern in patterns {
-                    if (ok := ImageSearch(&X, &Y, 0, 0, A_ScreenWidth, A_ScreenHeight, "*10 " pattern)) {
+                    if (ok := ImageSearch(&X, &Y, 0, 31, 799, 624, "*15 " pattern)) {
 
                         ; If it's Nightmare Train Act 2 or 3, rerun the other detection method
-                        if (mapName = "Nightmare Train: Act 2" or mapName = "Nightmare Train: Act 3") {
+                        if (mapName = "Nightmare Train - Act 2" or mapName = "Nightmare Train - Act 3") {
                             AddToLog("Nightmare Train Act 2 or 3 detected, running secondary detection...")
                             return DetectMapForInfinityCastle()
                         }
@@ -157,7 +157,7 @@ DetectInfinityCastleMap() {
             }
         }
 
-        Sleep 250
+        Sleep 50
         Reconnect()
     }
 }

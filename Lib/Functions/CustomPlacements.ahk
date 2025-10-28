@@ -145,18 +145,30 @@ GetPlacementsForMode(mode) {
 
     switch mode {
         case "Story":
+        {    
             return StoryDropdown.Text
+        }
         case "Legend Stage":
+        {
+            if (LegendDropDown.Text = "Nightmare Train") {
+                return LegendDropDown.Text " - " LegendActDropdown.Text
+            }
             return LegendDropDown.Text
+        }
+
         case "Raid":
             return RaidDropdown.Text
+
         case "Portal":
             return PortalDropdown.Text
+
         case "Event":
             return EventDropdown.Text
+
         case "Custom":
-            return CustomPlacementMapDropdown.Text    
+            return CustomPlacementMapDropdown.Text
     }
+
     return CustomPlacementMapDropdown.Text
 }
 

@@ -601,7 +601,7 @@ DoesntHaveSeamless(ModeName) {
     if (IsInChallenge())
         return true
 
-    static modesWithoutSeamless := ["Gates", "Infinity Castle"]
+    static modesWithoutSeamless := ["Gates", "Infinity Castle", "Portal"]
 
     for mode in modesWithoutSeamless {
         if (mode = ModeName)

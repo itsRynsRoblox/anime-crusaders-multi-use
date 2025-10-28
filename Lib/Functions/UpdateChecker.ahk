@@ -85,37 +85,47 @@ CheckForUpdates() {
                 backupDir := A_ScriptDir "\Settings_Backup_" version
                 DirCreate(backupDir)
                 DirCopy(settingsDir, backupDir, true)
-                AddToLog("💾 Backed up settings to " backupDir)
+                AddToLog("💾 Backed up settings...")
             }
 
-            ; --- Copy all update files except overwrite Settings ---
-            loop files, extractDir "\*", "D"  ; Directories
-            {
-                if (A_LoopFileName = "Settings") {
-                    ; Copy each file inside Settings only if it doesn't already exist
-                    loop files, A_LoopFileFullPath "\*", "F" {
-                        relPath := StrReplace(A_LoopFileFullPath, extractDir "\Settings\", "")
-                        destFile := settingsDir "\" relPath
-                        if !FileExist(destFile)
-                            FileCopy(A_LoopFileFullPath, destFile)
-                    }
+            ; --- Delete old files but preserve key folders ---
+            loop files, A_ScriptDir "\*.*", "R" {
+                file := A_LoopFileFullPath
+
+                if InStr(file, "\Settings\")
                     continue
-                }
+                if InStr(file, "\Settings_Backup_")
+                    continue
+                if (file = A_ScriptFullPath)
+                    continue
+                if InStr(file, extractDir)
+                    continue
 
-                dest := A_ScriptDir "\" A_LoopFileName
-                DirCopy(A_LoopFileFullPath, dest, true)
+                FileDelete(file)
             }
 
-            ; Copy top-level files
-            loop files, extractDir "\*", "F" {
-                ; Skip any files that would go into Settings
-                if !InStr(A_LoopFileFullPath, extractDir "\Settings\")
-                    FileCopy(A_LoopFileFullPath, A_ScriptDir "\" A_LoopFileName, true)
+            ; --- Remove empty folders safely ---
+            loop files, A_ScriptDir "\*", "DR" {
+                dir := A_LoopFileFullPath
+
+                if InStr(dir, "\Settings") || InStr(dir, "\Settings_Backup_") || InStr(dir, extractDir)
+                    continue
+
+                try DirDelete(dir, false)  ; delete only if empty, skip errors
+                catch
+                    continue
             }
 
-            ; --- Clean up temp extraction folder ---
-            DirDelete(extractDir, true)
-            AddToLog("✅ Update installed successfully")
+            ; --- Copy new update contents ---
+            DirCopy(extractDir, A_ScriptDir, true)
+            AddToLog("✅ Update files copied successfully")
+
+            ; --- Clean up temporary extraction folder ---
+            try {
+                DirDelete(extractDir, true)  ; true = recursive delete
+                AddToLog("🧹 Temporary extraction folder removed.")
+            }
+
 
             Sleep(2000)
             Run(A_ScriptFullPath)

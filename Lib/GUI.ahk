@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.7.5"
+global version := "v1.7.8"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"
@@ -399,15 +399,18 @@ global CustomWalkBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hi
 global WalkMapText := MainUI.Add("Text", "x875 y110 Hidden cffffff", "Map:")
 global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose1 +Center Hidden", [
     "Custom",
+    ; Story Maps
     "Planet Namak",
     "Marine's Ford",
     "Karakura Town",
     "Shibuya",
-    "Shibuya (Destroyed)",
     "Demon District",
-    "Nightmare Train: Act 1",
-    "Nightmare Train: Act 2",
-    "Nightmare Train: Act 3",
+    ; Legend Stages
+    "Shibuya (Destroyed)",
+    "Nightmare Train - Act 1",
+    "Nightmare Train - Act 2",
+    "Nightmare Train - Act 3",
+    ; Events
     "Halloween",
     "Spirit Invasion"
 ])
@@ -435,9 +438,9 @@ global CustomPlacementMapDropdown := MainUI.Add("DropDownList", "x310 y653 w180 
     "Shibuya",
     "Shibuya (Destroyed)", 
     "Demon District",
-    "Nightmare Train: Act 1",
-    "Nightmare Train: Act 2",
-    "Nightmare Train: Act 3",
+    "Nightmare Train - Act 1",
+    "Nightmare Train - Act 2",
+    "Nightmare Train - Act 3",
     "Halloween",
     "Spirit Invasion"
 ])

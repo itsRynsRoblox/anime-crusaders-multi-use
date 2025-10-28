@@ -30,7 +30,13 @@ global challengeMap, castleMap
         case "Story":
             return StoryDropdown.Text
         case "Legend Stage":
+        {
+            ; If current legend is "Nightmare Train", use act dropdown automatically
+            if (LegendDropDown.Text = "Nightmare Train") {
+                return LegendDropDown.Text " - " LegendActDropdown.Text
+            }
             return LegendDropDown.Text
+        }
         case "Raid":
             return RaidDropdown.Text
         case "Portal":
