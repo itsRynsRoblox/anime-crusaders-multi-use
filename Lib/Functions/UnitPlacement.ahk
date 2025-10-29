@@ -291,6 +291,8 @@ PostPlacementChecks() {
         CheckForCardSelection()
     }
 
+    CloseUnitPassives()
+
     Reconnect()
 }
 
@@ -299,4 +301,10 @@ GetPlacementSpeed() {
         return 1
     }
     return PlaceSpeed.Value
+}
+
+CloseUnitPassives() {
+    if (isMenuOpen("Unit Passives")) {
+        FixClick(576, 179)
+    }
 }

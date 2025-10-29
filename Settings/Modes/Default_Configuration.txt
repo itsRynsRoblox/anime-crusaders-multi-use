@@ -2,9 +2,9 @@
 Enabled1=1
 Enabled2=1
 Enabled3=1
-Enabled4=0
-Enabled5=0
-Enabled6=0
+Enabled4=1
+Enabled5=1
+Enabled6=1
 Placement1=1
 Placement2=1
 Placement3=1

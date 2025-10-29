@@ -194,6 +194,8 @@ WaitForUpgradeText(timeout := 4500) {
             return true
         }
 
+        CloseUnitPassives()
+
         ; Card selection check
         if (isMenuOpen("Card Selection")) {
             SelectCardsByMode()

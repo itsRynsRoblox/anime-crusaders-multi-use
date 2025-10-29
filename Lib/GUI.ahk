@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.7.9"
+global version := "v1.7.10"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"

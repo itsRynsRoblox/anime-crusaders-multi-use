@@ -78,13 +78,13 @@ LoadCustomPlacements() {
     filePath := A_ScriptDir "\Settings\CustomPlacements.txt"
 
     if !FileExist(filePath) {
-        AddToLog("❌ Save file not found: " filePath)
+        AddToLog("❌ Save file not found")
         return
     }
 
     file := FileOpen(filePath, "r")
     if !IsObject(file) {
-        AddToLog("❌ Failed to open file: " filePath)
+        AddToLog("❌ Failed to open file")
         return
     }
 
@@ -196,7 +196,7 @@ ExportCustomCoords(mapName) {
     }
 
     file.Close()
-    AddToLog("📤 Exported " savedCoords[mapName].Length " coords to → Settings\Export")
+    AddToLog("📤 Exported " savedCoords[mapName].Length " coords to → Settings\Export\" mapName " Coords.txt")
 }
 
 ImportCustomCoords() {
@@ -210,7 +210,7 @@ ImportCustomCoords() {
     MainUI.Opt("-AlwaysOnTop")
     Sleep(100)
 
-    file := FileSelect(3, , "Select a file to import", "Text Documents (*.txt)")
+    file := FileSelect(3, , "Select a file to import custom placements", "Text Documents (*.txt)")
     MainUI.Opt("+AlwaysOnTop")
 
     if !file

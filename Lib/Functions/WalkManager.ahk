@@ -213,14 +213,14 @@ ExportMovements(mapName := "") {
     ; Default: export all maps
     if (mapName = "") {
         filePath := exportDir "\Exported Movements - All.txt"
-        AddToLog("Exporting all maps to " filePath)
+        AddToLog("Exporting all maps to Settings\Export\Exported Movements - All.txt")
         entries := allWalks
     } else if !allWalks.Has(mapName) {
         AddToLog("No recording found for map: " mapName)
         return
     } else {
         filePath := exportDir "\Exported Movements - " mapName ".txt"
-        AddToLog("Exporting map '" mapName "' to " filePath)
+        AddToLog("Exporting map '" mapName "' to Settings\Export\Exported Movements - " mapName ".txt")
         entries := Map()
         entries[mapName] := allWalks[mapName]
     }
@@ -251,7 +251,7 @@ ImportMovements(*) {
     Sleep(100)
 
     ; Prompt user to select file
-    filePath := FileSelect("Select a movement file to import", "", A_ScriptDir "\Settings", "Text Files (*.txt)")
+    filePath := FileSelect("Select a file to import custom movements", "", A_ScriptDir "\Settings", "Text Files (*.txt)")
 
     MainUI.Opt("+AlwaysOnTop")
 

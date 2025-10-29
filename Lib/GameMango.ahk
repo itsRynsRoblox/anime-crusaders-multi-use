@@ -125,6 +125,8 @@ MonitorStage() {
         ; --- Fallback if disconnected ---
         Reconnect()
 
+        CloseUnitPassives()
+
         ; --- Wait for XP/Results screen ---
         if (!isMenuOpen("End Screen"))
             continue
@@ -527,5 +529,8 @@ isMenuOpen(name := "") {
     }
     else if (name = "Stage Info") {
         return GetPixel(0xFFE700, 659, 76, 2, 2, 5)
+    }
+    else if (name = "Unit Passives") {
+        return GetPixel(0xFFFFFF, 576, 179, 2, 2, 5)
     }
 }
