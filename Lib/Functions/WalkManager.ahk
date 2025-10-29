@@ -314,3 +314,65 @@ ClearMovement(*) {
     allWalks.Delete(mapName)
     SaveAllMovements()
 }
+
+isCorrectAngle(Map) {
+    switch Map {
+        case "Nightmare Train - Act 2":
+            return GetPixel(0x0054B2, 108, 372, 2, 2, 10)
+        case "Halloween":
+            return !GetPixel(0x2D0109, 47, 121, 2, 2, 10)
+        default:
+            return true
+    }
+}
+
+RotateCameraAngle() {
+    loop 2 {
+        SendInput ("{Left up}")
+        Sleep 200
+        SendInput ("{Left down}")
+        Sleep 750
+        SendInput ("{Left up}")
+        KeyWait "Left" ; Wait for key to be fully processed
+    }
+}
+
+AdjustCameraToCorrectAngle(mapName, loopUntilCorrect := false) {
+    maxAttempts := 5
+
+    if !MapNeedsRotation(mapName)
+        return true
+
+    loop {
+        if (isCorrectAngle(mapName)) {
+            if (A_Index - 1 > 1) {
+                AddToLog("✅ Correct angle found for " mapName " after " A_Index - 1 " rotation(s).")
+            }
+            return true
+        } else {
+            AddToLog("Adjusting camera for correct angle on " mapName "...")
+        }
+
+        RotateCameraAngle()
+        Zoom()
+        Sleep 1000
+
+        if (!loopUntilCorrect || A_Index - 1 >= maxAttempts) {
+            break
+        }
+    }
+
+    AddToLog("❌ Failed to find correct angle for " mapName " after " maxAttempts " attempts.")
+    return false
+}
+
+MapNeedsRotation(mapName) {
+    switch mapName {
+        case "Nightmare Train - Act 2":
+            return true
+        case "Halloween":
+            return true 
+        default:
+            return false
+    }
+}

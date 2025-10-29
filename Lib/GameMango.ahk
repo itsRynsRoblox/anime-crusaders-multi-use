@@ -19,7 +19,7 @@ F6:: {
 }
 
 F7:: {
-    CopyMouseCoords(false)
+    CopyMouseCoords(true)
 }
 
 F8:: {
@@ -223,7 +223,8 @@ BasicSetup(usedButton := false) {
         Zoom()
     }
 
-    FixHalloweenAngle()
+    AdjustCameraToCorrectAngle(GetMapForMode(ModeDropdown.Text))
+    ;FixHalloweenAngle()
     Sleep(300)
 
     CloseLeaderboard(false)

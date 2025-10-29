@@ -105,10 +105,10 @@ SelectCards(eventName) {
     baseY := 250
     scale := 1.0
 
-    cardSlots := [{ clickOffsetX: 105, clickOffsetY: 95, ocrOffsetX1: 31, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30,
-        tierOffsetX: 0, tierOffsetY: 45 }, { clickOffsetX: 305, clickOffsetY: 95, ocrOffsetX1: 240, ocrOffsetY1: 10,
-            ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }, { clickOffsetX: 505, clickOffsetY: 95,
-                ocrOffsetX1: 450, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }
+    cardSlots := [
+        { clickOffsetX: 105, clickOffsetY: 95, ocrOffsetX1: 31, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 },
+        { clickOffsetX: 305, clickOffsetY: 95, ocrOffsetX1: 240, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 },
+        { clickOffsetX: 505, clickOffsetY: 95, ocrOffsetX1: 450, ocrOffsetY1: 10, ocrWidth: 130, ocrHeight: 30, tierOffsetX: 0, tierOffsetY: 45 }
     ]
 
     for index, slot in cardSlots {

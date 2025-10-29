@@ -108,12 +108,10 @@ OnConfirmClick(*) {
         case "Story":
             if (StoryDropdown.Text = "" || StoryActDropdown.Text = "")
                 return AddToLog("Please select both Story and Act before confirming")
-            AddToLog("Selected " StoryDropdown.Text)
 
         case "Legend Stage":
             if (LegendDropDown.Text = "" or LegendActDropdown.Text = "")
                 return AddToLog("Please select both Legend Stage and Act before confirming")
-            AddToLog("Selected " LegendDropDown.Text)
 
         case "Custom":
             AddToLog("Selected Custom")
@@ -121,7 +119,6 @@ OnConfirmClick(*) {
         case "Raid":
             if (RaidDropdown.Text = "")
                 return AddToLog("Please select both Raid and Act before confirming")
-            AddToLog("Selected " RaidDropdown.Text)
 
         case "Event":
             if (EventDropdown.Text = "" || EventRoleDropdown.Text = "")
@@ -330,12 +327,6 @@ Scroll(times, direction, delay) {
         Send("{" direction "}")
         Sleep(delay)
     }
-}
-
-RotateCameraAngle() {
-    Send("{Right down}")
-    Sleep 800
-    Send("{Right up}")
 }
 
 CloseLobbyPopups() {

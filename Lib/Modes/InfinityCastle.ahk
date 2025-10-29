@@ -8,6 +8,11 @@ StartInfinityCastle() {
         WalkToInfinityCastle()
     }
 
+    if (InfiniteCastleModeDropdown.Text = "Traitless") {
+        FixClick(525, 212)
+        Sleep(500)
+    }
+
     FixClick(530, 455) ; Enter Infinity Castle
 
     while (isInLobby()) {
@@ -73,7 +78,7 @@ DetectMapForInfinityCastle() {
             "Karakura Town", KarakuraTownInfinityCastle,
             "Shibuya", ShibuyaInfinityCastle,
             "Demon District", DemonDistrictInfinityCastle,
-            ;"Nightmare Train: Act 1", NightmareTrainAct1InfinityCastle,
+            "Nightmare Train: Act 1", NightmareTrainAct1InfinityCastle,
             "Nightmare Train - Act 2", NightmareTrainAct2InfinityCastle,
             "Nightmare Train - Act 3", NightmareTrainAct3InfinityCastle
         )
@@ -106,6 +111,7 @@ DetectInfinityCastleMap() {
     if (ModeDropdown.Text != "Infinity Castle" or isInChallenge()) {
         return
     }
+
     AddToLog("Trying to determine map for Infinity Castle...")
     startTime := A_TickCount
 
@@ -121,40 +127,41 @@ DetectInfinityCastleMap() {
             return
         }
 
+        ; Each entry: MapName: [Variance, Pattern(s)]
         loadingScreens := Map(
-            "Planet Namak", [PlanetNamakLoadingScreen],
-            "Marine's Ford", [MarinesFordLoadingScreen],
-            "Karakura Town", [KarakuraTownLoadingScreen],
-            "Shibuya", [ShibuyaLoadingScreen],
-            "Shibuya (Destroyed)", [ShibuyaDestroyedLoadingScreen],
-            "Demon District", [DemonDistrictLoadingScreen],
-            "Nightmare Train - Act 1", [NightmareTrainAct1LoadingScreen],
-            "Nightmare Train - Act 2", [NightmareTrainAct2LoadingScreen],
-            "Nightmare Train - Act 3", [NightmareTrainAct3LoadingScreen]
+            "Planet Namak", [15, PlanetNamakLoadingScreen],
+            "Marine's Ford", [15, MarinesFordLoadingScreen],
+            "Karakura Town", [15, KarakuraTownLoadingScreen],
+            "Shibuya", [15, ShibuyaLoadingScreen],
+            "Shibuya (Destroyed)", [15, ShibuyaDestroyedLoadingScreen],
+            "Demon District", [15, DemonDistrictLoadingScreen],
+            "Nightmare Train - Act 1", [5, NightmareTrainAct1LoadingScreen],
+            "Nightmare Train - Act 2", [5, NightmareTrainAct2LoadingScreen],
+            "Nightmare Train - Act 3", [5, NightmareTrainAct3LoadingScreen]
         )
 
-        for mapName, patterns in loadingScreens {
-            try {
-                for pattern in patterns {
-                    if (ok := ImageSearch(&X, &Y, 0, 31, 799, 624, "*15 " pattern)) {
+        for mapName, data in loadingScreens {
+            variance := data[1]
+            patterns := data[2]
 
-                        ; If it's Nightmare Train Act 2 or 3, rerun the other detection method
-                        if (mapName = "Nightmare Train - Act 2" or mapName = "Nightmare Train - Act 3") {
-                            AddToLog("Nightmare Train Act 2 or 3 detected, running secondary detection...")
+            try {
+                ; Allow for multiple patterns if you ever add more for a map
+                for pattern in (IsObject(patterns) ? patterns : [patterns]) {
+                    if (ok := ImageSearch(&X, &Y, 0, 31, 799, 624, "*" variance " " pattern)) {
+
+                        if (mapName ~= "Nightmare Train - Act (2|3)") {
+                            AddToLog(mapName " detected, running secondary detection...")
                             return DetectMapForInfinityCastle()
                         }
 
                         AddToLog("Detected Map: " mapName)
-
                         castleMap := mapName
-
                         return mapName
                     }
                 }
             } catch {
-                if (debugMessages) {
-                    AddToLog("Error occurred during map detection.")
-                }
+                if (debugMessages)
+                    AddToLog("Error occurred during map detection for " mapName ".")
             }
         }
 
@@ -162,6 +169,7 @@ DetectInfinityCastleMap() {
         Reconnect()
     }
 }
+
 
 HandleInfinityCastleEnd(isVictory := true) {
     if (TimeForChallenge()) {
