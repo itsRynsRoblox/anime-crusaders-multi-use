@@ -6,6 +6,7 @@ StartHalloween(skipLobby := false) {
             WalkToHalloween()
         }
         FixClick(473, 473) ; click play
+        Sleep(500)
         PlayHereOrMatchmake()
     }
     RestartStage()

@@ -90,11 +90,15 @@ HandleDefaultEnd() {
             ClickNextLevel()
             return RestartStage()
         }
-    } else {
-        AddToLog("[Info] Game over, replaying stage")
-        ClickReplay()
-        return RestartStage()
     }
+    else if (Matchmaking.Value && ModesWithMatchmaking(ModeDropdown.Text)) {
+            AddToLog("[Info] Game over, returning to lobby for matchmaking")
+            return ClickReturnToLobby()
+        } else {
+            AddToLog("[Info] Game over, restarting stage")
+            ClickReplay()
+            return RestartStage()
+        }
 }
 
 MonitorStage() {
@@ -521,7 +525,7 @@ isMenuOpen(name := "") {
         return FindText(&X, &Y, 444, 439, 610, 475, 0.20, 0.20, InfinityCastleUI)
     }
     else if (name = "Halloween") {
-        return FindText(&X, &Y, 370, 452, 409, 488, 0.20, 0.20, HalloweenUI)
+        return FindText(&X, &Y, 494, 199, 616, 223, 0.20, 0.20, HalloweenUI)
     }
     else if (name = "Card Selection") {
         return FindText(&X, &Y, 352, 432, 452, 456, 0.20, 0.20, CardSelection) 

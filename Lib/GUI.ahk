@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.7.10"
+global version := "v1.8.0"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"
@@ -326,8 +326,9 @@ keybindSaveBtn := MainUI.Add("Button", "x880 y350 w50 h20 Hidden", "Save")
 keybindSaveBtn.OnEvent("Click", SaveKeybindSettings)
 
 global UpgradeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Upgrade Settings")
-global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Use the Unit Manager to upgrade your units")
-global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y130 cffffff Hidden", "Use Unit Priority while upgrading")
+global EnableUpgrading := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff Checked", "Enable Upgrading")
+global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y130 Hidden cffffff", "Use the Unit Manager to upgrade your units")
+global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y150 cffffff Hidden", "Use Unit Priority while upgrading")
 
 global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Tech Settings")
 global ZoomText := MainUI.Add("Text", "x1018 y230 Hidden c" uiTheme[1], "Zoom Level:")
@@ -410,6 +411,8 @@ global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose
     "Nightmare Train - Act 1",
     "Nightmare Train - Act 2",
     "Nightmare Train - Act 3",
+    "Amusement Park",
+    "Tokyo Empire",
     ; Events
     "Halloween",
     "Spirit Invasion"
@@ -441,6 +444,8 @@ global CustomPlacementMapDropdown := MainUI.Add("DropDownList", "x310 y653 w180 
     "Nightmare Train - Act 1",
     "Nightmare Train - Act 2",
     "Nightmare Train - Act 3",
+    "Amusement Park",
+    "Tokyo Empire",
     "Halloween",
     "Spirit Invasion"
 ])
@@ -467,7 +472,7 @@ global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose
 global InfiniteCastleModeDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose1 +Center Hidden", ["Normal", "Traitless"])
 global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya (Destroyed)", "Nightmare Train"] )
 global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Act 1", "Act 2", "Act 3"])
-global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Amusement Park", "Test"])
+global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Amusement Park", "Tokyo Empire"])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Marine Ford", "Demon District"])
 global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Solo", "Host", "Guest"])
@@ -873,7 +878,7 @@ InitControlGroups() {
     ]
 
     ControlGroups["Upgrade"] := [
-        UpgradeBorder, UnitManagerUpgradeSystem, PriorityUpgrade
+        UpgradeBorder, EnableUpgrading, UnitManagerUpgradeSystem, PriorityUpgrade
     ]
 
     ControlGroups["Mode"] := [

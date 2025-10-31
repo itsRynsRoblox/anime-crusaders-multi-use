@@ -234,23 +234,28 @@ StartPlacingUnits(untilSuccessful := true) {
     }
 
     AddToLog("All units placed to requested amounts")
-    UpgradeUnits()
+    if (EnableUpgrading.Value) {
+        UpgradeUnits()
+    } else {
+        AddToLog("Upgrading is disabled, skipping to monitoring stage")
+        return MonitorStage()
+    }
 }
 
 PlaceUnit(x, y, slot := 1) {
     ; First click to prepare placement
     FixClick(x, y)
-    Sleep 150
+    Sleep 75
 
     ; Check if the unit was successfully placed
-    if (WaitForUpgradeText(500)) {
+    if (WaitForUpgradeText(350)) {
         AddToLog("Unit Placed Successfully")
         return true
     }
 
     ; Select the unit slot
     SendInput(slot)
-    Sleep 300  ; Slightly reduced for responsiveness
+    Sleep 75  ; Slightly reduced for responsiveness
 
     wiggle()
 

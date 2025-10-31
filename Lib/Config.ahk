@@ -87,6 +87,7 @@ SaveSettingsForMode(*) {
         content .= "`nTeleport To Spawn=" ZoomTeleport.Value
 
         content .= "`n`n[Upgrade Settings]"
+        content .= "`nUpgrading Enabled=" EnableUpgrading.Value
         content .= "`nUnit Manager Upgrade System=" UnitManagerUpgradeSystem.Value
         content .= "`nPriority Upgrade=" PriorityUpgrade.Value
 
@@ -454,6 +455,7 @@ InitSettings() {
     UnitConfigMap["Zoom In Then Out"] := { control: ZoomInOption, prop: "Value" }
     UnitConfigMap["Teleport To Spawn"] := { control: ZoomTeleport, prop: "Value" }
 
+    UnitConfigMap["Upgrading Enabled"] := { control: EnableUpgrading, prop: "Value" }
     UnitConfigMap["Unit Manager Upgrade System"] := { control: UnitManagerUpgradeSystem, prop: "Value" }
     UnitConfigMap["Priority Upgrade"] := { control: PriorityUpgrade, prop: "Value" }
     UnitConfigMap["Farm More Portals"] := { control: FarmMorePortals, prop: "Value" }

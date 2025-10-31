@@ -41,7 +41,7 @@ WalkToRaidRoom() {
 GetRaidMap(map) {
 
     RaidMapNames := [
-        "Amusement Park", "Test"
+        "Amusement Park", "Tokyo Empire"
     ]
 
     baseX := 195
@@ -50,9 +50,9 @@ GetRaidMap(map) {
 
     for index, name in RaidMapNames {
         if (map = name) {
-            x := baseX + spacing * (index - 1)
+            y := baseY + spacing * (index - 1)
             scrolls := (index > 4) ? 1 : 0  ; Adjust this threshold as needed
-            return { x: x, y: baseY, scrolls: scrolls }
+            return { x: baseX, y: y, scrolls: scrolls }
         }
     }
 

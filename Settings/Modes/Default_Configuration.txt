@@ -8,8 +8,8 @@ Enabled6=1
 Placement1=1
 Placement2=1
 Placement3=1
-Placement4=1
-Placement5=1
+Placement4=3
+Placement5=3
 Placement6=1
 Priority1=1
 Priority2=2
@@ -49,7 +49,7 @@ AbilityEnabled5=0
 AbilityEnabled6=0
 
 [Auto Ability Settings]
-AutoAbility=0
+AutoAbility=1
 AutoAbilityTimer=60
 
 [Zoom Settings]
@@ -59,6 +59,7 @@ Zoom In Then Out=1
 Teleport To Spawn=1
 
 [Upgrade Settings]
+Upgrading Enabled=1
 Unit Manager Upgrade System=1
 Priority Upgrade=1
 

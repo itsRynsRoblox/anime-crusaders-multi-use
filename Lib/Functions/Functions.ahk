@@ -34,7 +34,7 @@ getCurrentTime() {
 OnModeChange(*) {
     global ActiveControlGroup
     ; Hide all
-    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown, EventRoleDropdown, CustomCardDropdown]
+    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown, EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown]
         ctrl.Visible := false
 
     if (ActiveControlGroup = "Mode") {
@@ -45,6 +45,8 @@ OnModeChange(*) {
     switch ModeDropdown.Text {
         case "Event":
             EventDropdown.Visible := true
+        case "Infinity Castle":
+            InfiniteCastleModeDropdown.Visible := true
         case "Story":
             StoryDropdown.Visible := true
             StoryActDropdown.Visible := true
@@ -140,7 +142,7 @@ OnConfirmClick(*) {
     for ctrl in [
         ModeDropdown, StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown,
         RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown,
-        EventRoleDropdown, CustomCardDropdown, ConfirmButton, modeSelectionGroup
+        EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown, ConfirmButton, modeSelectionGroup
     ]
         ctrl.Visible := false
 

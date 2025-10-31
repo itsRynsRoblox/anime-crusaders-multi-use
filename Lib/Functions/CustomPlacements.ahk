@@ -10,10 +10,6 @@ StartCoordinateCapture() {
     ; Get current map from dropdown
     mapName := GetPlacementsForMode(ModeDropdown.Text)
 
-    ; Clear only this map's data before capturing
-    if mapName != ""
-        savedCoords[mapName] := []
-
     ; Activate Roblox window
     if (WinExist(rblxID)) {
         WinActivate(rblxID)

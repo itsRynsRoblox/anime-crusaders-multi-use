@@ -326,8 +326,8 @@ isCorrectAngle(Map) {
     }
 }
 
-RotateCameraAngle() {
-    loop 2 {
+RotateCameraAngle(times := 2) {
+    loop times {
         SendInput ("{Left up}")
         Sleep 200
         SendInput ("{Left down}")
