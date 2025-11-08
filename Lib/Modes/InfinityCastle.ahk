@@ -80,7 +80,8 @@ DetectMapForInfinityCastle() {
             "Demon District", DemonDistrictInfinityCastle,
             "Nightmare Train: Act 1", NightmareTrainAct1InfinityCastle,
             "Nightmare Train - Act 2", NightmareTrainAct2InfinityCastle,
-            "Nightmare Train - Act 3", NightmareTrainAct3InfinityCastle
+            "Nightmare Train - Act 3", NightmareTrainAct3InfinityCastle,
+            "Mirror Dimension", MirrorDimensionInfinityCastle
         )
 
         for mapName, pattern in mapPatterns {
@@ -137,7 +138,8 @@ DetectInfinityCastleMap() {
             "Demon District", [15, DemonDistrictLoadingScreen],
             "Nightmare Train - Act 1", [5, NightmareTrainAct1LoadingScreen],
             "Nightmare Train - Act 2", [5, NightmareTrainAct2LoadingScreen],
-            "Nightmare Train - Act 3", [5, NightmareTrainAct3LoadingScreen]
+            "Nightmare Train - Act 3", [5, NightmareTrainAct3LoadingScreen],
+            "Mirror Dimension", [15, MirrorDimensionLoadingScreen]
         )
 
         for mapName, data in loadingScreens {

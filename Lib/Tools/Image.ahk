@@ -6,6 +6,8 @@ global Exitbutton := "Images\exitButton.png"
 global Disconnected := "Images\disconnected.png"
 global Import := "Images\import.png"
 global Export := "Images\export.png"
+global Add := "Images\add.png"
+global Trash := "Images\trash.png"
 
 ;=== General FindText Text and Buttons ===
 Disconnect:="|<>*154$122.zznzzzzzzzzzzzzzzzzws7szzzzzzzzzzzzzDzzzC0TDzzzzzzzzzzzznzzznb3zzzzzzzzzzzzzwzzzwtwzzzzzzzzzzzzzzDzzzCT7DVy7kz8T8TkzV0S7sHblnUC0k7k3k3k7U060w0tyQsrXMswMwMstsrD7CCCTbCDlyDDDDDCTATnntXnblnkwzblnnnnU3Dww0NwtwQz3DtwQwwws0nzD06TCTDDwlyDDDDDCTwTnnzXnb3nbADXXnnnnXr3wQSsss1ws3UA1wwwww1s31UD0C1zD1y7kzDDDDkzVsS7sHU"
@@ -88,6 +90,7 @@ DemonDistrictInfinityCastle:="|<>*79$159.ypy000sTzzyTzzzzzzzzzzzzzzzzzk007Xzzzvz
 NightmareTrainAct1InfinityCastle:="|<>*78$75.zzzzzzzzzzzzzzzzzzbnzzzzzrzzzzwwBzzzwSwQ4QA7D6C2DnrBABY8wMwa6ySs9UBVbti4k7nrDUjggzhYkLyS4C4BY7VW727nzzhzzzzzzqzzzzwTzzzzzyDzzzzzzzzzzzzzzw"
 NightmareTrainAct2InfinityCastle:="|<>*65$76.zzzzzzzzzTzzzzzzzznvzzzzztzzzzyC2zzzy3b3031UllVU1w6Q0000336003wNU2022C0M10Dna080A8y3U40yS8A0Bk3Ua207ls0sMrMS6MAAS1zzVzzzzzzkzzzzyDzzzzzz7zzs"
 NightmareTrainAct3InfinityCastle:="|<>*72$87.zzzzzzzzzzzzzzzzzzzzzblzzzzz3bzzzzzss4zzzzkAzzzzzs673zzzzXbks4A20ksMS13wQw200U071b1U0DXb0300kMy4y8k1wAs0M0b37wb160DtU3k0ws0s4HA0DkA27VVb8D1n1sMT3zzzDzzzzzzznzzzzy3zzzzzzzUzzzzzzzzzsxzvzzyTw"
+MirrorDimensionInfinityCastle:="|<>*68$63.zzzzzzzzzzzzzzTzzzzzzzzzkzzzzzzyTyC7zzzzzzlzltzzzzzzy7wDzzzzzzzkzVttaNwTnC3sC60UC0w1kS1kk41U3UC1kC63UsQA7l4FkkwD7lVy82CC7VsyADlUlllwT7lXyACCCDXsyATlllllwT13XyDSCCDXw0QTlzlllwTsDXzzzzzzzzzzzzzzzzzzzzzw"
 
 PlanetNamakLoadingScreen:="Images/Loading Screens/Planet Namak.png"
 MarinesFordLoadingScreen:="Images/Loading Screens/Marine's Ford.png"
@@ -98,6 +101,7 @@ DemonDistrictLoadingScreen:="Images/Loading Screens/Demon District.png"
 NightmareTrainAct1LoadingScreen:="Images/Loading Screens/Nightmare Train Act 1.png"
 NightmareTrainAct2LoadingScreen:="Images/Loading Screens/Nightmare Train Act 2.png"
 NightmareTrainAct3LoadingScreen:="Images/Loading Screens/Nightmare Train Act 3.png"
+MirrorDimensionLoadingScreen:="Images/Loading Screens/Mirror Dimension.png"
 
 ;Outdated FindText
 Retry := "|<>*115$29.000000000000000w20024+0047nzk9802EE09l0U2GW194ZY1zzmE0004U000600000000004"

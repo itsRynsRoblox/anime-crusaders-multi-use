@@ -206,7 +206,7 @@ ImportCustomCoords() {
     MainUI.Opt("-AlwaysOnTop")
     Sleep(100)
 
-    file := FileSelect(3, , "Select a file to import custom placements", "Text Documents (*.txt)")
+    file := FileSelect("", A_ScriptDir "\Settings", "Select a coordinate file to import", "Text Files (*.txt)")
     MainUI.Opt("+AlwaysOnTop")
 
     if !file

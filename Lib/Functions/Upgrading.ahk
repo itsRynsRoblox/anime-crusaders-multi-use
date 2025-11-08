@@ -153,8 +153,9 @@ ProcessUpgrades(slot := false, priorityNum := false) {
 
         for index, coord in successfulCoordinates {
 
-            if (coord.autoUpgrade)
+            if (coord.autoUpgrade || coord.upgradePriority = "") {
                 continue
+            }
 
             if ((!slot || coord.slot = slot) && (!priorityNum || coord.upgradePriority = priorityNum)) {
                 slotDone := false  ; Found unit to upgrade => not done yet

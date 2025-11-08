@@ -1,0 +1,30 @@
+﻿{
+    "Matchmaking": {
+        "Enabled": 0,
+        "Failsafe": 0,
+        "FailsafeTimer": "60"
+    },
+    "Placement": {
+        "Order": 1,
+        "Pattern": 2,
+        "PlaceUntilSuccessful": 0,
+        "Speed": "2"
+    },
+    "PrivateServer": {
+        "Enabled": 0,
+        "URL": ""
+    },
+    "Story": {
+        "Difficulty": 1
+    },
+    "Universal": {
+        "NextLevel": 0,
+        "ReturnToLobby": 1,
+        "UsingModeConfigurations": 0
+    },
+    "Webhook": {
+        "Enabled": 0,
+        "LogsEnabled": 0,
+        "URL": ""
+    }
+}

@@ -177,25 +177,24 @@ MonitorStage() {
 }
 
 Zoom() {
-    WinActivate(rblxID)
-    Sleep 100
-    MouseMove(400, 300)
-    Sleep 100
+    if (!WinActive(rblxID)) {
+        if (WinExist(rblxID)) {
+            WinActivate(rblxID)
+            Sleep 100
+        }
+    }
 
     if (ZoomInOption.Value) {
-        ; Zoom in smoothly
-        Scroll(20, "WheelUp", 50)
-
-        ; Look down
-        Click
-        MouseMove(400, 400)  ; Move mouse down to angle camera down
+        MouseMove(400, 300, 5)
+        Sleep 100
+        Scroll(25, "WheelUp", 50)
     }
-    
+
+    MouseMove(400, 400, 5)
+    Sleep 100
+
     ; Zoom back out smoothly
     Scroll(Integer(ZoomBox.Value), "WheelDown", 50)
-    
-    ; Move mouse back to center
-    MouseMove(400, 300)
 }
 
 CloseChat() {
@@ -208,7 +207,7 @@ CloseChat() {
 BasicSetup(usedButton := false) {
     global firstStartup
 
-    if(!WinActivate(rblxID)) {
+    if(!WinActive(rblxID)) {
         WinActivate(rblxID)
     }
 
@@ -230,7 +229,6 @@ BasicSetup(usedButton := false) {
     }
 
     AdjustCameraToCorrectAngle(GetMapForMode(ModeDropdown.Text))
-    ;FixHalloweenAngle()
     Sleep(300)
 
     CloseLeaderboard(false)
@@ -260,19 +258,24 @@ RestartStage() {
     ; Wait for game to actually start
     StartedGame()
 
-    ; Begin unit placement and management
-    StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlaceUntilSuccessful.Value)
+    if (ShouldUseRecording.Value) {
+        PlayRecordedActions()
+    } else {
+        ; Begin unit placement and management
+        StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlaceUntilSuccessful.Value)
+    }
     
     ; Monitor stage progress
     MonitorStage()
 }
 
 Reconnect(force := false) {
-    if (WinExist(rblxID)) {
-        WinActivate(rblxID)
-    }
-
     if (FindText(&X, &Y, 202, 206, 601, 256, 0.10, 0.10, Disconnect) || force) {
+        if (WinExist(rblxID)) {
+            if (!WinActive(rblxID)) {
+                WinActivate(rblxID)
+            }
+        }
 
         ; Wait until internet is available
         while !isConnectedToInternet() {

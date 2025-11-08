@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.8.0"
+global version := "v1.8.1"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"
@@ -34,14 +34,22 @@ global waitingState := Map()
 ;Custom Unit Placement
 global waitingForClick := false
 global savedCoords := Map()
+global placementProfiles := Map()
+global placementProfileFile := A_ScriptDir "\Settings\Profiles\PlacementProfiles.json"
 ; Custom Walk
-global savedWalkCoords := Map()
 global recording := false
 global allWalks := Map()
 global keyDownTimes := Map()
 global lastActionTime := 0
+global movementProfiles := Map()
+global movementProfileFile := A_ScriptDir "\Settings\Profiles\MovementProfiles.json"
+; Custom Tiny Task
+global allRecordings := Map()
+global recordedActions := []
+global recordingProfiles := Map()
+global recordingProfileFile := A_ScriptDir "\Settings\Profiles\RecordingProfiles.json"
 ;Nuke Ability
-global nukeCoords := []
+global nukeCoords := { x: 400, y: 300 }
 ;Hotkeys
 global F1Key := "F1"
 global F2Key := "F2"
@@ -114,6 +122,28 @@ global CardModeConfigs := Map(
 
 global currentConfig := CardModeConfigs[currentCardMode]
 
+global customDropdowns := [
+    "Custom",
+    ; Story Maps
+    "Planet Namak",
+    "Marine's Ford",
+    "Karakura Town",
+    "Shibuya",
+    "Demon District",
+    ; Legend Stages
+    "Shibuya (Destroyed)",
+    "Nightmare Train - Act 1",
+    "Nightmare Train - Act 2",
+    "Nightmare Train - Act 3",
+    "Mirror Dimension",
+    ; Raids
+    "Amusement Park",
+    "Tokyo Empire",
+    ; Events
+    "Halloween",
+    "Spirit Invasion"
+    ]
+
 ; ========== Constants and Theme Setup ==========
 mainWidth := 1364
 mainHeight := 697
@@ -165,8 +195,8 @@ global exitButton := AddUI("Picture", "x1330 y1 w32 h32 +BackgroundTrans", Exitb
 global minimizeButton := AddUI("Picture", "x1305 y3 w27 h27 +Background" uiColors["Background"], Minimize, (*) => minimizeUI())
 
 ; ========== Import ==========
-global importUnitConfigButton := AddUI("Picture", "x1312 y48 w20 h20 +BackgroundTrans", Import, (*) => ImportSettingsFromFile())
-global exportUnitConfigButton := AddUI("Picture", "x1337 y48 w20 h20 +BackgroundTrans", Export, (*) => ExportUnitConfig())
+global importUnitConfigButton := AddUI("Picture", "x1312 y48 w20 h20 +BackgroundTrans", Import, (*) => LoadUnitSettingsByMode(true))
+global exportUnitConfigButton := AddUI("Picture", "x1337 y48 w20 h20 +BackgroundTrans", Export, (*) => SaveSettingsForMode(true))
 
 ; ========== Title ==========
 MainUI.SetFont("Bold s16 c" uiColors["Primary"], "Verdana")
@@ -240,7 +270,7 @@ OpenPrivateServerGuide(*) {
 MainUI.SetFont("s9 Bold c" uiTheme[1])
 
 ActiveConfigurationText:= MainUI.Add("Text", "x840 y7 +Center c" uiTheme[1], "Active Configuration: ")
-ConfigurationDropdown := MainUI.Add("DropDownList", "x990 y4.5 w110 h180 +Center Choose1", ["Unit", "Challenge", "Cards", "Map Movement", "Mode", "Nuke", "Upgrade"])
+ConfigurationDropdown := MainUI.Add("DropDownList", "x990 y4.5 w110 h180 +Center Choose1", ["Unit", "Challenge", "Cards", "Map Movement", "Mode", "Nuke", "Upgrade", "Recording"])
 ConfigurationDropdown.OnEvent("Change", UpdateActiveConfiguration)
 
 global guideBtn := MainUI.Add("Button", "x1108 y5 w90 h20", "Guide")
@@ -262,7 +292,7 @@ global settingsBtn := MainUI.Add("Button", "x1208 y5 w90 h20", "Settings")
 settingsBtn.OnEvent("Click", (*) => ToggleControlGroup("Settings"))
 
 placementSaveBtn := MainUI.Add("Button", "x807 y471 w80 h20", "Save")
-placementSaveBtn.OnEvent("Click", SaveSettingsForMode)
+placementSaveBtn.OnEvent("Click", (*) => SaveSettingsForMode())
 
 MainUI.SetFont("s9")
 
@@ -290,8 +320,8 @@ placementSaveText := MainUI.Add("Text", "x807 y451 w80 h20", "Save Config")
 Hotkeytext := MainUI.Add("Text", "x807 y35 w200 h30", F1Key ": Fix Roblox Position")
 Hotkeytext2 := MainUI.Add("Text", "x807 y50 w200 h30", F2Key ": Start Macro")
 Hotkeytext3 := MainUI.Add("Text", "x807 y65 w200 h20", F3Key ": Stop Macro")
-GithubButton := MainUI.Add("Picture", "x30 y640", GithubImage)
-DiscordButton := MainUI.Add("Picture", "x112 y645 w60 h34 +BackgroundTrans cffffff", DiscordImage)
+;GithubButton := MainUI.Add("Picture", "x30 y640", GithubImage)
+DiscordButton := MainUI.Add("Picture", "x30 y645 w60 h34 +BackgroundTrans cffffff", DiscordImage)
 ; === Settings GUI ===
 global WebhookBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Webhook Settings")
 global WebhookEnabled := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff", "Webhook Enabled")
@@ -395,33 +425,42 @@ global MinionSlot6 := MainUI.Add("CheckBox", "x1200 y206 cffffff Hidden", "Slot 
 global PlacementBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Placement Configuration")
 ; === End Unit Config GUI ===
 
+; === Custom Recording GUI ===
+global RecordBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Custom Recording Configuration")
+global RecordMapText := MainUI.Add("Text", "x875 y110 Hidden cffffff", "Map:")
+global RecordMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose1 +Center Hidden", customDropdowns)
+AddRecordingProfileButton := MainUI.Add("Picture", "x1120 y103 w15 h15 Hidden", Add)
+AddRecordingProfileButton.OnEvent("Click", (*) => AddRecordingProfile())
+DeleteRecordingProfileButton := MainUI.Add("Picture", "x1120 y118 w15 h15 Hidden", Trash)
+DeleteRecordingProfileButton.OnEvent("Click", (*) => DeleteRecordingProfile())
+ImportRecording := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
+ImportRecording.OnEvent("Click", ImportRecordings)
+ExportRecording := MainUI.Add("Picture", "x845 y108 w20 h20 +BackgroundTrans Hidden", Export)
+ExportRecording.OnEvent("Click", (*) => ExportRecordings(RecordMapDropdown.Text))
+global ShouldUseRecording := MainUI.Add("CheckBox", "x875 y140 Hidden cffffff", "Use recorded actions instead of default macro actions")
+global ShouldLoopRecording := MainUI.Add("CheckBox", "x875 y170 Hidden cffffff", "Loop recorded actions infintely")
+global ShouldHandleGameEnd := MainUI.Add("CheckBox", "x875 y200 Hidden cffffff", "Automatically restart recording when/if the game ends")
+RecordStartButton := MainUI.Add("Button", "x1140 y110 w60 h20 Hidden", "Set")
+RecordStartButton.OnEvent("Click", StartRecordingActionsForMap)
+RecordClearButton := MainUI.Add("Button", "x1215 y110 w60 h20 Hidden", "Clear")
+RecordClearButton.OnEvent("Click", ClearRecordings)
+RecordTestButton := MainUI.Add("Button", "x1290 y110 w60 h20 Hidden", "Test")
+RecordTestButton.OnEvent("Click", (*) => PlayRecordedActions())
+RecordImport := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
+
 ;=== Custom Walk GUI ===
 global CustomWalkBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Custom Walk Configuration")
 global WalkMapText := MainUI.Add("Text", "x875 y110 Hidden cffffff", "Map:")
-global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose1 +Center Hidden", [
-    "Custom",
-    ; Story Maps
-    "Planet Namak",
-    "Marine's Ford",
-    "Karakura Town",
-    "Shibuya",
-    "Demon District",
-    ; Legend Stages
-    "Shibuya (Destroyed)",
-    "Nightmare Train - Act 1",
-    "Nightmare Train - Act 2",
-    "Nightmare Train - Act 3",
-    "Amusement Park",
-    "Tokyo Empire",
-    ; Events
-    "Halloween",
-    "Spirit Invasion"
-])
-MovementSetButton := MainUI.Add("Button", "x1130 y110 w60 h20 Hidden", "Set")
+global WalkMapDropdown := MainUI.Add("DropDownList", "x915 y108 w200 h180 Choose1 +Center Hidden", customDropdowns)
+AddMovementProfileButton := MainUI.Add("Picture", "x1120 y103 w15 h15 Hidden", Add)
+AddMovementProfileButton.OnEvent("Click", (*) => AddMovementProfile())
+DeleteMovementProfileButton := MainUI.Add("Picture", "x1120 y118 w15 h15 Hidden", Trash)
+DeleteMovementProfileButton.OnEvent("Click", (*) => DeleteMovementProfile())
+MovementSetButton := MainUI.Add("Button", "x1140 y110 w60 h20 +BackgroundTrans Hidden", "Set")
 MovementSetButton.OnEvent("Click", StartRecordingWalk)
-MovementClearButton := MainUI.Add("Button", "x1205 y110 w60 h20 Hidden", "Clear")
+MovementClearButton := MainUI.Add("Button", "x1215 y110 w60 h20 Hidden", "Clear")
 MovementClearButton.OnEvent("Click", ClearMovement)
-MovementTestButton := MainUI.Add("Button", "x1280 y110 w60 h20 Hidden", "Test")
+MovementTestButton := MainUI.Add("Button", "x1290 y110 w60 h20 Hidden", "Test")
 MovementTestButton.OnEvent("Click", (*) => StartWalk(true))
 MovementImport := MainUI.Add("Picture", "x820 y108 w20 h20 +BackgroundTrans Hidden", Import)
 MovementImport.OnEvent("Click", (*) => ImportMovements())
@@ -429,36 +468,24 @@ MovementExport := MainUI.Add("Picture", "x845 y108 w20 h20 +BackgroundTrans Hidd
 MovementExport.OnEvent("Click", (*) => ExportMovements(WalkMapDropdown.Text))
 
 ; === Custom Placement Settings ===
-global CustomSettings := MainUI.Add("GroupBox", "x190 y632 w605 h60 +Center c" uiTheme[1], "Custom Placement Settings")
-PlacementSettingsImportButton := AddUI("Picture", "x200 y652 w27 h27 +BackgroundTrans", Import, (*) => ImportCustomCoords())
-PlacementSettingsExportButton := AddUI("Picture", "x235 y652 w27 h27 +BackgroundTrans", Export, (*) => ExportCustomCoords(CustomPlacementMapDropdown.Text))
-CustomPlacementMap := MainUI.Add("Text", "x275 y655 w60 h20 +Left", "Map:")
-global CustomPlacementMapDropdown := MainUI.Add("DropDownList", "x310 y653 w180 h200 Choose1 +Center", [
-    "Custom",
-    "Planet Namak",
-    "Marine's Ford",
-    "Karakura Town",
-    "Shibuya",
-    "Shibuya (Destroyed)", 
-    "Demon District",
-    "Nightmare Train - Act 1",
-    "Nightmare Train - Act 2",
-    "Nightmare Train - Act 3",
-    "Amusement Park",
-    "Tokyo Empire",
-    "Halloween",
-    "Spirit Invasion"
-])
+global CustomSettings := MainUI.Add("GroupBox", "x130 y632 w665 h60 +Center c" uiTheme[1], "Custom Placement Settings")
+PlacementSettingsImportButton := AddUI("Picture", "x150 y652 w27 h27 +BackgroundTrans", Import, (*) => ImportCustomCoords())
+PlacementSettingsExportButton := AddUI("Picture", "x195 y652 w27 h27 +BackgroundTrans", Export, (*) => ExportCustomCoords(CustomPlacementMapDropdown.Text))
+CustomPlacementMap := MainUI.Add("Text", "x305 y645 w60 h20 +Left", "Profile")
+AddCustomPlacementProfile := MainUI.Add("Picture", "x425 y650 w15 h15 +BackgroundTrans", Add)
+AddCustomPlacementProfile.OnEvent("Click", (*) => AddPlacementProfile())
+RemoveCustomPlacementProfile := MainUI.Add("Picture", "x425 y670 w15 h15 +BackgroundTrans", Trash)
+RemoveCustomPlacementProfile.OnEvent("Click", (*) => DeletePlacementProfile())
+global CustomPlacementMapDropdown := MainUI.AddDropDownList("x240 y663 w180 h200 +Center")
 
-CustomPlacementButton := MainUI.Add("Button", "x495 y655 w85 h20", "Set")
+CustomPlacementButton := MainUI.Add("Button", "x450 y658 w85 h20", "Set")
 CustomPlacementButton.OnEvent("Click", (*) => StartCoordinateCapture())
-CustomPlacementClearButton := MainUI.Add("Button", "x595 y655 w85 h20", "Clear")
+CustomPlacementClearButton := MainUI.Add("Button", "x575 y658 w85 h20", "Clear")
 CustomPlacementClearButton.OnEvent("Click", (*) => DeleteCustomCoordsForPreset(CustomPlacementMapDropdown.Text))
-fixCameraButton := MainUI.Add("Button", "x695 y655 w85 h20", "Fix Camera")
+fixCameraButton := MainUI.Add("Button", "x695 y658 w85 h20", "Fix Camera")
 fixCameraButton.OnEvent("Click", (*) => BasicSetup(true))
-; === End of Custom Placement Settings ===
 
-GithubButton.OnEvent("Click", (*) => OpenGithub())
+;GithubButton.OnEvent("Click", (*) => OpenGithub())
 DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
@@ -544,87 +571,87 @@ Loop 6 {
     AddUnitCard(MainUI, A_Index, 808, y_start + ((A_Index-1)*y_spacing))
 }
 
-enabled1 := MainUI.Add("CheckBox", "x818 y105 w15 h15", "")
-enabled2 := MainUI.Add("CheckBox", "x818 y155 w15 h15", "")
-enabled3 := MainUI.Add("CheckBox", "x818 y205 w15 h15", "")
-enabled4 := MainUI.Add("CheckBox", "x818 y255 w15 h15", "")
-enabled5 := MainUI.Add("CheckBox", "x818 y305 w15 h15", "")
-enabled6 := MainUI.Add("CheckBox", "x818 y355 w15 h15", "")
+global enabled1 := MainUI.Add("CheckBox", "x818 y105 w15 h15", "")
+global enabled2 := MainUI.Add("CheckBox", "x818 y155 w15 h15", "")
+global enabled3 := MainUI.Add("CheckBox", "x818 y205 w15 h15", "")
+global enabled4 := MainUI.Add("CheckBox", "x818 y255 w15 h15", "")
+global enabled5 := MainUI.Add("CheckBox", "x818 y305 w15 h15", "")
+global enabled6 := MainUI.Add("CheckBox", "x818 y355 w15 h15", "")
 
-upgradeEnabled1 := MainUI.Add("CheckBox", "x1065 y90 w15 h15", "")
-upgradeEnabled2 := MainUI.Add("CheckBox", "x1065 y140 w15 h15", "")
-upgradeEnabled3 := MainUI.Add("CheckBox", "x1065 y190 w15 h15", "")
-upgradeEnabled4 := MainUI.Add("CheckBox", "x1065 y240 w15 h15", "")
-upgradeEnabled5 := MainUI.Add("CheckBox", "x1065 y290 w15 h15", "")
-upgradeEnabled6 := MainUI.Add("CheckBox", "x1065 y340 w15 h15", "")
+global upgradeEnabled1 := MainUI.Add("CheckBox", "x1065 y90 w15 h15", "")
+global upgradeEnabled2 := MainUI.Add("CheckBox", "x1065 y140 w15 h15", "")
+global upgradeEnabled3 := MainUI.Add("CheckBox", "x1065 y190 w15 h15", "")
+global upgradeEnabled4 := MainUI.Add("CheckBox", "x1065 y240 w15 h15", "")
+global upgradeEnabled5 := MainUI.Add("CheckBox", "x1065 y290 w15 h15", "")
+global upgradeEnabled6 := MainUI.Add("CheckBox", "x1065 y340 w15 h15", "")
 
-abilityEnabled1 := MainUI.Add("CheckBox", "x1065 y110 w15 h15", "")
-abilityEnabled2 := MainUI.Add("CheckBox", "x1065 y160 w15 h15", "")
-abilityEnabled3 := MainUI.Add("CheckBox", "x1065 y210 w15 h15", "")
-abilityEnabled4 := MainUI.Add("CheckBox", "x1065 y260 w15 h15", "")
-abilityEnabled5 := MainUI.Add("CheckBox", "x1065 y310 w15 h15", "")
-abilityEnabled6 := MainUI.Add("CheckBox", "x1065 y360 w15 h15", "")
+global abilityEnabled1 := MainUI.Add("CheckBox", "x1065 y110 w15 h15", "")
+global abilityEnabled2 := MainUI.Add("CheckBox", "x1065 y160 w15 h15", "")
+global abilityEnabled3 := MainUI.Add("CheckBox", "x1065 y210 w15 h15", "")
+global abilityEnabled4 := MainUI.Add("CheckBox", "x1065 y260 w15 h15", "")
+global abilityEnabled5 := MainUI.Add("CheckBox", "x1065 y310 w15 h15", "")
+global abilityEnabled6 := MainUI.Add("CheckBox", "x1065 y360 w15 h15", "")
 
-upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1235 y105 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1235 y155 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1235 y205 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1235 y255 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1235 y305 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
-upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1235 y355 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled1 := MainUI.Add("CheckBox", "x1235 y105 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled2 := MainUI.Add("CheckBox", "x1235 y155 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled3 := MainUI.Add("CheckBox", "x1235 y205 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled4 := MainUI.Add("CheckBox", "x1235 y255 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled5 := MainUI.Add("CheckBox", "x1235 y305 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
+global upgradeLimitEnabled6 := MainUI.Add("CheckBox", "x1235 y355 w15 h15 " (unitUpgradeLimitDisabled ? "Hidden" : ""), "")
 
 MainUI.SetFont("s8 c" uiTheme[6])
 
 ; Placement dropdowns
-Placement1 := MainUI.Add("DropDownList", "x918 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
-Placement2 := MainUI.Add("DropDownList", "x918 y155 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
-Placement3 := MainUI.Add("DropDownList", "x918 y205 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
-Placement4 := MainUI.Add("DropDownList", "x918 y255 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
-Placement5 := MainUI.Add("DropDownList", "x918 y305 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
-Placement6 := MainUI.Add("DropDownList", "x918 y355 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement1 := MainUI.Add("DropDownList", "x918 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement2 := MainUI.Add("DropDownList", "x918 y155 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement3 := MainUI.Add("DropDownList", "x918 y205 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement4 := MainUI.Add("DropDownList", "x918 y255 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement5 := MainUI.Add("DropDownList", "x918 y305 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Placement6 := MainUI.Add("DropDownList", "x918 y355 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
 
-Priority1 := MainUI.Add("DropDownList", "x980 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
+global Priority1 := MainUI.Add("DropDownList", "x980 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6"])
 Priority1.OnEvent("Change", (*) => OnPriorityChange("Placement", 1, Priority1.Value))
 
-Priority2 := MainUI.Add("DropDownList", "x980 y155 w35 h180 Choose2 +Center", ["1","2","3","4","5","6"])
+global Priority2 := MainUI.Add("DropDownList", "x980 y155 w35 h180 Choose2 +Center", ["1","2","3","4","5","6"])
 Priority2.OnEvent("Change", (*) => OnPriorityChange("Placement", 2, Priority2.Value))
 
-Priority3 := MainUI.Add("DropDownList", "x980 y205 w35 h180 Choose3 +Center", ["1","2","3","4","5","6"])
+global Priority3 := MainUI.Add("DropDownList", "x980 y205 w35 h180 Choose3 +Center", ["1","2","3","4","5","6"])
 Priority3.OnEvent("Change", (*) => OnPriorityChange("Placement", 3, Priority3.Value))
 
-Priority4 := MainUI.Add("DropDownList", "x980 y255 w35 h180 Choose4 +Center", ["1","2","3","4","5","6"])
+global Priority4 := MainUI.Add("DropDownList", "x980 y255 w35 h180 Choose4 +Center", ["1","2","3","4","5","6"])
 Priority4.OnEvent("Change", (*) => OnPriorityChange("Placement", 4, Priority4.Value))
 
-Priority5 := MainUI.Add("DropDownList", "x980 y305 w35 h180 Choose5 +Center", ["1","2","3","4","5","6"])
+global Priority5 := MainUI.Add("DropDownList", "x980 y305 w35 h180 Choose5 +Center", ["1","2","3","4","5","6"])
 Priority5.OnEvent("Change", (*) => OnPriorityChange("Placement", 5, Priority5.Value))
 
-Priority6 := MainUI.Add("DropDownList", "x980 y355 w35 h180 Choose6 +Center", ["1","2","3","4","5","6"])
+global Priority6 := MainUI.Add("DropDownList", "x980 y355 w35 h180 Choose6 +Center", ["1","2","3","4","5","6"])
 Priority6.OnEvent("Change", (*) => OnPriorityChange("Placement", 6, Priority6.Value))
 
-UpgradePriority1 := MainUI.Add("DropDownList", "x1020 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority1 := MainUI.Add("DropDownList", "x1020 y105 w35 h180 Choose1 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority1.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 1, UpgradePriority1.Text))
 
-UpgradePriority2 := MainUI.Add("DropDownList", "x1020 y155 w35 h180 Choose2 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority2 := MainUI.Add("DropDownList", "x1020 y155 w35 h180 Choose2 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority2.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 2, UpgradePriority2.Text))
 
-UpgradePriority3 := MainUI.Add("DropDownList", "x1020 y205 w35 h180 Choose3 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority3 := MainUI.Add("DropDownList", "x1020 y205 w35 h180 Choose3 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority3.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 3, UpgradePriority3.Text))
 
-UpgradePriority4 := MainUI.Add("DropDownList", "x1020 y255 w35 h180 Choose4 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority4 := MainUI.Add("DropDownList", "x1020 y255 w35 h180 Choose4 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority4.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 4, UpgradePriority4.Text))
 
-UpgradePriority5 := MainUI.Add("DropDownList", "x1020 y305 w35 h180 Choose5 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority5 := MainUI.Add("DropDownList", "x1020 y305 w35 h180 Choose5 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority5.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 5, UpgradePriority5.Text))
 
-UpgradePriority6 := MainUI.Add("DropDownList", "x1020 y355 w35 h180 Choose6 +Center", ["1","2","3","4","5","6",""])
+global UpgradePriority6 := MainUI.Add("DropDownList", "x1020 y355 w35 h180 Choose6 +Center", ["1","2","3","4","5","6",""])
 UpgradePriority6.OnEvent("Change", (*) => OnPriorityChange("Upgrade", 6, UpgradePriority6.Text))
 
-; Upgrade Limit
-UpgradeLimit1 := MainUI.Add("DropDownList", "x1310 y105 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
-UpgradeLimit2 := MainUI.Add("DropDownList", "x1310 y155 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
-UpgradeLimit3 := MainUI.Add("DropDownList", "x1310 y205 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
-UpgradeLimit4 := MainUI.Add("DropDownList", "x1310 y255 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
-UpgradeLimit5 := MainUI.Add("DropDownList", "x1310 y305 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
-UpgradeLimit6 := MainUI.Add("DropDownList", "x1310 y355 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+; UPGRADE LIMIT
+global UpgradeLimit1 := MainUI.Add("DropDownList", "x1310 y105 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+global UpgradeLimit2 := MainUI.Add("DropDownList", "x1310 y155 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+global UpgradeLimit3 := MainUI.Add("DropDownList", "x1310 y205 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+global UpgradeLimit4 := MainUI.Add("DropDownList", "x1310 y255 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+global UpgradeLimit5 := MainUI.Add("DropDownList", "x1310 y305 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
+global UpgradeLimit6 := MainUI.Add("DropDownList", "x1310 y355 w45 h180 Choose1 +Center " (unitUpgradeLimitDisabled ? "Hidden" : ""), ["0","1","2","3","4","5","6","7","8","9"])
 
 LoadUnitSettingsByMode()
 MainUI.Show("w1366 h700")
@@ -774,64 +801,6 @@ UpdateTooltip() {
     }
 }
 
-~LShift::
-{
-    global waitingForClick, recording
-    if waitingForClick {
-        AddToLog("Stopping coordinate capture")
-        if (WaitingFor("Placements")) {
-            SaveCustomPlacements()
-        }
-        RemoveWaiting()
-        ShowPlacements(false)
-    }
-    if (recording) {
-        StopRecordingWalk()
-    }
-}
-
-~LButton::
-{
-    global waitingForClick, savedCoords
-    global nukeCoords
-    global placement1, placement2, placement3, placement4, placement5, placement6
-
-    if !scriptInitialized
-        return
-
-    if waitingForClick {
-        if (WaitingFor("Nuke")) {
-            MouseGetPos(&x, &y)
-            SetTimer(UpdateTooltip, 0)
-            nukeCoords := {x: x, y: y}
-            ToolTip("Nuke Coords Set", x + 10, y + 10)
-            AddToLog("📌 Nuke Ability Coordinates Saved → X: " x ", Y: " y)
-            SetTimer(ClearToolTip, -1200)
-            RemoveWaiting()
-        }
-        else {
-            mode := ModeDropdown.Text
-            mapName := (mode = "Event") ? EventDropdown.Text : CustomPlacementMapDropdown.Text
-
-            if (mapName = "") {
-                AddToLog("⚠️ No map selected.")
-                return
-            }
-
-            MouseGetPos(&x, &y)
-            SetTimer(UpdateTooltip, 0)
-
-            coords := GetOrInitCustomCoords(mapName)
-            coords.Push({ x: x, y: y, mapName: mapName })
-            savedCoords[mapName] := coords
-
-            ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
-            AddToLog("📌 [Map: " mapName "] Saved → X: " x ", Y: " y " | Set: " coords.Length)
-            SetTimer(ClearToolTip, -1200)
-        }
-    }
-}
-
 ClearToolTip() {
     ToolTip()  ; Properly clear tooltip
     Sleep 100  ; Small delay to ensure clearing happens across all systems
@@ -916,7 +885,14 @@ InitControlGroups() {
     ]
 
     ControlGroups["Map Movement"] := [
-        CustomWalkBorder, WalkMapText, WalkMapDropdown, MovementSetButton, MovementClearButton, MovementTestButton, MovementImport, MovementExport
+        CustomWalkBorder, WalkMapText, WalkMapDropdown, AddMovementProfileButton, DeleteMovementProfileButton,
+        MovementSetButton, MovementClearButton, MovementTestButton, MovementImport, MovementExport
+    ]
+
+    ControlGroups["Recording"] := [
+        RecordBorder, RecordMapText, RecordMapDropdown, AddRecordingProfileButton, DeleteRecordingProfileButton,
+        ImportRecording, ExportRecording, ShouldUseRecording, ShouldLoopRecording, ShouldHandleGameEnd,
+        RecordStartButton, RecordClearButton, RecordTestButton
     ]
 }
 

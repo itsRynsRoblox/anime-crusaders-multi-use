@@ -251,7 +251,7 @@ ImportMovements(*) {
     Sleep(100)
 
     ; Prompt user to select file
-    filePath := FileSelect("Select a file to import custom movements", "", A_ScriptDir "\Settings", "Text Files (*.txt)")
+    filePath := FileSelect("", A_ScriptDir "\Settings", "Select a movement file to import", "Text Files (*.txt)")
 
     MainUI.Opt("+AlwaysOnTop")
 

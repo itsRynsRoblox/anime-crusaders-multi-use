@@ -656,6 +656,10 @@ ClickNextLevel(testing := false) {
             }
         }
     }
+    if (ModeDropdown.Text = "Story") {
+        updatedStory := GetNewStorySettings()
+        SetNewStorySettings(updatedStory)
+    }
 }
 
 OpenInventory(tab := "All") {

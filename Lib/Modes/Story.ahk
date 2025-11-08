@@ -93,3 +93,77 @@ WalkToStoryRoom() {
     Walk("a", 3200)
     Walk("w", 2500)
 }
+
+GetNewStorySettings() {
+
+    StoryMapList := ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"]
+    map := StoryDropdown.Value
+    act := StoryActDropdown.Value
+
+    maxAct := 6  ; Acts 1-6
+
+    ; Convert dropdown act -> internal act 1-6, skipping Infinite at index 1
+    if (act = "Infinite")
+        act := 1
+    else
+        act := act - 1  ; dropdown index 2 = Act 1, etc.
+
+    ; If not at final act → increment act
+    if (act < maxAct) {
+        return {
+            mapIndex: StoryDropdown.Value,
+            mapName: StoryMapList[StoryDropdown.Value],
+            act: act + 1
+        }
+    }
+
+    ; Finished act 6 → move to next map
+    currentMapIndex := StoryDropdown.Value
+    totalMaps := StoryMapList.Length
+
+    if (currentMapIndex < totalMaps) {
+        nextMapIndex := currentMapIndex + 1
+        return {
+            mapIndex: nextMapIndex,
+            mapName: StoryMapList[nextMapIndex],
+            act: 1
+        }
+    }
+
+    ; Last map finished → stay on last map, Act 6
+    return {
+        mapIndex: currentMapIndex,
+        mapName: StoryMapList[currentMapIndex],
+        act: maxAct
+    }
+}
+
+SetNewStorySettings(settings) {
+    global firstStartup
+
+    oldMap := StoryDropdown.Value
+    oldMapName := StoryDropdown.Text
+
+    ; Set map by index
+    StoryDropdown.Value := settings.mapIndex
+
+    ; Convert act (1–6) → dropdown index 2–7
+    StoryActDropdown.Value := (settings.act + 1)
+
+    ; Check if map changed
+    if (settings.mapIndex != oldMap) {
+        AddToLog("Completed map: " oldMapName ", starting new map: " settings.mapName)
+        firstStartup := true
+    }
+}
+
+
+TestStoryProgression() {
+    AddToLog("Starting Story Progression Test...")
+
+    loop 10 {
+        new := GetNewStorySettings()
+        SetNewStorySettings(new)
+        Sleep 1000
+    }
+}

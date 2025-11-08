@@ -37,15 +37,15 @@ StartLegendStage(map, act) {
 
 GetLegendMap(map) {
 
-    RaidMapNames := [
-        "Shibuya (Destroyed)", "Nightmare Train"
+    MapNames := [
+        "Shibuya (Destroyed)", "Nightmare Train", "Mirror Dimension"
     ]
 
     baseX := 195
     baseY := 255
     spacing := 45
 
-    for index, name in RaidMapNames {
+    for index, name in MapNames {
         if (map = name) {
             y := baseY + spacing * (index - 1)
             scrolls := (index > 4) ? 1 : 0  ; Adjust this threshold as needed
