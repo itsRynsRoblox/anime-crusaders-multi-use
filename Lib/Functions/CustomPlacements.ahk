@@ -1,33 +1,39 @@
 #Requires AutoHotkey v2.0
 
-StartCoordinateCapture() {
-    global savedCoords
+StartCoordinateCapture(*) {
+    global savedCoords, waitingForClick, activeHotkeys
 
     ; Make sure savedCoords exists
     if !IsSet(savedCoords) || !(savedCoords is Map)
         savedCoords := Map()
 
-    ; Get current map from dropdown
     mapName := GetPlacementsForMode(ModeDropdown.Text)
+    if mapName != ""
+        savedCoords[mapName] := []
+
+    waitingForClick := true
+    activeHotkeys := []  ; clear previous session
 
     ; Activate Roblox window
-    if (WinExist(rblxID)) {
+    if (!WinActivate(rblxID)) {
         WinActivate(rblxID)
     }
 
-    AddWaitingFor("Placements")
-    AddToLog("Press LShift to stop coordinate capture")
-    SetTimer UpdateTooltip, 50  ; Update tooltip position
+    AddToLog("📍 Coordinate capture started. Left-click to record, press LShift to stop.")
+    SetTimer(UpdateTooltip, 50)
+
+    ; --- Register temporary hotkeys dynamically ---
+    activeHotkeys.Push(Hotkey("~LButton", HandleCoordinateClick))
+    activeHotkeys.Push(Hotkey("~LShift", StopCoordinateCapture))
 }
 
 UseCustomPoints() {
-    global savedCoords  ; Access the global saved coordinates
+    global savedCoords
     points := []
 
     mapName := GetPlacementsForMode(ModeDropdown.Text)
 
     if (!savedCoords.Has(mapName) || savedCoords[mapName].Length = 0) {
-        AddToLog("No coordinates set for map: " mapName ", skipping...")
         return
     }
 
@@ -35,6 +41,8 @@ UseCustomPoints() {
     for coord in savedCoords[mapName] {
         points.Push({ x: coord.x, y: coord.y })
     }
+
+    AddToLog("Points: " points.Length)
 
     return points
 }

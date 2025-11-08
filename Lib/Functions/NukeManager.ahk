@@ -5,20 +5,26 @@ global nukeTimerActive := false
 global nukePaused := false
 global nukeScheduledTime := 0
 
-StartNukeCapture() {
-    global nukeCoords
+StartNukeCapture(*) {
+    global nukeCoords, waitingForClick, activeHotkeys
 
-    ; Reset saved walk coordinates
-    nukeCoords := []
+    nukeCoords := []          ; Reset previous Nuke coordinates
+    waitingForClick := true   ; Enable click capture mode
+    activeHotkeys := []       ; Reset active hotkeys
 
     ; Activate Roblox window
-    if (WinExist(rblxID)) {
+    if (WinExist(rblxID))
         WinActivate(rblxID)
-    }
 
+    ; Set the "WaitingFor" flag for HandleCoordinateClick
     AddWaitingFor("Nuke")
-    AddToLog("Press LShift to stop coordinate capture")
-    SetTimer UpdateTooltip, 50  ; Update tooltip position every 50ms
+
+    AddToLog("Coordinate capture started. Left-click to record, press LShift to stop.")
+    SetTimer(UpdateTooltip, 50)
+
+    ; Use the same dynamic hotkey system as normal placement
+    activeHotkeys.Push(Hotkey("~LButton", HandleCoordinateClick))
+    activeHotkeys.Push(Hotkey("~LShift", StopCoordinateCapture))
 }
 
 CheckForWave50() {

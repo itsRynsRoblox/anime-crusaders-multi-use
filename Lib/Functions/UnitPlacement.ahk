@@ -292,7 +292,7 @@ PostPlacementChecks() {
         return MonitorStage()
     }
 
-    if (HasCards(ModeDropdown.Text)) || (HasCards(EventDropdown.Text)) {
+    if (HasCards(ModeDropdown.Text) || HasCards(EventDropdown.Text)) {
         CheckForCardSelection()
     }
 

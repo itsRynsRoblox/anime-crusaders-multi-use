@@ -22,13 +22,13 @@
         }
     },
     "Nuke": {
-        "AtSpecificWave": 1,
+        "AtSpecificWave": 0,
         "Coords": {
             "X": 400,
             "Y": 300
         },
         "Delay": "0",
-        "Enabled": 1,
+        "Enabled": 0,
         "Slot": 1,
         "Wave": 1
     },

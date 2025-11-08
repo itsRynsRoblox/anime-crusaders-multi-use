@@ -33,6 +33,9 @@ SaveSettingsForMode(toExport := false) {
                 Slot_1_Upgrade_Enabled: UpgradeEnabled1.Value, Slot_2_Upgrade_Enabled: UpgradeEnabled2.Value, Slot_3_Upgrade_Enabled: UpgradeEnabled3.Value,
                 Slot_4_Upgrade_Enabled: UpgradeEnabled4.Value, Slot_5_Upgrade_Enabled: UpgradeEnabled5.Value, Slot_6_Upgrade_Enabled: UpgradeEnabled6.Value,
 
+                Slot_1_Ability_Enabled: AbilityEnabled1.Value, Slot_2_Ability_Enabled: AbilityEnabled2.Value, Slot_3_Ability_Enabled: AbilityEnabled3.Value,
+                Slot_4_Ability_Enabled: AbilityEnabled4.Value, Slot_5_Ability_Enabled: AbilityEnabled5.Value, Slot_6_Ability_Enabled: AbilityEnabled6.Value,
+
                 Slot_1_Upgrade_Limit: UpgradeLimit1.Text, Slot_2_Upgrade_Limit: UpgradeLimit2.Text, Slot_3_Upgrade_Limit: UpgradeLimit3.Text,
                 Slot_4_Upgrade_Limit: UpgradeLimit4.Text, Slot_5_Upgrade_Limit: UpgradeLimit5.Text, Slot_6_Upgrade_Limit: UpgradeLimit6.Text,
 
@@ -194,6 +197,13 @@ LoadUnitSettingsByMode(fromFile := false) {
     UpgradeEnabled4.Value := data["Unit_Settings"]["Slot_4_Upgrade_Enabled"]
     UpgradeEnabled5.Value := data["Unit_Settings"]["Slot_5_Upgrade_Enabled"]
     UpgradeEnabled6.Value := data["Unit_Settings"]["Slot_6_Upgrade_Enabled"]
+
+    AbilityEnabled1.Value := data["Unit_Settings"]["Slot_1_Ability_Enabled"]
+    AbilityEnabled2.Value := data["Unit_Settings"]["Slot_2_Ability_Enabled"]
+    AbilityEnabled3.Value := data["Unit_Settings"]["Slot_3_Ability_Enabled"]
+    AbilityEnabled4.Value := data["Unit_Settings"]["Slot_4_Ability_Enabled"]
+    AbilityEnabled5.Value := data["Unit_Settings"]["Slot_5_Ability_Enabled"]
+    AbilityEnabled6.Value := data["Unit_Settings"]["Slot_6_Ability_Enabled"]
 
     UpgradeLimit1.Text := data["Unit_Settings"]["Slot_1_Upgrade_Limit"]
     UpgradeLimit2.Text := data["Unit_Settings"]["Slot_2_Upgrade_Limit"]

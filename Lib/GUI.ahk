@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.8.1"
+global version := "v1.8.3"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"
@@ -403,12 +403,12 @@ HalloweenCardButton.OnEvent("Click", (*) => SwitchCardMode("Halloween"))
 
 ; === Nuke Config GUI ===
 global NukeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden" uiTheme[1], "Nuke Configuration")
-global NukeUnitSlotEnabled := MainUI.Add("Checkbox", "x825 y113 Hidden Choose1 cffffff Checked", "Nuke Unit | Slot")
+global NukeUnitSlotEnabled := MainUI.Add("Checkbox", "x825 y113 Hidden Choose1 cffffff", "Nuke Unit | Slot")
 global NukeUnitSlot := MainUI.Add("DropDownList", "x960 y110 w100 h180 Hidden Choose1", ["1", "2", "3", "4", "5", "6"])
 global NukeCoordinatesText := MainUI.Add("Text", "x1080 y113 Hidden cffffff", "Nuke Ability Coordinates")
 global NukeCoordinatesButton := MainUI.Add("Button", "x1260 y110 w80 h20 Hidden", "Set")
 NukeCoordinatesButton.OnEvent("Click", (*) => StartNukeCapture())
-global NukeAtSpecificWave := MainUI.Add("Checkbox", "x825 y140 Hidden Choose1 cffffff Checked", "Nuke At Wave | Wave")
+global NukeAtSpecificWave := MainUI.Add("Checkbox", "x825 y140 Hidden Choose1 cffffff", "Nuke At Wave | Wave")
 global NukeWave := MainUI.Add("DropDownList", "x1000 y137 w100 h180 Hidden Choose1", ["15", "20", "50"])
 global NukeDelayText := MainUI.Add("Text", "x1120 y140 Hidden cffffff", "Nuke Delay")
 global NukeDelay := MainUI.Add("Edit", "x1210 y138 w40 h20 Hidden cBlack Number", "0")
@@ -497,7 +497,7 @@ global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choos
 global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global InfiniteCastleModeDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose1 +Center Hidden", ["Normal", "Traitless"])
-global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya (Destroyed)", "Nightmare Train"] )
+global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya (Destroyed)", "Nightmare Train", "Mirror Dimension"] )
 global LegendActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Act 1", "Act 2", "Act 3"])
 global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center", ["Amusement Park", "Tokyo Empire"])
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
@@ -548,8 +548,6 @@ AddUnitCard(MainUI, index, x, y) {
     unit.PlacementText        := AddText(x + 90, y + 2, 80, 20, "+BackgroundTrans", "Placements")
     unit.PriorityText         := AddText(x + 185, y + 2, 60, 20, "BackgroundTrans", "Priority")
 
-    MainUI.SetFont("s7 c" uiTheme[1])
-    ;unit.PlaceAndUpgradeText := AddText(x + 258, y + 2, 250, 20, "BackgroundTrans", "Auto Upgrade After Placement")
     MainUI.SetFont("s9 c" uiTheme[1])
     unit.AutoUpgradeTitle         := AddText(x + 275, y + 5, 250, 25, "+BackgroundTrans", "Enable Auto Upgrade")
     unit.AutoAbilityTitle := AddText(x + 275, y + 25, 250, 25, "+BackgroundTrans", "Enable Auto Ability")
@@ -989,6 +987,56 @@ ValidateEditBox(ctrl) {
     }
 }
 
-OpenCoordinateEditor() {
-    
+HandleCoordinateClick(*) {
+    global waitingForClick, savedCoords, nukeCoords
+
+    if !waitingForClick
+        return
+
+    ; Handle special “Nuke” mode
+    if (WaitingFor("Nuke")) {
+        MouseGetPos(&x, &y)
+        nukeCoords := { x: x, y: y }
+        ToolTip("Nuke Coords Set", x + 10, y + 10)
+        AddToLog("Nuke Coords Saved → X: " x ", Y: " y)
+        SetTimer(ClearToolTip, -1000)
+        RemoveWaiting()
+        return
+    }
+
+    ; Normal placement coordinate capture
+    mode := ModeDropdown.Text
+    mapName := (mode = "Event") ? EventDropdown.Text : CustomPlacementMapDropdown.Text
+    if (mapName = "") {
+        AddToLog("⚠️ No map selected.")
+        return
+    }
+
+    MouseGetPos(&x, &y)
+    coords := GetOrInitCustomCoords(mapName)
+    coords.Push({ x: x, y: y, mapName: mapName })
+    savedCoords[mapName] := coords
+
+    ToolTip("Coords Set: " coords.Length, x + 10, y + 10)
+    AddToLog("📌 [Map: " mapName "] Saved → X: " x ", Y: " y " | Total: " coords.Length)
+    SetTimer(ClearToolTip, -1000)
+}
+
+StopCoordinateCapture(*) {
+    global waitingForClick, activeHotkeys
+
+    if !waitingForClick
+        return
+
+    waitingForClick := false
+
+    ; Remove all dynamically created hotkeys
+    for hk in activeHotkeys {
+        try hk.Delete()
+    }
+    activeHotkeys := []
+
+    SetTimer(UpdateTooltip, 0)
+    SetTimer(ClearToolTip, -500)
+    AddToLog("✅ Coordinate capture stopped.")
 }
