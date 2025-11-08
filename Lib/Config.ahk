@@ -163,95 +163,95 @@ LoadUnitSettingsByMode(fromFile := false) {
         data := {} ; fallback object
     }
 
-    Enabled1.Value := data["Unit_Settings"]["Slot_1_Enabled"]
-    Enabled2.Value := data["Unit_Settings"]["Slot_2_Enabled"]
-    Enabled3.Value := data["Unit_Settings"]["Slot_3_Enabled"]
-    Enabled4.Value := data["Unit_Settings"]["Slot_4_Enabled"]
-    Enabled5.Value := data["Unit_Settings"]["Slot_5_Enabled"]
-    Enabled6.Value := data["Unit_Settings"]["Slot_6_Enabled"]
+    Enabled1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Enabled"], 0)
+    Enabled2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Enabled"], 0)
+    Enabled3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Enabled"], 0)
+    Enabled4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Enabled"], 0)
+    Enabled5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Enabled"], 0)
+    Enabled6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Enabled"], 0)
 
-    Placement1.Value := data["Unit_Settings"]["Slot_1_Placements"]
-    Placement2.Value := data["Unit_Settings"]["Slot_2_Placements"]
-    Placement3.Value := data["Unit_Settings"]["Slot_3_Placements"]
-    Placement4.Value := data["Unit_Settings"]["Slot_4_Placements"]
-    Placement5.Value := data["Unit_Settings"]["Slot_5_Placements"]
-    Placement6.Value := data["Unit_Settings"]["Slot_6_Placements"]
+    Placement1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Placements"], 0)
+    Placement2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Placements"], 0)
+    Placement3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Placements"], 0)
+    Placement4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Placements"], 0)
+    Placement5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Placements"], 0)
+    Placement6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Placements"], 0)
 
-    Priority1.Value := data["Unit_Settings"]["Slot_1_Priority"]
-    Priority2.Value := data["Unit_Settings"]["Slot_2_Priority"]
-    Priority3.Value := data["Unit_Settings"]["Slot_3_Priority"]
-    Priority4.Value := data["Unit_Settings"]["Slot_4_Priority"]
-    Priority5.Value := data["Unit_Settings"]["Slot_5_Priority"]
-    Priority6.Value := data["Unit_Settings"]["Slot_6_Priority"]
+    Priority1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Priority"], 0)
+    Priority2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Priority"], 0)
+    Priority3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Priority"], 0)
+    Priority4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Priority"], 0)
+    Priority5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Priority"], 0)
+    Priority6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Priority"], 0)
 
-    UpgradePriority1.Text := data["Unit_Settings"]["Slot_1_Upgrade_Priority"]
-    UpgradePriority2.Text := data["Unit_Settings"]["Slot_2_Upgrade_Priority"]
-    UpgradePriority3.Text := data["Unit_Settings"]["Slot_3_Upgrade_Priority"]
-    UpgradePriority4.Text := data["Unit_Settings"]["Slot_4_Upgrade_Priority"]
-    UpgradePriority5.Text := data["Unit_Settings"]["Slot_5_Upgrade_Priority"]
-    UpgradePriority6.Text := data["Unit_Settings"]["Slot_6_Upgrade_Priority"]
+    UpgradePriority1.Text := GetValue(data, ["Unit_Settings", "Slot_1_Upgrade_Priority"], "")
+    UpgradePriority2.Text := GetValue(data, ["Unit_Settings", "Slot_2_Upgrade_Priority"], "")
+    UpgradePriority3.Text := GetValue(data, ["Unit_Settings", "Slot_3_Upgrade_Priority"], "")
+    UpgradePriority4.Text := GetValue(data, ["Unit_Settings", "Slot_4_Upgrade_Priority"], "")
+    UpgradePriority5.Text := GetValue(data, ["Unit_Settings", "Slot_5_Upgrade_Priority"], "")
+    UpgradePriority6.Text := GetValue(data, ["Unit_Settings", "Slot_6_Upgrade_Priority"], "")
 
-    UpgradeEnabled1.Value := data["Unit_Settings"]["Slot_1_Upgrade_Enabled"]
-    UpgradeEnabled2.Value := data["Unit_Settings"]["Slot_2_Upgrade_Enabled"]
-    UpgradeEnabled3.Value := data["Unit_Settings"]["Slot_3_Upgrade_Enabled"]
-    UpgradeEnabled4.Value := data["Unit_Settings"]["Slot_4_Upgrade_Enabled"]
-    UpgradeEnabled5.Value := data["Unit_Settings"]["Slot_5_Upgrade_Enabled"]
-    UpgradeEnabled6.Value := data["Unit_Settings"]["Slot_6_Upgrade_Enabled"]
+    UpgradeEnabled1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Upgrade_Enabled"], 0)
+    UpgradeEnabled2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Upgrade_Enabled"], 0)
+    UpgradeEnabled3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Upgrade_Enabled"], 0)
+    UpgradeEnabled4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Upgrade_Enabled"], 0)
+    UpgradeEnabled5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Upgrade_Enabled"], 0)
+    UpgradeEnabled6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Upgrade_Enabled"], 0)
 
-    AbilityEnabled1.Value := data["Unit_Settings"]["Slot_1_Ability_Enabled"]
-    AbilityEnabled2.Value := data["Unit_Settings"]["Slot_2_Ability_Enabled"]
-    AbilityEnabled3.Value := data["Unit_Settings"]["Slot_3_Ability_Enabled"]
-    AbilityEnabled4.Value := data["Unit_Settings"]["Slot_4_Ability_Enabled"]
-    AbilityEnabled5.Value := data["Unit_Settings"]["Slot_5_Ability_Enabled"]
-    AbilityEnabled6.Value := data["Unit_Settings"]["Slot_6_Ability_Enabled"]
+    AbilityEnabled1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Ability_Enabled"], 0)
+    AbilityEnabled2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Ability_Enabled"], 0)
+    AbilityEnabled3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Ability_Enabled"], 0)
+    AbilityEnabled4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Ability_Enabled"], 0)
+    AbilityEnabled5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Ability_Enabled"], 0)
+    AbilityEnabled6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Ability_Enabled"], 0)
 
-    UpgradeLimit1.Text := data["Unit_Settings"]["Slot_1_Upgrade_Limit"]
-    UpgradeLimit2.Text := data["Unit_Settings"]["Slot_2_Upgrade_Limit"]
-    UpgradeLimit3.Text := data["Unit_Settings"]["Slot_3_Upgrade_Limit"]
-    UpgradeLimit4.Text := data["Unit_Settings"]["Slot_4_Upgrade_Limit"]
-    UpgradeLimit5.Text := data["Unit_Settings"]["Slot_5_Upgrade_Limit"]
-    UpgradeLimit6.Text := data["Unit_Settings"]["Slot_6_Upgrade_Limit"]
+    UpgradeLimit1.Text := GetValue(data, ["Unit_Settings", "Slot_1_Upgrade_Limit"], "")
+    UpgradeLimit2.Text := GetValue(data, ["Unit_Settings", "Slot_2_Upgrade_Limit"], "")
+    UpgradeLimit3.Text := GetValue(data, ["Unit_Settings", "Slot_3_Upgrade_Limit"], "")
+    UpgradeLimit4.Text := GetValue(data, ["Unit_Settings", "Slot_4_Upgrade_Limit"], "")
+    UpgradeLimit5.Text := GetValue(data, ["Unit_Settings", "Slot_5_Upgrade_Limit"], "")
+    UpgradeLimit6.Text := GetValue(data, ["Unit_Settings", "Slot_6_Upgrade_Limit"], "")
 
-    UpgradeLimitEnabled1.Value := data["Unit_Settings"]["Slot_1_Upgrade_Limit_Enabled"]
-    UpgradeLimitEnabled2.Value := data["Unit_Settings"]["Slot_2_Upgrade_Limit_Enabled"]
-    UpgradeLimitEnabled3.Value := data["Unit_Settings"]["Slot_3_Upgrade_Limit_Enabled"]
-    UpgradeLimitEnabled4.Value := data["Unit_Settings"]["Slot_4_Upgrade_Limit_Enabled"]
-    UpgradeLimitEnabled5.Value := data["Unit_Settings"]["Slot_5_Upgrade_Limit_Enabled"]
-    UpgradeLimitEnabled6.Value := data["Unit_Settings"]["Slot_6_Upgrade_Limit_Enabled"]
+    UpgradeLimitEnabled1.Value := GetValue(data, ["Unit_Settings", "Slot_1_Upgrade_Limit_Enabled"], 0)
+    UpgradeLimitEnabled2.Value := GetValue(data, ["Unit_Settings", "Slot_2_Upgrade_Limit_Enabled"], 0)
+    UpgradeLimitEnabled3.Value := GetValue(data, ["Unit_Settings", "Slot_3_Upgrade_Limit_Enabled"], 0)
+    UpgradeLimitEnabled4.Value := GetValue(data, ["Unit_Settings", "Slot_4_Upgrade_Limit_Enabled"], 0)
+    UpgradeLimitEnabled5.Value := GetValue(data, ["Unit_Settings", "Slot_5_Upgrade_Limit_Enabled"], 0)
+    UpgradeLimitEnabled6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Upgrade_Limit_Enabled"], 0)
 
-    AutoAbilityBox.Value := data["Auto_Ability"]["Enabled"]
-    AutoAbilityTimer.Text := data["Auto_Ability"]["Timer"]
+    AutoAbilityBox.Value := GetValue(data, ["Auto_Ability", "Enabled"], 0)
+    AutoAbilityTimer.Text := GetValue(data, ["Auto_Ability", "Timer"], "")
 
-    ZoomBox.Value := data["Zoom_Settings"]["Level"]
-    ZoomTech.Value := data["Zoom_Settings"]["Enabled"]
-    ZoomInOption.Value := data["Zoom_Settings"]["Zoom_In"]
-    ZoomTeleport.Value := data["Zoom_Settings"]["Teleport"]
+    ZoomBox.Value := GetValue(data, ["Zoom_Settings", "Level"], 0)
+    ZoomTech.Value := GetValue(data, ["Zoom_Settings", "Enabled"], 0)
+    ZoomInOption.Value := GetValue(data, ["Zoom_Settings", "Zoom_IN"], 0)
+    ZoomTeleport.Value := GetValue(data, ["Zoom_Settings", "Teleport"], 0)
 
-    EnableUpgrading.Value := data["Upgrading"]["Enabled"]
-    UnitManagerUpgradeSystem.Value := data["Upgrading"]["Use_Unit_Manager"]
-    PriorityUpgrade.Value := data["Upgrading"]["Use_Unit_Priority"]
+    EnableUpgrading.Value := GetValue(data, ["Upgrading", "Enabled"], 0)
+    UnitManagerUpgradeSystem.Value := GetValue(data, ["Upgrading", "Use_Unit_Manager"], 0)
+    PriorityUpgrade.Value := GetValue(data, ["Upgrading", "Use_Unit_Priority"], 0)
 
-    ShouldUseRecording.Value := data["Custom_Recordings"]["Use"]
-    ShouldLoopRecording.Value := data["Custom_Recordings"]["Loop"]
-    ShouldHandleGameEnd.Value := data["Custom_Recordings"]["HandleEnd"]
+    ShouldUseRecording.Value := GetValue(data, ["Custom_Recordings", "Use"], 0)
+    ShouldLoopRecording.Value := GetValue(data, ["Custom_Recordings", "Loop"], 0)
+    ShouldHandleGameEnd.Value := GetValue(data, ["Custom_Recordings", "HandleEnd"], 0)
 
-    NukeUnitSlotEnabled.Value := data["Nuke"]["Enabled"]
-    NukeUnitSlot.Value := data["Nuke"]["Slot"]
-    nukeCoords := { x: data["Nuke"]["Coords"]["X"], y: data["Nuke"]["Coords"]["Y"] }
-    NukeAtSpecificWave.Value := data["Nuke"]["AtSpecificWave"]
-    NukeWave.Value := data["Nuke"]["Wave"]
-    NukeDelay.Value := data["Nuke"]["Delay"]
+    NukeUnitSlotEnabled.Value := GetValue(data, ["Nuke", "Enabled"], 0)
+    NukeUnitSlot.Value := GetValue(data, ["Nuke", "Slot"], 0)
+    nukeCoords := { x: GetValue(data, ["Nuke", "Coords", "X"], 0), y: GetValue(data, ["Nuke", "Coords", "Y"], 0) }
+    NukeAtSpecificWave.Value := GetValue(data, ["Nuke", "AtSpecificWave"], 0)
+    NukeWave.Value := GetValue(data, ["Nuke", "Wave"], 0)
+    NukeDelay.Value := GetValue(data, ["Nuke", "Delay"], 0)
 
-    MinionSlot1.Value := data["Unit_Manager_Fixes"]["Slot1AddsExtraUnit"]
-    MinionSlot2.Value := data["Unit_Manager_Fixes"]["Slot2AddsExtraUnit"]
-    MinionSlot3.Value := data["Unit_Manager_Fixes"]["Slot3AddsExtraUnit"]
-    MinionSlot4.Value := data["Unit_Manager_Fixes"]["Slot4AddsExtraUnit"]
-    MinionSlot5.Value := data["Unit_Manager_Fixes"]["Slot5AddsExtraUnit"]
-    MinionSlot6.Value := data["Unit_Manager_Fixes"]["Slot6AddsExtraUnit"]
+    MinionSlot1.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot1AddsExtraUnit"], 0)
+    MinionSlot2.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot2AddsExtraUnit"], 0)
+    MinionSlot3.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot3AddsExtraUnit"], 0)
+    MinionSlot4.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot4AddsExtraUnit"], 0)
+    MinionSlot5.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot5AddsExtraUnit"], 0)
+    MinionSlot6.Value := GetValue(data, ["Unit_Manager_Fixes", "Slot6AddsExtraUnit"], 0)
 
-    FarmMorePortals.Value := GetNestedValue(data, ["Modes", "Portals", "Farm_Portals"], 0)
-    HalloweenMovement.Value := GetNestedValue(data, ["Modes", "Events", "Halloween", "Use_Premade_Movement"], 0)
-    GateMovement.Value := GetNestedValue(data, ["Modes", "Events", "Gates", "Use_Premade_Movement"], 0)
+    FarmMorePortals.Value := GetValue(data, ["Modes", "Portals", "Farm_Portals"], 0)
+    HalloweenMovement.Value := GetValue(data, ["Modes", "Events", "Halloween", "Use_Premade_Movement"], 0)
+    GateMovement.Value := GetValue(data, ["Modes", "Events", "Gates", "Use_Premade_Movement"], 0)
 
 
     LoadCustomPlacements()
@@ -487,12 +487,8 @@ GetSection(obj, key) {
     return (IsObject(obj) && HasKey(obj, key)) ? obj[key] : {}
 }
 
-GetValue(obj, key, fallback := "") {
-    return (IsObject(obj) && HasKey(obj, key)) ? obj[key] : fallback
-}
-
 ; Traverse nested objects safely and return a value or fallback
-GetNestedValue(obj, keys, fallback := "") {
+GetValue(obj, keys, fallback := "") {
     current := obj
     for key in keys {
         if !(IsObject(current) && current.Has(key))
