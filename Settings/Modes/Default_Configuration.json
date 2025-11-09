@@ -18,7 +18,7 @@
             }
         },
         "Portals": {
-            "Farm_Portals": 1
+            "Farm_Portals": 0
         }
     },
     "Nuke": {
@@ -90,6 +90,9 @@
         "Slot_6_Upgrade_Limit_Enabled": 0,
         "Slot_6_Upgrade_Priority": "6"
     },
+    "Update_Checker": {
+        "Enabled": 0
+    },
     "Upgrading": {
         "Enabled": 1,
         "Use_Unit_Manager": 0,
@@ -99,6 +102,6 @@
         "Enabled": 1,
         "Level": "20",
         "Teleport": 1,
-        "Zoom_In": 0
+        "Zoom_In": 1
     }
 }

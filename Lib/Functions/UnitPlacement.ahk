@@ -238,7 +238,6 @@ StartPlacingUnits(untilSuccessful := true) {
         UpgradeUnits()
     } else {
         AddToLog("Upgrading is disabled, skipping to monitoring stage")
-        return MonitorStage()
     }
 }
 

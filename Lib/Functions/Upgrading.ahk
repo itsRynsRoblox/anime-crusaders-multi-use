@@ -39,12 +39,18 @@ UpgradeWithPriority() {
 
 UpgradeWithoutPriority() {
     global successfulCoordinates
-    while (successfulCoordinates.Length > 0) {
-        ProcessUpgrades(false, "")
+
+    slotOrder := [1, 2, 3, 4, 5, 6] ; or however many slots you have
+
+    for slot in slotOrder {
+        if (HasUnitsInSlot(slot, "", successfulCoordinates)) {
+            ProcessUpgrades(slot, "")
+            upgraded := true
+        }
     }
+
     AddToLog("All units maxed, proceeding to monitor stage")
 }
-
 
 SetAutoUpgradeForAllUnits(testAmount := 0) {
     global successfulCoordinates
@@ -337,8 +343,14 @@ TestAllUpgradeFindTexts() {
 
 HasUnitsInSlot(slot, priorityNum, coordinates) {
     for coord in coordinates {
-        if (coord.slot = slot && coord.upgradePriority = priorityNum && !coord.autoUpgrade)
-            return true
+        if (coord.slot = slot && !coord.autoUpgrade) {
+            if (priorityNum = false || priorityNum = "") {
+                return true   ; ignore priority requirement
+            }
+            if (coord.upgradePriority = priorityNum) {
+                return true
+            }
+        }
     }
     return false
 }

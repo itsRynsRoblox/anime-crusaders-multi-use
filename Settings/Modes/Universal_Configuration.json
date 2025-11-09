@@ -6,7 +6,7 @@
     },
     "Placement": {
         "Order": 1,
-        "Pattern": 1,
+        "Pattern": 2,
         "PlaceUntilSuccessful": 0,
         "Speed": "2"
     },

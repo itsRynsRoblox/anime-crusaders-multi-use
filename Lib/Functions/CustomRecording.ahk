@@ -52,6 +52,9 @@ StartRecordingActionsForMap(*) {
 StopRecordingActions(*) {
     global allRecordings, recordingActions
 
+    if !recordingActions
+        return
+
     recordingMap := RecordMapDropdown.Text
 
     RemoveActiveHotkeys()
@@ -196,6 +199,9 @@ PlayRecordedActions() {
 
 StopPlayback(*) {
     global shouldLoop
+
+    if (!shouldLoop)
+        return
 
     shouldLoop := false
 

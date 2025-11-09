@@ -154,7 +154,7 @@ MonitorStage() {
         stageLength := FormatStageTime(stageEndTime - stageStartTime)
         result := true
 
-        if (GetPixel(0xFF0005, 156, 151, 2, 2, 10)) {
+        if (GetPixel(0xE10009, 434, 124, 2, 2, 10)) {
             result := false
         }
 

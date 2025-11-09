@@ -1,6 +1,6 @@
 ﻿#Include %A_ScriptDir%\Lib\GUI.ahk
 
-SaveSettingsForMode(toExport := false) {
+SaveSettingsForMode(toExport := false, sendMessage := true) {
     try {
         ; Determine mode name
         gameMode := (ModeConfigurations.Value ? ModeDropdown.Text : "Default")
@@ -90,6 +90,9 @@ SaveSettingsForMode(toExport := false) {
                         Use_Premade_Movement: GateMovement.Value
                     }
                 }
+            },
+            Update_Checker: {
+                Enabled: UpdateChecker.Value
             }
         }
 
@@ -106,7 +109,9 @@ SaveSettingsForMode(toExport := false) {
             return
         }
 
-        AddToLog("✅ Saved settings for mode: " gameMode)
+        if (sendMessage) {
+            AddToLog("✅ Saved settings for mode: " gameMode)
+        }
 
         ; Save related components
         SaveCustomPlacements()
@@ -146,8 +151,8 @@ LoadUnitSettingsByMode(fromFile := false) {
 
     if !FileExist(file) {
         AddToLog("⚠️ No configuration found for mode: " mode ", using default settings...")
-        SaveSettingsForMode()
-        return
+        SaveSettingsForMode(false, false)
+        file := A_ScriptDir "\Settings\Modes\" safeMode "_Configuration.json"
     }
 
     json := FileRead(file, "UTF-8")
@@ -220,16 +225,16 @@ LoadUnitSettingsByMode(fromFile := false) {
     UpgradeLimitEnabled6.Value := GetValue(data, ["Unit_Settings", "Slot_6_Upgrade_Limit_Enabled"], 0)
 
     AutoAbilityBox.Value := GetValue(data, ["Auto_Ability", "Enabled"], 0)
-    AutoAbilityTimer.Text := GetValue(data, ["Auto_Ability", "Timer"], "")
+    AutoAbilityTimer.Text := GetValue(data, ["Auto_Ability", "Timer"], "60")
 
-    ZoomBox.Value := GetValue(data, ["Zoom_Settings", "Level"], 0)
-    ZoomTech.Value := GetValue(data, ["Zoom_Settings", "Enabled"], 0)
-    ZoomInOption.Value := GetValue(data, ["Zoom_Settings", "Zoom_IN"], 0)
+    ZoomBox.Value := GetValue(data, ["Zoom_Settings", "Level"], 20)
+    ZoomTech.Value := GetValue(data, ["Zoom_Settings", "Enabled"], 1)
+    ZoomInOption.Value := GetValue(data, ["Zoom_Settings", "Zoom_In"], 1)
     ZoomTeleport.Value := GetValue(data, ["Zoom_Settings", "Teleport"], 0)
 
     EnableUpgrading.Value := GetValue(data, ["Upgrading", "Enabled"], 0)
     UnitManagerUpgradeSystem.Value := GetValue(data, ["Upgrading", "Use_Unit_Manager"], 0)
-    PriorityUpgrade.Value := GetValue(data, ["Upgrading", "Use_Unit_Priority"], 0)
+    PriorityUpgrade.Value := GetValue(data, ["Upgrading", "Use_Unit_Priority"], 1)
 
     ShouldUseRecording.Value := GetValue(data, ["Custom_Recordings", "Use"], 0)
     ShouldLoopRecording.Value := GetValue(data, ["Custom_Recordings", "Loop"], 0)
@@ -253,6 +258,7 @@ LoadUnitSettingsByMode(fromFile := false) {
     HalloweenMovement.Value := GetValue(data, ["Modes", "Events", "Halloween", "Use_Premade_Movement"], 0)
     GateMovement.Value := GetValue(data, ["Modes", "Events", "Gates", "Use_Premade_Movement"], 0)
 
+    UpdateChecker.Value := GetValue(data, ["Update_Checker", "Enabled"], 1)
 
     LoadCustomPlacements()
     InitControlGroups()
