@@ -461,6 +461,8 @@ GetRecordingMap(mode) {
             return PortalDropdown.Text
         case "Event":
             return EventDropdown.Text
+        case "Boss Rush":
+            return "Boss Rush"
         case "Custom":
             return RecordMapDropdown.Text
     }

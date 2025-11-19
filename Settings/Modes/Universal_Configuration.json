@@ -5,8 +5,8 @@
         "FailsafeTimer": "60"
     },
     "Placement": {
-        "Order": 1,
-        "Pattern": 2,
+        "Order": 2,
+        "Pattern": 1,
         "PlaceUntilSuccessful": 0,
         "Speed": "2"
     },

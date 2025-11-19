@@ -169,6 +169,9 @@ GetPlacementsForMode(mode) {
         case "Event":
             return EventDropdown.Text
 
+        case "Boss Rush":
+            return "Boss Rush"    
+
         case "Custom":
             return CustomPlacementMapDropdown.Text
     }

@@ -6,7 +6,7 @@
 ; Application Info
 global GameName := "Anime Crusaders"
 global GameTitle := "Ryn's " GameName " Macro "
-global version := "v1.8.6"
+global version := "v1.8.8"
 global rblxID := "ahk_exe RobloxPlayerBeta.exe"
 ; Update Checker
 global repoOwner := "itsRynsRoblox"
@@ -130,6 +130,7 @@ global customDropdowns := [
     "Karakura Town",
     "Shibuya",
     "Demon District",
+    "Devil City",
     ; Legend Stages
     "Shibuya (Destroyed)",
     "Nightmare Train - Act 1",
@@ -141,7 +142,9 @@ global customDropdowns := [
     "Tokyo Empire",
     ; Events
     "Halloween",
-    "Spirit Invasion"
+    "Spirit Invasion",
+    ; Boss Rush
+    "Boss Rush"
     ]
 
 ; ========== Constants and Theme Setup ==========
@@ -358,7 +361,6 @@ keybindSaveBtn.OnEvent("Click", SaveKeybindSettings)
 global UpgradeBorder := MainUI.Add("GroupBox", "x808 y85 w550 h296 +Center Hidden c" uiTheme[1], "Upgrade Settings")
 global EnableUpgrading := MainUI.Add("CheckBox", "x825 y110 Hidden cffffff Checked", "Enable Upgrading")
 global UnitManagerUpgradeSystem := MainUI.Add("CheckBox", "x825 y130 Hidden cffffff", "Use the Unit Manager to upgrade your units")
-global PriorityUpgrade := MainUI.Add("CheckBox", "x825 y150 cffffff Hidden Checked", "Use Unit Priority while upgrading")
 
 global ZoomSettingsBorder := MainUI.Add("GroupBox", "x1000 y205 w165 h176 +Center Hidden c" uiTheme[1], "Zoom Tech Settings")
 global ZoomText := MainUI.Add("Text", "x1018 y230 Hidden c" uiTheme[1], "Zoom Level:")
@@ -490,11 +492,11 @@ DiscordButton.OnEvent("Click", (*) => OpenDiscord())
 ;--------------SETTINGS--------------;
 global modeSelectionGroup := MainUI.Add("GroupBox", "x808 y38 w500 h45 +Center Background" uiTheme[2], "Game Mode Selection")
 MainUI.SetFont("s10 c" uiTheme[6])
-global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Story", "Infinity Castle", "Legend Stage", "Portal", "Raid", "Event", "Challenge", "Custom"])
+global ModeDropdown := MainUI.Add("DropDownList", "x818 y53 w140 h180 Choose0 +Center", ["Boss Rush", "Story", "Infinity Castle", "Legend Stage", "Portal", "Raid", "Event", "Challenge", "Custom"])
 global CustomCardDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden Choose1", ["Halloween", "Spirit Invasion"])
 global EventDropdown:= MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Halloween", "Spirit Invasion"])
 global EventRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden Choose1", ["Solo", "Host", "Guest"])
-global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"])
+global StoryDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District", "Devil City"])
 global StoryActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Infinite", "Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global InfiniteCastleModeDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose1 +Center Hidden", ["Normal", "Traitless"])
 global LegendDropDown := MainUI.Add("DropDownlist", "x968 y53 w150 h180 Choose0 +Center", ["Shibuya (Destroyed)", "Nightmare Train", "Mirror Dimension"] )
@@ -503,6 +505,8 @@ global RaidDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +C
 global RaidActDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center", ["Act 1", "Act 2", "Act 3", "Act 4", "Act 5", "Act 6"])
 global PortalDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose0 +Center Hidden", ["Marine Ford", "Demon District"])
 global PortalRoleDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose0 +Center Hidden", ["Solo", "Host", "Guest"])
+global BossRushDropdown := MainUI.Add("DropDownList", "x968 y53 w150 h180 Choose1 +Center Hidden", ["Traits Enabled", "Traits Disabled"])
+global BossRushModifierDropdown := MainUI.Add("DropDownList", "x1128 y53 w80 h180 Choose1 +Center Hidden", ["Slot", "Damage", "Placement"])
 global ConfirmButton := MainUI.Add("Button", "x1218 y53 w80 h25", "Confirm")
 
 LegendDropDown.Visible := false
@@ -845,7 +849,7 @@ InitControlGroups() {
     ]
 
     ControlGroups["Upgrade"] := [
-        UpgradeBorder, EnableUpgrading, UnitManagerUpgradeSystem, PriorityUpgrade
+        UpgradeBorder, EnableUpgrading, UnitManagerUpgradeSystem
     ]
 
     ControlGroups["Mode"] := [

@@ -1,6 +1,6 @@
 ﻿{
     "Auto_Ability": {
-        "Enabled": 1,
+        "Enabled": 0,
         "Timer": "60"
     },
     "Custom_Recordings": {
@@ -91,12 +91,11 @@
         "Slot_6_Upgrade_Priority": "6"
     },
     "Update_Checker": {
-        "Enabled": 0
+        "Enabled": 1
     },
     "Upgrading": {
         "Enabled": 1,
-        "Use_Unit_Manager": 0,
-        "Use_Unit_Priority": 0
+        "Use_Unit_Manager": 0
     },
     "Zoom_Settings": {
         "Enabled": 1,

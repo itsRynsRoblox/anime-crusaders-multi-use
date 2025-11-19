@@ -34,6 +34,7 @@ global scriptInitialized := false
 #Include %A_ScriptDir%/lib/Modes/Limited/Gates.ahk
 #Include %A_ScriptDir%/lib/Modes/Limited/Halloween.ahk
 #Include %A_ScriptDir%/lib/Modes/Limited/SpiritInvasion.ahk
+#Include %A_ScriptDir%/lib/Modes/BossRush.ahk
 
 ; === Core Mechanics ===
 #Include %A_ScriptDir%/lib/Functions/Functions.ahk

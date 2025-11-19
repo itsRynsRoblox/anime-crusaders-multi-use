@@ -29,7 +29,7 @@ StartStoryMode() {
 
 StartStory(map, act) {
     AddToLog("Starting " map " - " act)
-    return StartContent(map, act, GetStoryMap, GetStoryAct, { x: 190, y: 185 }, { x: 340, y: 255 })
+    return StartContent(map, act, GetStoryMap, GetStoryAct, { x: 205, y: 260 }, { x: 340, y: 260 })
 }
 
 StoryMovement() {
@@ -45,6 +45,7 @@ GetStoryMap(map) {
         case "Karakura Town": return {x: 200, y: 340, scrolls: 0}
         case "Shibuya": return {x: 200, y: 385, scrolls: 0}
         case "Demon District": return {x: 200, y: 430, scrolls: 0}
+        case "Devil City": return {x: 200, y: 330, scrolls: 1}
     }
 }
 
@@ -96,7 +97,7 @@ WalkToStoryRoom() {
 
 GetNewStorySettings() {
 
-    StoryMapList := ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District"]
+    StoryMapList := ["Planet Namak", "Marine's Ford", "Karakura Town", "Shibuya", "Demon District", "Devil City"]
     map := StoryDropdown.Value
     act := StoryActDropdown.Value
 

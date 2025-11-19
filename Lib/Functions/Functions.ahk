@@ -34,7 +34,7 @@ getCurrentTime() {
 OnModeChange(*) {
     global ActiveControlGroup
     ; Hide all
-    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown, EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown]
+    for ctrl in [StoryDropdown, StoryActDropdown, LegendDropDown, LegendActDropdown, RaidDropdown, RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown, EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown, BossRushDropdown, BossRushModifierDropdown]
         ctrl.Visible := false
 
     if (ActiveControlGroup = "Mode") {
@@ -57,6 +57,9 @@ OnModeChange(*) {
             RaidDropdown.Visible := RaidActDropdown.Visible := true
         case "Portal":
             PortalDropdown.Visible := PortalRoleDropdown.Visible := true
+        case "Boss Rush":
+            BossRushDropdown.Visible := true  
+            BossRushModifierDropdown.Visible := true  
         case "Custom":
             CustomCardDropdown.Visible := true
         default:
@@ -127,8 +130,11 @@ OnConfirmClick(*) {
                 return AddToLog("Please select both Event and Role before confirming")
 
         case "Challenge":
-            AddToLog("This is used to store your Auto Challenge settings only")
-            return
+            return AddToLog("This is used to store your Auto Challenge settings only")
+
+        case "Boss Rush":
+            if (BossRushDropdown.Text = "" || BossRushModifierDropdown.Text = "")
+                return AddToLog("Please select boss rush mode before confirming")
 
         default:
             AddToLog("Selected " mode)
@@ -142,7 +148,9 @@ OnConfirmClick(*) {
     for ctrl in [
         ModeDropdown, StoryDropdown, StoryActDropdown, LegendDropDown, RaidDropdown,
         RaidActDropdown, PortalDropdown, PortalRoleDropdown, EventDropdown,
-        EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown, ConfirmButton, modeSelectionGroup
+        EventRoleDropdown, CustomCardDropdown, InfiniteCastleModeDropdown,
+        BossRushDropdown, BossRushModifierDropdown,
+        ConfirmButton, modeSelectionGroup
     ]
         ctrl.Visible := false
 

@@ -207,8 +207,12 @@ CloseChat() {
 BasicSetup(usedButton := false) {
     global firstStartup
 
-    if(!WinActive(rblxID)) {
+    if (!WinActive(rblxID)) {
         WinActivate(rblxID)
+    }
+
+    if (ModeDropdown.Text = "Boss Rush") {
+        SelectBossModifier()
     }
 
     if (!firstStartup) {
@@ -247,22 +251,26 @@ BasicSetup(usedButton := false) {
     
 RestartStage() {
 
-    ; Special Cases
-    DetectInfinityCastleMap()
-    
-    ; Wait for loading
-    CheckLoaded()
-
-    BasicSetup()
-
-    ; Wait for game to actually start
-    StartedGame()
-
     if (ShouldUseRecording.Value) {
         PlayRecordedActions()
     } else {
-        ; Begin unit placement and management
-        StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlaceUntilSuccessful.Value)
+        ; Special Cases
+        DetectInfinityCastleMap()
+
+        ; Wait for loading
+        CheckLoaded()
+
+        BasicSetup()
+
+        ; Wait for game to actually start
+        StartedGame()
+
+        if (ShouldUseRecording.Value) {
+            PlayRecordedActions()
+        } else {
+            ; Begin unit placement and management
+            StartPlacingUnits(PlacementPatternDropdown.Text == "Custom" || PlaceUntilSuccessful.Value)
+        }
     }
     
     ; Monitor stage progress
@@ -404,8 +412,7 @@ CheckLobby() {
 CheckLoaded() {
     loop {
         Reconnect()
-        
-        if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests)) {
+        if (ok := FindText(&X, &Y, 59, 585, 95, 621, 0.10, 0.10, IngameQuests) || (ModeDropdown.Text = "Boss Rush" && FindText(&X, &Y, 369, 310, 436, 333, 0.20, 0.20, DamageCard))) {
             AddToLog("Successfully Loaded In")
             if (MatchmakingFailsafe.Value) {
                 TimerManager.Clear("Teleport Failsafe")
@@ -451,6 +458,8 @@ StartSelectedMode() {
             StartPortals()
         case "Infinity Castle":
             StartInfinityCastle()
+        case "Boss Rush":
+            StartBossRush()    
         case "Custom":
             CustomMode()
     }
@@ -492,7 +501,7 @@ HandleStartButton() {
 
 StartsInLobby(ModeName) {
     ; Array of modes that usually start in lobby
-    static modes := ["Story", "Legend Stage", "Raid", "Event", "Portal", "Infinity Castle"]
+    static modes := ["Story", "Legend Stage", "Raid", "Event", "Portal", "Infinity Castle", "Boss Rush"]
 
     ; Check if current mode is in the array
     for mode in modes {
@@ -539,5 +548,8 @@ isMenuOpen(name := "") {
     }
     else if (name = "Unit Passives") {
         return GetPixel(0xFFFFFF, 576, 179, 2, 2, 5)
+    }
+    else if (name = "Boss Rush") {
+        return FindText(&X, &Y, 267, 451, 399, 486, 0.20, 0.20, BossRushUI)
     }
 }

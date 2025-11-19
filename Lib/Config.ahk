@@ -55,7 +55,6 @@ SaveSettingsForMode(toExport := false, sendMessage := true) {
             Upgrading: {
                 Enabled: EnableUpgrading.Value,
                 Use_Unit_Manager: UnitManagerUpgradeSystem.Value,
-                Use_Unit_Priority: PriorityUpgrade.Value
             },
             Custom_Recordings: {
                 Use: ShouldUseRecording.Value,
@@ -234,7 +233,6 @@ LoadUnitSettingsByMode(fromFile := false) {
 
     EnableUpgrading.Value := GetValue(data, ["Upgrading", "Enabled"], 0)
     UnitManagerUpgradeSystem.Value := GetValue(data, ["Upgrading", "Use_Unit_Manager"], 0)
-    PriorityUpgrade.Value := GetValue(data, ["Upgrading", "Use_Unit_Priority"], 1)
 
     ShouldUseRecording.Value := GetValue(data, ["Custom_Recordings", "Use"], 0)
     ShouldLoopRecording.Value := GetValue(data, ["Custom_Recordings", "Loop"], 0)

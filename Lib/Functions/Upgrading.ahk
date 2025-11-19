@@ -6,11 +6,7 @@ UpgradeUnits() {
         OpenMenu("Unit Manager")
     }
 
-    if (PriorityUpgrade.Value) {
-        UpgradeWithPriority()
-    } else {
-        UpgradeWithoutPriority()
-    }
+    UpgradeWithPriority()
 
     return MonitorStage()
 }
@@ -367,11 +363,10 @@ EnableAutoUpgrade() {
 
 MaxUpgrade() {
     Sleep 500
-    ok := (
-        FindText(&X, &Y, 192, 396, 317, 432, 0.10, 0.10, MaxUpgradeText)
-        || FindText(&X, &Y, 192, 396, 317, 432, 0.20, 0.20, MaxUpgradeTextIdol)
-    )
-    return ok
+    if (FindText(&X, &Y, 191, 395, 317, 431, 0.10, 0.10, MaxUpgradeText) || FindText(&X, &Y, 191, 395, 317, 431, 0.20, 0.20, MaxUpgradeTextIdol)) {
+        return true
+    }
+    return false
 }
 
 UnitManagerUpgrade(slot) {
